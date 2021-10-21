@@ -12,22 +12,22 @@
 %type <Ast.program> program
 %%
 program:
-    blocks EOF { Program("Test") }
-  | EOF { Program("empty") }
+    blocks EOF { Program($1) }
+  | EOF { Program("{empty program}") }
 
 blocks:
-    blocks block {}
-  | block {}
+    blocks block { $1 ^ ";\n\n" ^ $2}
+  | block { $1 }
 
 block:
-    import_stmt {}
+    import_stmt { $1 }
 
 import_stmt:
-    FROM module_name IMPORT name { print_string "from "; print_string $2; print_string " import "; print_string $4; }
+    FROM module_name IMPORT name { "Importing " ^ $4 ^ " from " ^ $2 }
 
 module_name:
-    module_name DOT name { print_string "module_name DOT name "; print_endline $1; $1 }
-  | name { print_string "name "; print_endline $1; $1 }
+    module_name DOT name { $1 ^ " . " ^ $3 }
+  | name { $1 }
 
 name:
-    STRING_LITERAL { print_string "STRING_LITERAL "; print_endline $1; $1 }
+    STRING_LITERAL { $1 }
