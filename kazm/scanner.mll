@@ -9,13 +9,15 @@ rule tokenize = parse
 | ')' { PAREN_R }
 | '{' { BRACE_L }
 | '}' { BRACE_R }
+| '[' { SQB_L }
+| ']' { SQB_R }
 | "from" { FROM }
 | "import" { IMPORT }
-| ['a'-'z']+ as slit { STRING_LITERAL(slit) }
 | "emptyline" { EMPTY_LINE }
 | "void" { VOID }
 | "bool" { BOOL }
 | "char" { CHAR }
 | "int" { INT }
 | "double" { DOUBLE }
+| ['a'-'z''_']+ as slit { STRING_LITERAL(slit) }
 | eof { EOF }
