@@ -25,5 +25,6 @@ rule tokenize = parse
 | "elseif" { ELSEIF }
 | "then" { THEN }
 | "return" { RETURN }
+| ['0'-'9']+ as intlit { INT_LITERAL(int_of_string intlit) }
 | ['a'-'z''_']+ as slit { STRING_LITERAL(slit) }
 | eof { EOF }

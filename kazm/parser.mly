@@ -1,6 +1,7 @@
 %token EOF
 
 %token<string> STRING_LITERAL
+%token<int> INT_LITERAL
 
 %token FROM IMPORT
 
@@ -45,6 +46,7 @@ func_body:
 
 stmts:
     stmts SEMI stmt { $3::$1 }
+  | stmts SEMI { $1 }
   | stmt { $1::[] }
 
 stmt:
@@ -57,15 +59,17 @@ stmt:
 return_stmt:
     RETURN stmt { "Return: " ^ $2 }
 
-
 conditional_stmt:
-    IF PAREN_L stmt PAREN_R BRACE_L stmt BRACE_R { "lone if with cond: " ^ $3 }
+    IF PAREN_L stmt PAREN_R BRACE_L stmts BRACE_R { "lone if with cond: " ^ $3 }
+
+decl_var_stmt:
+    dtype_with_name EQUALS stmt { "assigning new var " ^ $3 ^ " to " ^ $1 }
 
 assign_stmt:
     name EQUALS stmt { "assigning " ^ $3 ^ " to " ^ $1 }
 
 call_stmt:
-    name PAREN_L arg_list PAREN_R { "calling " ^ $1 ^ " with arg_list " ^ (List.fold_left (fun a b -> a ^ ", " ^ b) "" (List.rev $3)) }
+    name PAREN_L name_list PAREN_R { "calling " ^ $1 ^ " with name_list " ^ (List.fold_left (fun a b -> a ^ ", " ^ b) "" (List.rev $3)) }
 
 arg_list:
     arg_list COMMA dtype_with_name { $3::$1 }
@@ -73,6 +77,10 @@ arg_list:
 
 dtype_with_name:
     dtype name { $2 ^ " (t: " ^ $1 ^ ")" }
+
+name_list:
+    name_list COMMA name { $3::$1 }
+  | name { $1::[] }
 
 name:
     STRING_LITERAL { $1 }
