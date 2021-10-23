@@ -1,9 +1,8 @@
 from parent.module import name
 
 double main(int arg, double[] doubles) {
-  emptyline
-}
-
-int rand_bernoulli(double p) {
-  emptyline
+  empty; empty;
+  if (empty) {
+    empty
+  }
 }

@@ -5,9 +5,13 @@
 %token FROM IMPORT
 
 %token PAREN_L PAREN_R BRACE_L BRACE_R SQB_L SQB_R
-%token DOT SEMICOLON COMMA
-%token EMPTY_LINE
+%token DOT SEMI COMMA
+%token EMPTY
 %token VOID BOOL CHAR INT DOUBLE
+
+%token EQUALS
+%token IF ELSE ELSEIF THEN
+%token RETURN
 
 %start program
 %type <Ast.program> program
@@ -32,15 +36,36 @@ module_name:
   | name { $1 }
 
 func:
-    dtype_with_name PAREN_L arg_list PAREN_R closure {
+    dtype_with_name PAREN_L arg_list PAREN_R func_body {
       "Declared function " ^ $1 ^ " with arg list " ^ (List.fold_left (fun a b -> a ^ ", " ^ b) "" (List.rev $3)) ^ " and body: " ^ $5
     }
 
-closure:
-    BRACE_L line BRACE_R { $2 }
+func_body:
+    BRACE_L stmts BRACE_R { "stmts: " ^ (List.fold_left (fun a b -> a ^ "\n" ^ b) "" (List.rev $2)) }
 
-line:
-    EMPTY_LINE { "empty line" }
+stmts:
+    stmts SEMI stmt { $3::$1 }
+  | stmt { $1::[] }
+
+stmt:
+    EMPTY { "empty" }
+  | return_stmt { $1 }
+  | conditional_stmt { $1 }
+  | assign_stmt { $1 }
+  | call_stmt { $1 }
+
+return_stmt:
+    RETURN stmt { "Return: " ^ $2 }
+
+
+conditional_stmt:
+    IF PAREN_L stmt PAREN_R BRACE_L stmt BRACE_R { "lone if with cond: " ^ $3 }
+
+assign_stmt:
+    name EQUALS stmt { "assigning " ^ $3 ^ " to " ^ $1 }
+
+call_stmt:
+    name PAREN_L arg_list PAREN_R { "calling " ^ $1 ^ " with arg_list " ^ (List.fold_left (fun a b -> a ^ ", " ^ b) "" (List.rev $3)) }
 
 arg_list:
     arg_list COMMA dtype_with_name { $3::$1 }

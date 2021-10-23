@@ -2,9 +2,10 @@
 
 rule tokenize = parse
   [' ' '\t' '\r' '\n'] { tokenize lexbuf }
+| '=' { EQUALS }
 | '.' { DOT }
 | ',' { COMMA }
-| ';' { SEMICOLON }
+| ';' { SEMI }
 | '(' { PAREN_L }
 | ')' { PAREN_R }
 | '{' { BRACE_L }
@@ -13,11 +14,16 @@ rule tokenize = parse
 | ']' { SQB_R }
 | "from" { FROM }
 | "import" { IMPORT }
-| "emptyline" { EMPTY_LINE }
+| "empty" { EMPTY }
 | "void" { VOID }
 | "bool" { BOOL }
 | "char" { CHAR }
 | "int" { INT }
 | "double" { DOUBLE }
+| "if" { IF }
+| "else" { ELSE }
+| "elseif" { ELSEIF }
+| "then" { THEN }
+| "return" { RETURN }
 | ['a'-'z''_']+ as slit { STRING_LITERAL(slit) }
 | eof { EOF }
