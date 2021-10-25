@@ -1,22 +1,41 @@
-%token EOF
+/* Ocamlyacc parser for Kazm */
 
-%token<string> STRING_LITERAL
-%token<int> INT_LITERAL
+%{ open Ast %}
 
 %token FROM IMPORT
 
-%token PAREN_L PAREN_R BRACE_L BRACE_R SQB_L SQB_R
-%token DOT SEMI COMMA
+%token PAREN_L PAREN_R BRACE_L BRACE_R SQB_L SQB_R /* ( ) { } [ ] */
+%token DOT SEMI COMMA MOD ASSIGN  /* . ; , * % = */
+%token PLUS MINUS TIMES DIVIDE  /* + - * / */
+%token PLUSEQ MINUSEQ TIMESEQ DIVIDEEQ PLUSPLUS MINUSMINUS /* + - * / += -= *= /= ++ -- */
+%token AND OR NOT  /* && || ! */
+%token EQ NEQ LT LEQ GT GEQ /* == != < <= > >= */
 %token EMPTY
-%token VOID BOOL CHAR INT DOUBLE
+%token VOID BOOL CHAR INT DOUBLE 
+%token IF THEN ELSE ELSIF FOR WHILE DO 
+%token RETURN BREAK CONTINUE
 
-%token EQUALS
-%token IF ELSE ELSEIF THEN
-%token RETURN
+%token<string> STRING_LITERAL   /* could change STRING_LITERAL to just STRING */
+%token<int> INT_LITERAL 
+%token EOF
+
+%nonassoc NOELSE
+%nonassoc ELSE 
+%left SEMICO 
+%left IF THEN 
+%right ASSIGN
+%left OR
+%left AND
+%left EQ NEQ
+%left LT GT GEQ LEQ
+%left PLUS MINUS
+%left TIMES DIVIDE MOD
+%right NOT
 
 %start program
 %type <Ast.program> program
 %%
+
 program:
     blocks EOF { Program($1) }
   | EOF { Program("{empty program}") }
@@ -63,10 +82,10 @@ conditional_stmt:
     IF PAREN_L stmt PAREN_R BRACE_L stmts BRACE_R { "lone if with cond: " ^ $3 }
 
 decl_var_stmt:
-    dtype_with_name EQUALS stmt { "assigning new var " ^ $3 ^ " to " ^ $1 }
+    dtype_with_name ASSIGN stmt { "assigning new var " ^ $3 ^ " to " ^ $1 }
 
 assign_stmt:
-    name EQUALS stmt { "assigning " ^ $3 ^ " to " ^ $1 }
+    name ASSIGN stmt { "assigning " ^ $3 ^ " to " ^ $1 }
 
 call_stmt:
     name PAREN_L name_list PAREN_R { "calling " ^ $1 ^ " with name_list " ^ (List.fold_left (fun a b -> a ^ ", " ^ b) "" (List.rev $3)) }
@@ -87,12 +106,12 @@ name:
 
 dtype:
     VOID { "void" }
-  // primitives
+  /* primitives */ 
   | BOOL { "bool" }
   | CHAR { "char" }
   | INT { "int" }
   | DOUBLE { "double" }
-  // arrays
+  /* arrays */ 
   | BOOL SQB_L SQB_R { "bool list" }
   | CHAR SQB_L SQB_R { "char list" }
   | INT SQB_L SQB_R { "int list" }
