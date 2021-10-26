@@ -1,3 +1,6 @@
 _build/
 kazm.native
 parser.output
+
+parser.ml
+parser.mli
