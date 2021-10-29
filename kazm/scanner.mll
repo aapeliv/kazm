@@ -22,7 +22,7 @@ rule tokenize = parse
 | "+=" { PLUSEQ }
 | "-=" { MINUSEQ }
 | "*+" { TIMESEQ }
-| "/=" { DIVIDEEQ }
+| "/=" { DIVIDEQ }
 | "&&" { AND }
 | "||" { OR }
 | '!' { NOT } (* "!" in C-Net *)
@@ -44,7 +44,6 @@ rule tokenize = parse
 | "elseif" { ELSEIF }
 | "for" { FOR }
 | "while" { WHILE }
-| "do" { DO }
 | "return" { RETURN }
 | "break" { BREAK }
 | "continue" { CONTINUE }

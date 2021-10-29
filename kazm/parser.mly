@@ -7,7 +7,7 @@
 %token PAREN_L PAREN_R BRACE_L BRACE_R SQB_L SQB_R /* ( ) { } [ ] */
 %token DOT SEMI COMMA MOD ASSIGN  /* . ; , * % = */
 %token PLUS MINUS TIMES DIVIDE  /* + - * / */
-%token PLUSEQ MINUSEQ TIMESEQ DIVIDEEQ PLUSPLUS MINUSMINUS /* + - * / += -= *= /= ++ -- */
+%token PLUSEQ MINUSEQ TIMESEQ DIVIDEQ /* + - * / += -= *= /= */
 %token AND OR NOT  /* && || ! */
 %token EQ NEQ LT LEQ GT GEQ /* == != < <= > >= */
 %token EMPTY
@@ -93,6 +93,37 @@ call_stmt:
 arg_list:
     arg_list COMMA dtype_with_name { $3::$1 }
   | dtype_with_name { $1::[] }
+ 
+assignment_operator:
+    ASSIGN { Assign }
+  | PLUSEQ { Pluseq }
+  | MINUSEQ { Minuseq }
+  | TIMESEQ { TimeseQ }
+  | DIVIDEQ { Divideq }
+
+expr: 
+    INT_LITERAL        { Intlit($1)               }
+  | STRING_LITERAL     { Stringlit($1)            }
+  | expr PLUS expr     { Binop($1, Add, $3)       }
+  | expr MINUS expr    { Binop($1, Sub, $3)       }
+  | expr TIMES expr    { Binop($1, Mul, $3)       }
+  | expr DIVIDE expr   { Binop($1, Div, $3)       }
+  | expr MOD expr      { Binop($1, Mod, $3)       }
+  | expr PLUSEQ expr   { Binop($1, Pluseq, $3)    }
+  | expr MINUSEQ expr  { Binop($1, Minuseq, $3)   }
+  | expr TIMESEQ expr  { Binop($1, Timeseq, $3)   }
+  | expr DIVIDEQ expr  { Binop($1, Divideq, $3)   }
+  | expr EQ expr       { Binop($1, Equal, $3)     }
+  | expr NEQ expr      { Binop($1, Neq, $3)       }
+  | expr LT expr       { Binop($1, Less, $3)      }
+  | expr LEQ expr      { Binop($1, Leq, $3)       }
+  | expr GT expr       { Binop($1, Greater, $3)   }
+  | expr GEQ expr      { Binop($1, Geq, $3)       }
+  | expr AND expr      { Binop($1, And, $3)       }
+  | expr OR expr       { Binop($1, Or, $3)        }
+  | NOT expr           { Unop(Not, $2)            }
+
+
 
 dtype_with_name:
     dtype name { $2 ^ " (t: " ^ $1 ^ ")" }
@@ -105,14 +136,11 @@ name:
     STRING_LITERAL { $1 }
 
 dtype:
-    VOID { "void" }
+    VOID { Void }
   /* primitives */ 
-  | BOOL { "bool" }
-  | CHAR { "char" }
-  | INT { "int" }
-  | DOUBLE { "double" }
+  | BOOL { Bool }
+  | CHAR { Char }
+  | INT { Int }
+  | DOUBLE { Double }
   /* arrays */ 
-  | BOOL SQB_L SQB_R { "bool list" }
-  | CHAR SQB_L SQB_R { "char list" }
-  | INT SQB_L SQB_R { "int list" }
-  | DOUBLE SQB_L SQB_R { "double list" }
+  | dtype SQB_L SQB_R { Array($1) }
