@@ -19,9 +19,7 @@ type token =
   | PLUSEQ
   | MINUSEQ
   | TIMESEQ
-  | DIVIDEEQ
-  | PLUSPLUS
-  | MINUSMINUS
+  | DIVIDEQ
   | AND
   | OR
   | NOT
