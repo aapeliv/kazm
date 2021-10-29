@@ -11,18 +11,18 @@
 %token AND OR NOT  /* && || ! */
 %token EQ NEQ LT LEQ GT GEQ /* == != < <= > >= */
 %token EMPTY
-%token VOID BOOL CHAR INT DOUBLE 
-%token IF THEN ELSE ELSIF FOR WHILE DO 
+%token VOID BOOL CHAR INT DOUBLE
+%token IF THEN ELSE ELSEIF FOR WHILE DO
 %token RETURN BREAK CONTINUE
 
 %token<string> STRING_LITERAL   /* could change STRING_LITERAL to just STRING */
-%token<int> INT_LITERAL 
+%token<int> INT_LITERAL
 %token EOF
 
 %nonassoc NOELSE
-%nonassoc ELSE 
-%left SEMICO 
-%left IF THEN 
+%nonassoc ELSE
+%left SEMICO
+%left IF THEN
 %right ASSIGN
 %left OR
 %left AND
@@ -93,35 +93,35 @@ call_stmt:
 arg_list:
     arg_list COMMA dtype_with_name { $3::$1 }
   | dtype_with_name { $1::[] }
- 
-assignment_operator:
-    ASSIGN { Assign }
-  | PLUSEQ { Pluseq }
-  | MINUSEQ { Minuseq }
-  | TIMESEQ { TimeseQ }
-  | DIVIDEQ { Divideq }
 
-expr: 
-    INT_LITERAL        { Intlit($1)               }
-  | STRING_LITERAL     { Stringlit($1)            }
-  | expr PLUS expr     { Binop($1, Add, $3)       }
-  | expr MINUS expr    { Binop($1, Sub, $3)       }
-  | expr TIMES expr    { Binop($1, Mul, $3)       }
-  | expr DIVIDE expr   { Binop($1, Div, $3)       }
-  | expr MOD expr      { Binop($1, Mod, $3)       }
-  | expr PLUSEQ expr   { Binop($1, Pluseq, $3)    }
-  | expr MINUSEQ expr  { Binop($1, Minuseq, $3)   }
-  | expr TIMESEQ expr  { Binop($1, Timeseq, $3)   }
-  | expr DIVIDEQ expr  { Binop($1, Divideq, $3)   }
-  | expr EQ expr       { Binop($1, Equal, $3)     }
-  | expr NEQ expr      { Binop($1, Neq, $3)       }
-  | expr LT expr       { Binop($1, Less, $3)      }
-  | expr LEQ expr      { Binop($1, Leq, $3)       }
-  | expr GT expr       { Binop($1, Greater, $3)   }
-  | expr GEQ expr      { Binop($1, Geq, $3)       }
-  | expr AND expr      { Binop($1, And, $3)       }
-  | expr OR expr       { Binop($1, Or, $3)        }
-  | NOT expr           { Unop(Not, $2)            }
+assignment_operator:
+    ASSIGN { "Assign" }
+  | PLUSEQ { "Pluseq" }
+  | MINUSEQ { "Minuseq" }
+  | TIMESEQ { "TimeseQ" }
+  | DIVIDEQ { "Divideq" }
+
+expr:
+    INT_LITERAL        { string_of_int $1 }
+  | STRING_LITERAL     { "string_literal: " ^ $1 }
+  | expr PLUS expr     { "PLUS" }
+  | expr MINUS expr    { "MINUS" }
+  | expr TIMES expr    { "TIMES" }
+  | expr DIVIDE expr   { "DIVIDE" }
+  | expr MOD expr      { "MOD" }
+  | expr PLUSEQ expr   { "PLUSEQ" }
+  | expr MINUSEQ expr  { "MINUSEQ" }
+  | expr TIMESEQ expr  { "TIMESEQ" }
+  | expr DIVIDEQ expr  { "DIVIDEQ" }
+  | expr EQ expr       { "EQ" }
+  | expr NEQ expr      { "NEQ" }
+  | expr LT expr       { "LT" }
+  | expr LEQ expr      { "LEQ" }
+  | expr GT expr       { "GT" }
+  | expr GEQ expr      { "GEQ" }
+  | expr AND expr      { "AND" }
+  | expr OR expr       { "OR" }
+  | NOT expr           { "NOT" }
 
 
 
@@ -136,11 +136,14 @@ name:
     STRING_LITERAL { $1 }
 
 dtype:
-    VOID { Void }
-  /* primitives */ 
-  | BOOL { Bool }
-  | CHAR { Char }
-  | INT { Int }
-  | DOUBLE { Double }
-  /* arrays */ 
-  | dtype SQB_L SQB_R { Array($1) }
+    VOID { "void" }
+  // primitives
+  | BOOL { "bool" }
+  | CHAR { "char" }
+  | INT { "int" }
+  | DOUBLE { "double" }
+  // arrays
+  | BOOL SQB_L SQB_R { "bool list" }
+  | CHAR SQB_L SQB_R { "char list" }
+  | INT SQB_L SQB_R { "int list" }
+  | DOUBLE SQB_L SQB_R { "double list" }
