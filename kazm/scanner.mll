@@ -15,6 +15,8 @@ rule tokenize = parse
   [' ' '\t' '\r' '\n'] { tokenize lexbuf }
 (* single line comment starts with // and carries to end of line *)
 | "//" [^'\n']* { tokenize lexbuf }
+(* multi line comment starts with /*)
+| "/*" { multicomment lexbuf }
 | '(' { PAREN_L }
 | ')' { PAREN_R }
 | '{' { BRACE_L }
@@ -72,3 +74,9 @@ and parse_string buffer = parse
 | newline             { Buffer.add_string buffer (Lexing.lexeme lexbuf); parse_string buffer lexbuf }
 | [^ '"'  '\n' '\r']+ { Buffer.add_string buffer (Lexing.lexeme lexbuf); parse_string buffer lexbuf }
 | eof                 { raise (Failure("Non-terminated double quotes")) } 
+
+and multicomment = parse
+"*/" { tokenize lexbuf }
+| '\n' { Lexing.new_line lexbuf; multicomment lexbuf }
+| eof { raise (Failure("reached end of file with an unclosed multiline comment"))}
+| _ { multicomment lexbuf }
