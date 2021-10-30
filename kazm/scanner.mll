@@ -2,8 +2,8 @@
 
 rule tokenize = parse
   [' ' '\t' '\r' '\n'] { tokenize lexbuf }
-| "from" { FROM }
-| "import" { IMPORT }
+(* | "from" { FROM } *)
+(* | "import" { IMPORT } *)
 | '(' { PAREN_L }
 | ')' { PAREN_R }
 | '{' { BRACE_L }
@@ -39,14 +39,13 @@ rule tokenize = parse
 | "int" { INT }
 | "double" { DOUBLE }
 | "if" { IF }
-| "then" { THEN }
 | "else" { ELSE }
-| "elseif" { ELSEIF }
 | "for" { FOR }
 | "while" { WHILE }
 | "return" { RETURN }
 | "break" { BREAK }
 | "continue" { CONTINUE }
-| ['0'-'9']+ as intlit { INT_LITERAL(int_of_string intlit) }
-| ['a'-'z''_']+ as strlit { STRING_LITERAL(strlit) }
+| "\"" (['a'-'z']+ as str) "\"" { STRING_LITERAL(str) }
+| ['0'-'9']+ as int { INT_LITERAL(int_of_string int) }
+| ['a'-'z''_''0'-'9']+ as str { NAME(str) }
 | eof { EOF }

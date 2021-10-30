@@ -1,6 +1,11 @@
 /* Ocamlyacc parser for Kazm */
 
-%{ open Ast %}
+%{
+open Ast
+
+let join_str_list str_list delimiter = List.fold_left (fun a b -> a ^ delimiter ^ b) "" (List.rev str_list)
+let concat_stmts stmts = join_str_list stmts "\n"
+%}
 
 // %token FROM IMPORT
 
@@ -16,8 +21,10 @@
 %token RETURN BREAK
 %token CLASS ME
 %token TRUE FALSE
+%token CONTINUE
 
-%token<string> IDENTIFIER  
+%token<string> NAME
+%token<string> STRING_LITERAL   /* could change STRING_LITERAL to just STRING */
 %token<int> INT_LITERAL
 %token EOF
 
@@ -59,77 +66,77 @@ block:
 //   | name { $1 }
 
 func:
-    dtype_with_name PAREN_L arg_list PAREN_R func_body {
-      "Declared function " ^ $1 ^ " with arg list " ^ (List.fold_left (fun a b -> a ^ ", " ^ b) "" (List.rev $3)) ^ " and body: " ^ $5
+    dtype_with_name PAREN_L arg_list PAREN_R BRACE_L stmts BRACE_R {
+      "Declared function " ^ $1 ^ " with arg list " ^ (join_str_list $3 ", ") ^ " and body: " ^ concat_stmts $6
     }
 
-func_body:
-    BRACE_L stmts BRACE_R { "stmts: " ^ (List.fold_left (fun a b -> a ^ "\n" ^ b) "" (List.rev $2)) }
-
 stmts:
-    stmts SEMI stmt { $3::$1 }
-  | stmts SEMI { $1 }
+    stmts stmt { $2::$1 }
   | stmt { $1::[] }
 
 stmt:
     EMPTY { "empty" }
-  | return_stmt { $1 }
-  | conditional_stmt { $1 }
-  | assign_stmt { $1 }
-  | call_stmt { $1 }
-  | decl_var_stmt { $1 }
-  | dtype_with_name { $1 } /* declaration without initialization */
+  | expr SEMI { $1 }
+  | return_stmt SEMI { $1 }
+  | assign_stmt SEMI { $1 }
+  | decl_var_stmt SEMI { $1 }
+  | if_stmt { $1 }
+  | while_stmt { $1 }
 
 return_stmt:
-    RETURN stmt { "Return: " ^ $2 }
+    RETURN expr { "Return: " ^ $2 }
 
-conditional_stmt:
-    IF PAREN_L stmt PAREN_R BRACE_L stmts BRACE_R { "lone if with cond: " ^ $3 }
+if_stmt:
+    IF PAREN_L expr PAREN_R BRACE_L stmts BRACE_R ELSE BRACE_L stmts BRACE_R { "if with catch-all else" }
+  | IF PAREN_L expr PAREN_R BRACE_L stmts BRACE_R ELSE if_stmt { "continuation if" }
+  | IF PAREN_L expr PAREN_R BRACE_L stmts BRACE_R { "start of if" }
 
-decl_var_stmt:
-    dtype_with_name ASSIGN stmt { "assigning new var " ^ $3 ^ " to " ^ $1 }
-
-assign_stmt:
-    name ASSIGN stmt { "assigning " ^ $3 ^ " to " ^ $1 }
-
-call_stmt:
-    name PAREN_L name_list PAREN_R { "calling " ^ $1 ^ " with name_list " ^ (List.fold_left (fun a b -> a ^ ", " ^ b) "" (List.rev $3)) }
+while_stmt:
+    WHILE PAREN_L expr PAREN_R BRACE_L stmts BRACE_R { "while (" ^ $3 ^ ") {\n" ^ (List.fold_left (fun a b -> a ^ ", " ^ b) "" (List.rev $6)) ^ "\n}" }
 
 arg_list:
     arg_list COMMA dtype_with_name { $3::$1 }
   | dtype_with_name { $1::[] }
-/*
-assignment_operator:
-    ASSIGN { "Assign" }
-  | PLUSEQ { "Pluseq" }
-  | MINUSEQ { "Minuseq" }
-  | TIMESEQ { "TimeseQ" }
-  | DIVIDEQ { "Divideq" }
-*/
-/*
+
 expr:
     INT_LITERAL        { string_of_int $1 }
-  | IDENTIFIER     { "identifier: " ^ $1 }
-  | expr PLUS expr     { "PLUS" }
-  | expr MINUS expr    { "MINUS" }
-  | expr TIMES expr    { "TIMES" }
-  | expr DIVIDE expr   { "DIVIDE" }
-  | expr MOD expr      { "MOD" }
-  | expr PLUSEQ expr   { "PLUSEQ" }
-  | expr MINUSEQ expr  { "MINUSEQ" }
-  | expr TIMESEQ expr  { "TIMESEQ" }
-  | expr DIVIDEQ expr  { "DIVIDEQ" }
-  | expr EQ expr       { "EQ" }
-  | expr NEQ expr      { "NEQ" }
-  | expr LT expr       { "LT" }
-  | expr LEQ expr      { "LEQ" }
-  | expr GT expr       { "GT" }
-  | expr GEQ expr      { "GEQ" }
-  | expr AND expr      { "AND" }
-  | expr OR expr       { "OR" }
-  | NOT expr           { "NOT" }
-*/
+  | STRING_LITERAL     { "string_literal: " ^ $1 }
+  | expr PLUS expr     { $1 ^ " + " ^ $3 }
+  | expr MINUS expr    { $1 ^ " - " ^ $3 }
+  | expr TIMES expr    { $1 ^ " * " ^ $3 }
+  | expr DIVIDE expr   { $1 ^ " / " ^ $3 }
+  | expr MOD expr      { $1 ^ " % " ^ $3 }
+  | expr EQ expr       { $1 ^ " == " ^ $3 }
+  | expr NEQ expr      { $1 ^ " != " ^ $3 }
+  | expr LT expr       { $1 ^ " < " ^ $3 }
+  | expr LEQ expr      { $1 ^ " <= " ^ $3 }
+  | expr GT expr       { $1 ^ " > " ^ $3 }
+  | expr GEQ expr      { $1 ^ " >= " ^ $3 }
+  | expr AND expr      { $1 ^ " && " ^ $3 }
+  | expr OR expr       { $1 ^ " || " ^ $3 }
+  | NOT expr           { " ! " ^ $2 }
+  | PAREN_L expr PAREN_R { "(" ^ $2 ^ ")" }
+  // refer to a name
+  | name               { $1 }
+  // call a function
+  | call_expr          { $1 }
 
+expr_list:
+    expr_list COMMA expr { $3::$1 }
+  | expr { $1::[] }
+
+call_expr:
+    name PAREN_L expr_list PAREN_R { "calling " ^ $1 ^ " with expr_list " ^ (List.fold_left (fun a b -> a ^ ", " ^ b) "" (List.rev $3)) }
+
+assign_stmt:
+    name ASSIGN expr   { $1 ^ " = " ^ $3 }
+  | name PLUSEQ expr   { $1 ^ " += " ^ $3 }
+  | name MINUSEQ expr  { $1 ^ " -= " ^ $3 }
+  | name TIMESEQ expr  { $1 ^ " *= " ^ $3 }
+  | name DIVIDEQ expr  { $1 ^ " /= " ^ $3 }
+
+decl_var_stmt:
+    dtype_with_name ASSIGN expr { "assigning new var " ^ $3 ^ " to " ^ $1 }
 
 dtype_with_name:
     dtype name { $2 ^ " (t: " ^ $1 ^ ")" }
@@ -139,7 +146,7 @@ name_list:
   | name { $1::[] }
 
 name:
-    IDENTIFIER { $1 }
+    NAME { $1 }
 
 dtype:
     VOID { "void" }
