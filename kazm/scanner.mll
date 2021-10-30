@@ -2,6 +2,7 @@
 
 rule tokenize = parse
   [' ' '\t' '\r' '\n'] { tokenize lexbuf }
+(* single line comment starts with // and carries to end of line *)
 | "//" [^'\n']* { tokenize lexbuf }
 | '(' { PAREN_L }
 | ')' { PAREN_R }
@@ -31,6 +32,7 @@ rule tokenize = parse
 | "<=" { LEQ }
 | '>' { GT }
 | ">=" { GEQ }
+| "class" { CLASS }
 | "void" { VOID }
 | "bool" { BOOL }
 | "char" { CHAR }
@@ -44,5 +46,5 @@ rule tokenize = parse
 | "break" { BREAK }
 | "\"" ([^'\"']+ as str) "\"" { STRING_LITERAL(str) }
 | ['0'-'9']+ as int { INT_LITERAL(int_of_string int) }
-| ['a'-'z''_''0'-'9']+ as str { NAME(str) }
+| ['A'-'Z''a'-'z''_''0'-'9']+ as str { IDENTIFIER(str) }
 | eof { EOF }

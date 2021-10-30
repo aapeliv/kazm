@@ -17,10 +17,10 @@ let concat_list list = join_str_list list ", "
 %token VOID BOOL CHAR INT DOUBLE
 %token IF ELSE FOR WHILE
 %token RETURN BREAK
-%token CLASS ME
+%token CLASS
 %token TRUE FALSE
 
-%token<string> NAME
+%token<string> IDENTIFIER
 %token<string> STRING_LITERAL
 %token<int> INT_LITERAL
 %token EOF
@@ -38,6 +38,8 @@ let concat_list list = join_str_list list ", "
 %left TIMES DIVIDE MOD
 %right NOT
 
+%left DOT
+
 %start program
 %type <Ast.program> program
 %%
@@ -50,10 +52,19 @@ blocks:
   | { [] }
 
 block:
-  func { $1 }
+    func { $1 }
+  | class_ { $1 }
+
+class_:
+    CLASS simple_name BRACE_L class_body BRACE_R SEMI { "decl'd class " ^ $2 }
+
+class_body:
+    class_body func { $2::$1 }
+  | class_body decl_var_expr SEMI { $2::$1 }
+  | { [] }
 
 func:
-    dtype_with_name PAREN_L arg_list PAREN_R BRACE_L stmts BRACE_R {
+    dtype_with_simple_name PAREN_L arg_list PAREN_R BRACE_L stmts BRACE_R {
       "Declared function " ^ $1 ^ " with arg list " ^ (concat_list $3) ^ " and body: " ^ concat_stmts $6
     }
 
@@ -88,8 +99,8 @@ for_stmt:
 
 arg_list:
     { [] }
-  | arg_list COMMA dtype_with_name { $3::$1 }
-  | dtype_with_name { $1::[] }
+  | arg_list COMMA dtype_with_simple_name { $3::$1 }
+  | dtype_with_simple_name { $1::[] }
 
 expr:
     INT_LITERAL        { string_of_int $1 }
@@ -109,19 +120,19 @@ expr:
   | expr OR expr       { $1 ^ " || " ^ $3 }
   | NOT expr           { " ! " ^ $2 }
   | PAREN_L expr PAREN_R { "(" ^ $2 ^ ")" }
-  | decl_var_expr      { $1 }
+  | assign_new_var_expr { $1 }
   | assign_expr        { $1 }
   // call a function
   | call_expr          { $1 }
   // refer to a name
-  | name               { $1 }
+  | full_name          { $1 }
 
 assign_expr:
-    name ASSIGN expr   { $1 ^ " = " ^ $3 }
-  | name PLUSEQ expr   { $1 ^ " += " ^ $3 }
-  | name MINUSEQ expr  { $1 ^ " -= " ^ $3 }
-  | name TIMESEQ expr  { $1 ^ " *= " ^ $3 }
-  | name DIVIDEQ expr  { $1 ^ " /= " ^ $3 }
+    full_name ASSIGN expr   { $1 ^ " = " ^ $3 }
+  | full_name PLUSEQ expr   { $1 ^ " += " ^ $3 }
+  | full_name MINUSEQ expr  { $1 ^ " -= " ^ $3 }
+  | full_name TIMESEQ expr  { $1 ^ " *= " ^ $3 }
+  | full_name DIVIDEQ expr  { $1 ^ " /= " ^ $3 }
 
 expr_list:
     { [] }
@@ -129,16 +140,23 @@ expr_list:
   | expr { $1::[] }
 
 call_expr:
-    name PAREN_L expr_list PAREN_R { "calling " ^ $1 ^ " with expr_list " ^ (concat_list $3) }
+    full_name PAREN_L expr_list PAREN_R { "calling " ^ $1 ^ " with expr_list " ^ (concat_list $3) }
 
 decl_var_expr:
-    dtype_with_name ASSIGN expr { "assigning new var " ^ $3 ^ " to " ^ $1 }
+    dtype_with_simple_name { "declaring new var " ^ $1 }
 
-dtype_with_name:
-    dtype name { $2 ^ " (t: " ^ $1 ^ ")" }
+assign_new_var_expr:
+    dtype_with_simple_name ASSIGN expr { "assigning new var " ^ $3 ^ " to " ^ $1 }
 
-name:
-    NAME { $1 }
+dtype_with_simple_name:
+    dtype simple_name { $2 ^ " (t: " ^ $1 ^ ")" }
+
+full_name:
+    full_name DOT IDENTIFIER { $1 ^ "." ^ $3 }
+  | IDENTIFIER { $1 }
+
+simple_name:
+    IDENTIFIER { $1 }
 
 dtype:
     VOID { "void" }

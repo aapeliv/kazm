@@ -3,7 +3,7 @@
 // function declarations
 void waste_time(int arg) {
   while (1) {
-    time_sleep(1);
+    time.sleep(1);
   }
   // we can call functions without args
   func();
@@ -33,6 +33,7 @@ char[] w(int id) {
 
 void w2() {
   int i = 0;
+  // while loops with breaks
   while (1) {
     if (i % 200 > 100) {
       break;
@@ -40,6 +41,14 @@ void w2() {
     i += 1;
   }
 }
+
+class MyClass {
+  int i;
+
+  void print_i() {
+    println(me.i);
+  }
+};
 
 double main(int arg, double[] doubles) {
   test("testing", two);
