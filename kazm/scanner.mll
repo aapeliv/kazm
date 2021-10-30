@@ -11,6 +11,10 @@ let double = (
 
 rule tokenize = parse
   [' ' '\t' '\r' '\n'] { tokenize lexbuf }
+<<<<<<< HEAD
+=======
+| "//" [^'\n']* { tokenize lexbuf }
+>>>>>>> 19fd09861b46d51198e2e88d34c53e9fab5dcd28
 | '(' { PAREN_L }
 | ')' { PAREN_R }
 | '{' { BRACE_L }
@@ -39,21 +43,18 @@ rule tokenize = parse
 | "<=" { LEQ }
 | '>' { GT }
 | ">=" { GEQ }
-| "empty" { EMPTY }
 | "void" { VOID }
 | "bool" { BOOL }
 | "char" { CHAR }
 | "int" { INT }
 | "double" { DOUBLE }
 | "if" { IF }
-| "then" { THEN }
 | "else" { ELSE }
-| "elseif" { ELSEIF }
 | "for" { FOR }
 | "while" { WHILE }
-| "do" { DO }
 | "return" { RETURN }
 | "break" { BREAK }
+<<<<<<< HEAD
 | "continue" { CONTINUE }
 | "true" {TRUE}
 | "false" {FALSE}
@@ -62,6 +63,11 @@ rule tokenize = parse
 | double as doublelit {DOUBLE_LITERAL(doublelit)}
 | '''     { STRING_LITERAL (parsestringSQ (Buffer.create 100) lexbuf) }
 | '"'     { STRING_LITERAL (parsestringDQ (Buffer.create 100) lexbuf) }
+=======
+| "\"" ([^'\"']+ as str) "\"" { STRING_LITERAL(str) }
+| ['0'-'9']+ as int { INT_LITERAL(int_of_string int) }
+| ['a'-'z''_''0'-'9']+ as str { NAME(str) }
+>>>>>>> 19fd09861b46d51198e2e88d34c53e9fab5dcd28
 | eof { EOF }
 | _ as character     { raise (Failure("Undefined character: " ^ Char.escaped character)) }
 
