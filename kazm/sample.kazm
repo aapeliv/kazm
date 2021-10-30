@@ -81,7 +81,7 @@ class Book {
   String title;
   String author;
 
-  void Book(int isbn, String title, String author) {
+  Book(int isbn, String title, String author) {
     me.isbn = isbn;
     me.title = title;
     me.author = author;
@@ -103,7 +103,7 @@ class String {
   char[] str;
 
   //* Constructor */
-  void String(char[] str) {
+  String(char[] str) {
     me.str = str;
   }
 

@@ -60,13 +60,21 @@ class_:
 
 class_body:
     class_body func { $2::$1 }
+  | class_body func_ctr { $2::$1 }
   | class_body decl_var_expr SEMI { $2::$1 }
   | { [] }
 
 func:
     dtype_with_simple_name PAREN_L arg_list PAREN_R BRACE_L stmts BRACE_R {
-      "Declared function " ^ $1 ^ " with arg list " ^ (concat_list $3) ^ " and body: " ^ concat_stmts $6
+      "function " ^ $1 ^ " with arg list " ^ (concat_list $3) ^ " and body: " ^ concat_stmts $6
     }
+
+// constructor
+func_ctr:
+    simple_name PAREN_L arg_list PAREN_R BRACE_L stmts BRACE_R {
+      "constructor function " ^ $1 ^ " with arg list " ^ (concat_list $3) ^ " and body: " ^ concat_stmts $6
+    }
+
 
 stmts:
     stmts stmt { $2::$1 }
@@ -126,7 +134,7 @@ expr:
   | call_expr          { $1 }
   // refer to a name
   | full_name          { $1 }
-  // array access
+  // TODO: array access
   | TRUE               { "true" }
   | FALSE              { "false" }
 
