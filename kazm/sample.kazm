@@ -55,6 +55,15 @@ class MyClass {
   }
 };
 
+class Wrapper {
+  // can declare user defined types
+  MyClass wrapped;
+
+  void print_wrapped_i() {
+    println(me.wrapped.i);
+  }
+};
+
 double main(int arg, double[] doubles) {
   test("testing", two);
   var = 5 * 7/3;

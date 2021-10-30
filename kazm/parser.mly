@@ -56,7 +56,7 @@ block:
   | class_ { $1 }
 
 class_:
-    CLASS simple_name BRACE_L class_body BRACE_R SEMI { "decl'd class " ^ $2 }
+    CLASS simple_name BRACE_L class_body BRACE_R SEMI { "decl'd class " ^ $2 ^ "\n body:\n" ^ concat_stmts $4 }
 
 class_body:
     class_body func { $2::$1 }
@@ -162,13 +162,15 @@ simple_name:
 
 dtype:
     VOID { "void" }
+  | singular_type { $1 }
+  // arrays
+  | singular_type SQB_L SQB_R { "array of " ^ $1 }
+
+singular_type:
   // primitives
-  | BOOL { "bool" }
+    BOOL { "bool" }
   | CHAR { "char" }
   | INT { "int" }
   | DOUBLE { "double" }
-  // arrays
-  | BOOL SQB_L SQB_R { "bool list" }
-  | CHAR SQB_L SQB_R { "char list" }
-  | INT SQB_L SQB_R { "int list" }
-  | DOUBLE SQB_L SQB_R { "double list" }
+  // user-defined
+  | IDENTIFIER { "custom dtype:" ^ $1 }
