@@ -2,7 +2,7 @@
 
 %{ open Ast %}
 
-%token FROM IMPORT
+// %token FROM IMPORT
 
 %token PAREN_L PAREN_R BRACE_L BRACE_R SQB_L SQB_R /* ( ) { } [ ] */
 %token DOT SEMI COMMA MOD ASSIGN  /* . ; , * % = */
@@ -12,17 +12,19 @@
 %token EQ NEQ LT LEQ GT GEQ /* == != < <= > >= */
 %token EMPTY
 %token VOID BOOL CHAR INT DOUBLE
-%token IF THEN ELSE ELSEIF FOR WHILE DO
-%token RETURN BREAK CONTINUE
+%token IF ELSE FOR WHILE
+%token RETURN BREAK
+%token CLASS ME
+%token TRUE FALSE
 
-%token<string> STRING_LITERAL   /* could change STRING_LITERAL to just STRING */
+%token<string> IDENTIFIER  
 %token<int> INT_LITERAL
 %token EOF
 
 %nonassoc NOELSE
 %nonassoc ELSE
 %left SEMICO
-%left IF THEN
+%left IF
 %right ASSIGN
 %left OR
 %left AND
@@ -45,15 +47,16 @@ blocks:
   | block { $1 }
 
 block:
-    import_stmt { $1 }
-  | func { $1 }
+  func { $1 }
+    // import_stmt { $1 }
+  // | func { $1 }
 
-import_stmt:
-    FROM module_name IMPORT name { "Importing " ^ $4 ^ " from " ^ $2 }
+// import_stmt:
+//     FROM module_name IMPORT name { "Importing " ^ $4 ^ " from " ^ $2 }
 
-module_name:
-    module_name DOT name { $1 ^ " . " ^ $3 }
-  | name { $1 }
+// module_name:
+//     module_name DOT name { $1 ^ " . " ^ $3 }
+//   | name { $1 }
 
 func:
     dtype_with_name PAREN_L arg_list PAREN_R func_body {
@@ -74,6 +77,8 @@ stmt:
   | conditional_stmt { $1 }
   | assign_stmt { $1 }
   | call_stmt { $1 }
+  | decl_var_stmt { $1 }
+  | dtype_with_name { $1 } /* declaration without initialization */
 
 return_stmt:
     RETURN stmt { "Return: " ^ $2 }
@@ -93,17 +98,18 @@ call_stmt:
 arg_list:
     arg_list COMMA dtype_with_name { $3::$1 }
   | dtype_with_name { $1::[] }
-
+/*
 assignment_operator:
     ASSIGN { "Assign" }
   | PLUSEQ { "Pluseq" }
   | MINUSEQ { "Minuseq" }
   | TIMESEQ { "TimeseQ" }
   | DIVIDEQ { "Divideq" }
-
+*/
+/*
 expr:
     INT_LITERAL        { string_of_int $1 }
-  | STRING_LITERAL     { "string_literal: " ^ $1 }
+  | IDENTIFIER     { "identifier: " ^ $1 }
   | expr PLUS expr     { "PLUS" }
   | expr MINUS expr    { "MINUS" }
   | expr TIMES expr    { "TIMES" }
@@ -122,7 +128,7 @@ expr:
   | expr AND expr      { "AND" }
   | expr OR expr       { "OR" }
   | NOT expr           { "NOT" }
-
+*/
 
 
 dtype_with_name:
@@ -133,7 +139,7 @@ name_list:
   | name { $1::[] }
 
 name:
-    STRING_LITERAL { $1 }
+    IDENTIFIER { $1 }
 
 dtype:
     VOID { "void" }
