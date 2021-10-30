@@ -22,6 +22,8 @@ let concat_list list = join_str_list list ", "
 
 %token<string> IDENTIFIER
 %token<string> STRING_LITERAL
+%token<float> DOUBLE_LITERAL
+%token<char> CHAR_LITERAL
 %token<int> INT_LITERAL
 %token EOF
 
@@ -114,6 +116,8 @@ arg_list:
 expr:
     INT_LITERAL        { string_of_int $1 }
   | STRING_LITERAL     { "string_literal: " ^ $1 }
+  | DOUBLE_LITERAL     { "double_literal: " ^ (string_of_float $1)}
+  | CHAR_LITERAL       { "char_literal: " ^ Char.escaped $1}
   | expr PLUS expr     { "(" ^ $1 ^ " + " ^ $3 ^ ")" }
   | expr MINUS expr    { "(" ^ $1 ^ " - " ^ $3 ^ ")" }
   | expr TIMES expr    { "(" ^ $1 ^ " * " ^ $3 ^ ")" }
