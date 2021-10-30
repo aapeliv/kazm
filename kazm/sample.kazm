@@ -10,7 +10,7 @@ void waste_time(int arg) {
   int result = call_me(3, "test", (3 * 6) / 15 * func2("arg"));
 }
 
-// we can assign functions that take no args and have no body
+// we can declare functions that take no args and have no body
 void no_args() {}
 
 int[] func2() {
