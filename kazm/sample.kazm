@@ -88,8 +88,7 @@ class Book {
   }
 
   String as_text() {
-    String with_by = me.title.concat(" by ");
-    return with_by.concat(me.author);
+    return me.title.concat(" by ").concat(me.author);
   }
 };
 

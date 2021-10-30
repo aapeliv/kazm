@@ -113,28 +113,29 @@ arg_list:
 expr:
     INT_LITERAL        { string_of_int $1 }
   | STRING_LITERAL     { "string_literal: " ^ $1 }
-  | expr PLUS expr     { $1 ^ " + " ^ $3 }
-  | expr MINUS expr    { $1 ^ " - " ^ $3 }
-  | expr TIMES expr    { $1 ^ " * " ^ $3 }
-  | expr DIVIDE expr   { $1 ^ " / " ^ $3 }
-  | expr MOD expr      { $1 ^ " % " ^ $3 }
-  | expr EQ expr       { $1 ^ " == " ^ $3 }
-  | expr NEQ expr      { $1 ^ " != " ^ $3 }
-  | expr LT expr       { $1 ^ " < " ^ $3 }
-  | expr LEQ expr      { $1 ^ " <= " ^ $3 }
-  | expr GT expr       { $1 ^ " > " ^ $3 }
-  | expr GEQ expr      { $1 ^ " >= " ^ $3 }
-  | expr AND expr      { $1 ^ " && " ^ $3 }
-  | expr OR expr       { $1 ^ " || " ^ $3 }
-  | NOT expr           { " ! " ^ $2 }
+  // | expr SQB_L expr SQB_R { "array access at pos " ^ $3 ^ " of " ^ $1 }
+  // | expr DOT expr { "(" ^ $1 ^ "." ^ $3 ^ ")" }
+  | expr PLUS expr     { "(" ^ $1 ^ " + " ^ $3 ^ ")" }
+  | expr MINUS expr    { "(" ^ $1 ^ " - " ^ $3 ^ ")" }
+  | expr TIMES expr    { "(" ^ $1 ^ " * " ^ $3 ^ ")" }
+  | expr DIVIDE expr   { "(" ^ $1 ^ " / " ^ $3 ^ ")" }
+  | expr MOD expr      { "(" ^ $1 ^ " % " ^ $3 ^ ")" }
+  | expr EQ expr       { "(" ^ $1 ^ " == " ^ $3 ^ ")" }
+  | expr NEQ expr      { "(" ^ $1 ^ " != " ^ $3 ^ ")" }
+  | expr LT expr       { "(" ^ $1 ^ " < " ^ $3 ^ ")" }
+  | expr LEQ expr      { "(" ^ $1 ^ " <= " ^ $3 ^ ")" }
+  | expr GT expr       { "(" ^ $1 ^ " > " ^ $3 ^ ")" }
+  | expr GEQ expr      { "(" ^ $1 ^ " >= " ^ $3 ^ ")" }
+  | expr AND expr      { "(" ^ $1 ^ " && " ^ $3 ^ ")" }
+  | expr OR expr       { "(" ^ $1 ^ " || " ^ $3 ^ ")" }
+  | NOT expr           { "(! " ^ $2 ^ ")" }
   | PAREN_L expr PAREN_R { "(" ^ $2 ^ ")" }
-  | assign_new_var_expr { $1 }
-  | assign_expr        { $1 }
+  | assign_new_var_expr { "(" ^ $1 ^ ")" }
+  | assign_expr        { "(" ^ $1 ^ ")" }
   // call a function
-  | call_expr          { $1 }
+  | full_name PAREN_L expr_list PAREN_R { "(calling " ^ $1 ^ " with expr_list " ^ (concat_list $3) ^ ")" }
   // refer to a name
-  | full_name          { $1 }
-  // TODO: array access
+  | full_name          { "(" ^ $1 ^ ")" }
   | TRUE               { "true" }
   | FALSE              { "false" }
 
@@ -150,9 +151,6 @@ expr_list:
   | expr_list COMMA expr { $3::$1 }
   | expr { $1::[] }
 
-call_expr:
-    full_name PAREN_L expr_list PAREN_R { "calling " ^ $1 ^ " with expr_list " ^ (concat_list $3) }
-
 decl_var_expr:
     dtype_with_simple_name { "declaring new var " ^ $1 }
 
@@ -163,7 +161,7 @@ dtype_with_simple_name:
     dtype simple_name { $2 ^ " (t: " ^ $1 ^ ")" }
 
 full_name:
-    full_name DOT IDENTIFIER { $1 ^ "." ^ $3 }
+    expr DOT IDENTIFIER { $1 ^ "." ^ $3 }
   | IDENTIFIER { $1 }
 
 simple_name:
