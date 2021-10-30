@@ -74,18 +74,14 @@ stmt:
   | if_stmt { $1 }
   | assign_stmt { $1 }
   | expr { $1 }
-  // | call_stmt { $1 }
 
 return_stmt:
     RETURN stmt { "Return: " ^ $2 }
 
-// if_stmt:
-//     IF PAREN_L stmt PAREN_R BRACE_L stmts BRACE_R { "lone if with cond: " ^ $3 }
-
 if_stmt:
-    IF PAREN_L stmt PAREN_R BRACE_L stmts BRACE_R ELSE BRACE_L stmts BRACE_R { "if with catch-all else" }
-  | IF PAREN_L stmt PAREN_R BRACE_L stmts BRACE_R ELSE if_stmt { "continuation if" }
-  | IF PAREN_L stmt PAREN_R BRACE_L stmts BRACE_R { "start of if" }
+    IF PAREN_L expr PAREN_R BRACE_L stmts BRACE_R ELSE BRACE_L stmts BRACE_R { "if with catch-all else" }
+  | IF PAREN_L expr PAREN_R BRACE_L stmts BRACE_R ELSE if_stmt { "continuation if" }
+  | IF PAREN_L expr PAREN_R BRACE_L stmts BRACE_R { "start of if" }
 
 arg_list:
     arg_list COMMA dtype_with_name { $3::$1 }
@@ -113,8 +109,12 @@ expr:
   // call a function
   | call_expr          { $1 }
 
+expr_list:
+    expr_list COMMA expr { $3::$1 }
+  | expr { $1::[] }
+
 call_expr:
-    name PAREN_L name_list PAREN_R { "calling " ^ $1 ^ " with name_list " ^ (List.fold_left (fun a b -> a ^ ", " ^ b) "" (List.rev $3)) }
+    name PAREN_L expr_list PAREN_R { "calling " ^ $1 ^ " with expr_list " ^ (List.fold_left (fun a b -> a ^ ", " ^ b) "" (List.rev $3)) }
 
 assign_stmt:
     name ASSIGN expr   { $1 ^ " = " ^ $3 }
