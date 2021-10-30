@@ -5,9 +5,10 @@ open Ast
 
 let join_str_list str_list delimiter = List.fold_left (fun a b -> a ^ delimiter ^ b) "" (List.rev str_list)
 let concat_stmts stmts = join_str_list stmts "\n"
+let concat_list list = join_str_list list ", "
 %}
 
-// %token FROM IMPORT
+%token IMPORT
 
 %token PAREN_L PAREN_R BRACE_L BRACE_R SQB_L SQB_R /* ( ) { } [ ] */
 %token DOT SEMI COMMA MOD ASSIGN  /* . ; , * % = */
@@ -24,7 +25,7 @@ let concat_stmts stmts = join_str_list stmts "\n"
 %token CONTINUE
 
 %token<string> NAME
-%token<string> STRING_LITERAL   /* could change STRING_LITERAL to just STRING */
+%token<string> STRING_LITERAL
 %token<int> INT_LITERAL
 %token EOF
 
@@ -46,28 +47,23 @@ let concat_stmts stmts = join_str_list stmts "\n"
 %%
 
 program:
-    blocks EOF { Program($1) }
+    blocks EOF { Program(concat_stmts $1) }
   | EOF { Program("{empty program}") }
 
 blocks:
-    blocks block { $1 ^ ";\n\n" ^ $2}
-  | block { $1 }
+    blocks block { $2::$1 }
+  | block { $1::[] }
 
 block:
   func { $1 }
-    // import_stmt { $1 }
-  // | func { $1 }
+  | import_stmt { $1 }
 
-// import_stmt:
-//     FROM module_name IMPORT name { "Importing " ^ $4 ^ " from " ^ $2 }
-
-// module_name:
-//     module_name DOT name { $1 ^ " . " ^ $3 }
-//   | name { $1 }
+import_stmt:
+    IMPORT name { "Importing " ^ $2 }
 
 func:
     dtype_with_name PAREN_L arg_list PAREN_R BRACE_L stmts BRACE_R {
-      "Declared function " ^ $1 ^ " with arg list " ^ (join_str_list $3 ", ") ^ " and body: " ^ concat_stmts $6
+      "Declared function " ^ $1 ^ " with arg list " ^ (concat_list $3) ^ " and body: " ^ concat_stmts $6
     }
 
 stmts:
@@ -92,7 +88,7 @@ if_stmt:
   | IF PAREN_L expr PAREN_R BRACE_L stmts BRACE_R { "start of if" }
 
 while_stmt:
-    WHILE PAREN_L expr PAREN_R BRACE_L stmts BRACE_R { "while (" ^ $3 ^ ") {\n" ^ (List.fold_left (fun a b -> a ^ ", " ^ b) "" (List.rev $6)) ^ "\n}" }
+    WHILE PAREN_L expr PAREN_R BRACE_L stmts BRACE_R { "while (" ^ $3 ^ ") {\n" ^ (concat_list $6) ^ "\n}" }
 
 arg_list:
     arg_list COMMA dtype_with_name { $3::$1 }
@@ -126,7 +122,7 @@ expr_list:
   | expr { $1::[] }
 
 call_expr:
-    name PAREN_L expr_list PAREN_R { "calling " ^ $1 ^ " with expr_list " ^ (List.fold_left (fun a b -> a ^ ", " ^ b) "" (List.rev $3)) }
+    name PAREN_L expr_list PAREN_R { "calling " ^ $1 ^ " with expr_list " ^ (concat_list $3) }
 
 assign_stmt:
     name ASSIGN expr   { $1 ^ " = " ^ $3 }
@@ -140,10 +136,6 @@ decl_var_stmt:
 
 dtype_with_name:
     dtype name { $2 ^ " (t: " ^ $1 ^ ")" }
-
-name_list:
-    name_list COMMA name { $3::$1 }
-  | name { $1::[] }
 
 name:
     NAME { $1 }

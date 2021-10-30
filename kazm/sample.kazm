@@ -1,4 +1,4 @@
-from parent.module import name
+import library
 
 double main(int arg, double[] doubles) {
   test("testing", two);

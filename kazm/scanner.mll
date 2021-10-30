@@ -2,8 +2,7 @@
 
 rule tokenize = parse
   [' ' '\t' '\r' '\n'] { tokenize lexbuf }
-(* | "from" { FROM } *)
-(* | "import" { IMPORT } *)
+| "import" { IMPORT }
 | '(' { PAREN_L }
 | ')' { PAREN_R }
 | '{' { BRACE_L }
