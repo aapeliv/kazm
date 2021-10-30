@@ -47,6 +47,7 @@ rule tokenize = parse
 | "return" { RETURN }
 | "break" { BREAK }
 | "continue" { CONTINUE }
-| ['0'-'9']+ as intlit { INT_LITERAL(int_of_string intlit) }
-| ['a'-'z''_']+ as strlit { STRING_LITERAL(strlit) }
+| "\"" (['a'-'z']+ as str) "\"" { STRING_LITERAL(str) }
+| ['0'-'9']+ as int { INT_LITERAL(int_of_string int) }
+| ['a'-'z''_''0'-'9']+ as str { NAME(str) }
 | eof { EOF }

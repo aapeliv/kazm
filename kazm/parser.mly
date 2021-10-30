@@ -3,7 +3,8 @@
 %{
 open Ast
 
-
+let join_str_list str_list delimiter = List.fold_left (fun a b -> a ^ delimiter ^ b) "" (List.rev str_list)
+let concat_stmts stmts = join_str_list stmts "\n"
 %}
 
 %token FROM IMPORT
@@ -19,6 +20,7 @@ open Ast
 %token IF THEN ELSE ELSEIF FOR WHILE DO
 %token RETURN BREAK CONTINUE
 
+%token<string> NAME
 %token<string> STRING_LITERAL   /* could change STRING_LITERAL to just STRING */
 %token<int> INT_LITERAL
 %token EOF
@@ -60,29 +62,25 @@ module_name:
   | name { $1 }
 
 func:
-    dtype_with_name PAREN_L arg_list PAREN_R func_body {
-      "Declared function " ^ $1 ^ " with arg list " ^ (List.fold_left (fun a b -> a ^ ", " ^ b) "" (List.rev $3)) ^ " and body: " ^ $5
+    dtype_with_name PAREN_L arg_list PAREN_R BRACE_L stmts BRACE_R {
+      "Declared function " ^ $1 ^ " with arg list " ^ (join_str_list $3 ", ") ^ " and body: " ^ concat_stmts $6
     }
 
-func_body:
-    BRACE_L stmts BRACE_R { "stmts: " ^ (List.fold_left (fun a b -> a ^ "\n" ^ b) "" (List.rev $2)) }
-
 stmts:
-    stmts SEMI stmt { $3::$1 }
-  | stmts SEMI { $1 }
+    stmts stmt { $2::$1 }
   | stmt { $1::[] }
 
 stmt:
     EMPTY { "empty" }
-  | expr { $1 }
-  | return_stmt { $1 }
+  | expr SEMI { $1 }
+  | return_stmt SEMI { $1 }
+  | assign_stmt SEMI { $1 }
+  | decl_var_stmt SEMI { $1 }
   | if_stmt { $1 }
   | while_stmt { $1 }
-  | assign_stmt { $1 }
-  | decl_var_stmt { $1 }
 
 return_stmt:
-    RETURN stmt { "Return: " ^ $2 }
+    RETURN expr { "Return: " ^ $2 }
 
 if_stmt:
     IF PAREN_L expr PAREN_R BRACE_L stmts BRACE_R ELSE BRACE_L stmts BRACE_R { "if with catch-all else" }
@@ -144,7 +142,7 @@ name_list:
   | name { $1::[] }
 
 name:
-    STRING_LITERAL { $1 }
+    NAME { $1 }
 
 dtype:
     VOID { "void" }
