@@ -2,6 +2,7 @@
 
 rule tokenize = parse
   [' ' '\t' '\r' '\n'] { tokenize lexbuf }
+| "//" [^'\n']* { tokenize lexbuf }
 | '(' { PAREN_L }
 | ')' { PAREN_R }
 | '{' { BRACE_L }

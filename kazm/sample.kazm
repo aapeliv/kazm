@@ -1,7 +1,14 @@
+// single line comment
+
+
 void waste_time(int arg) {
   time_sleep(1);
   calling_function_wihout_args();
 }
+
+// test
+
+//
 
 double main(int arg, double[] doubles) {
   test("testing", two);
