@@ -126,6 +126,7 @@ expr:
   | call_expr          { $1 }
   // refer to a name
   | full_name          { $1 }
+  // array access
   | TRUE               { "true" }
   | FALSE              { "false" }
 

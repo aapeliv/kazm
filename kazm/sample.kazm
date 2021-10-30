@@ -98,3 +98,28 @@ void book_stuff() {
   println("ISBN: ", my_book.isbn);
   println(my_book.as_text());
 }
+
+class String {
+  char[] str;
+
+  //* Constructor */
+  void String(char[] str) {
+    me.str = str;
+  }
+
+  //* member function */
+  String concat(String you) {
+    str.resize(me.str.len + you.str.len);
+    // resize takes as argument the new length of the array
+
+    //"hello" " world" 5, 6 ==> 12
+
+    int start = me.str.len;
+    for (int i = 0; i< you.str.len; i+=1){
+      // TODO: array access doesn't work!
+      //str2[start] = you[i];
+      start += 1;
+    }
+    //[h, e, l, l, o, , w, o, r, l, d]
+  }
+};
