@@ -14,7 +14,6 @@ let concat_list list = join_str_list list ", "
 %token PLUSEQ MINUSEQ TIMESEQ DIVIDEQ /* + - * / += -= *= /= */
 %token AND OR NOT  /* && || ! */
 %token EQ NEQ LT LEQ GT GEQ /* == != < <= > >= */
-%token EMPTY
 %token VOID BOOL CHAR INT DOUBLE
 %token IF ELSE FOR WHILE
 %token RETURN BREAK
@@ -45,11 +44,10 @@ let concat_list list = join_str_list list ", "
 
 program:
     blocks EOF { Program(concat_stmts $1) }
-  | EOF { Program("{empty program}") }
 
 blocks:
     blocks block { $2::$1 }
-  | block { $1::[] }
+  | { [] }
 
 block:
   func { $1 }
@@ -64,8 +62,7 @@ stmts:
   | { [] }
 
 stmt:
-    EMPTY { "empty" }
-  | expr SEMI { $1 }
+    expr SEMI { $1 }
   | return_stmt SEMI { $1 }
   | break_stmt SEMI { $1 }
   | if_stmt { $1 }

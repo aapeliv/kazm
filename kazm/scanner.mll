@@ -31,7 +31,6 @@ rule tokenize = parse
 | "<=" { LEQ }
 | '>' { GT }
 | ">=" { GEQ }
-| "empty" { EMPTY }
 | "void" { VOID }
 | "bool" { BOOL }
 | "char" { CHAR }
