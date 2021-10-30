@@ -117,7 +117,6 @@ class String {
 
     int start = me.str.len;
     for (int i = 0; i< you.str.len; i+=1){
-      // TODO: array access doesn't work!
       str[start] = you[i];
       start += 1;
     }
