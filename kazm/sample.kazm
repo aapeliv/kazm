@@ -45,6 +45,7 @@ void w2() {
 
 class MyClass {
   int i;
+  int[] js;
 
   void print_i() {
     println(me.i);
@@ -73,4 +74,27 @@ double main(int arg, double[] doubles) {
   } else if (1 > 3) {
     return test(one, two);
   }
+}
+
+class Book {
+  int isbn;
+  String title;
+  String author;
+
+  void Book(int isbn, String title, String author) {
+    me.isbn = isbn;
+    me.title = title;
+    me.author = author;
+  }
+
+  String as_text() {
+    String with_by = me.title.concat(" by ");
+    return with_by.concat(me.author);
+  }
+};
+
+void book_stuff() {
+  Book my_book = Book(1234, "The Kazm LRM", "The Kazm team");
+  println("ISBN: ", my_book.isbn);
+  println(my_book.as_text());
 }
