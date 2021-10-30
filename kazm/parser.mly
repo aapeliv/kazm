@@ -31,7 +31,7 @@ let concat_list list = join_str_list list ", "
 %nonassoc ELSE
 %left SEMICO
 %left IF
-%right ASSIGN
+%right ASSIGN PLUSEQ MINUSEQ TIMESEQ DIVIDEQ
 %left OR
 %left AND
 %left EQ NEQ
@@ -68,8 +68,6 @@ stmt:
     EMPTY { "empty" }
   | expr SEMI { $1 }
   | return_stmt SEMI { $1 }
-  | assign_stmt SEMI { $1 }
-  | decl_var_stmt SEMI { $1 }
   | if_stmt { $1 }
   | while_stmt { $1 }
   | for_stmt { $1 }
@@ -111,10 +109,19 @@ expr:
   | expr OR expr       { $1 ^ " || " ^ $3 }
   | NOT expr           { " ! " ^ $2 }
   | PAREN_L expr PAREN_R { "(" ^ $2 ^ ")" }
-  // refer to a name
-  | name               { $1 }
+  | decl_var_expr      { $1 }
+  | assign_expr        { $1 }
   // call a function
   | call_expr          { $1 }
+  // refer to a name
+  | name               { $1 }
+
+assign_expr:
+    name ASSIGN expr   { $1 ^ " = " ^ $3 }
+  | name PLUSEQ expr   { $1 ^ " += " ^ $3 }
+  | name MINUSEQ expr  { $1 ^ " -= " ^ $3 }
+  | name TIMESEQ expr  { $1 ^ " *= " ^ $3 }
+  | name DIVIDEQ expr  { $1 ^ " /= " ^ $3 }
 
 expr_list:
     { [] }
@@ -124,14 +131,7 @@ expr_list:
 call_expr:
     name PAREN_L expr_list PAREN_R { "calling " ^ $1 ^ " with expr_list " ^ (concat_list $3) }
 
-assign_stmt:
-    name ASSIGN expr   { $1 ^ " = " ^ $3 }
-  | name PLUSEQ expr   { $1 ^ " += " ^ $3 }
-  | name MINUSEQ expr  { $1 ^ " -= " ^ $3 }
-  | name TIMESEQ expr  { $1 ^ " *= " ^ $3 }
-  | name DIVIDEQ expr  { $1 ^ " /= " ^ $3 }
-
-decl_var_stmt:
+decl_var_expr:
     dtype_with_name ASSIGN expr { "assigning new var " ^ $3 ^ " to " ^ $1 }
 
 dtype_with_name:
