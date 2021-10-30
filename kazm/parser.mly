@@ -1,6 +1,10 @@
 /* Ocamlyacc parser for Kazm */
 
-%{ open Ast %}
+%{
+open Ast
+
+
+%}
 
 %token FROM IMPORT
 
@@ -70,10 +74,12 @@ stmts:
 
 stmt:
     EMPTY { "empty" }
+  | expr { $1 }
   | return_stmt { $1 }
   | if_stmt { $1 }
+  | while_stmt { $1 }
   | assign_stmt { $1 }
-  | expr { $1 }
+  | decl_var_stmt { $1 }
 
 return_stmt:
     RETURN stmt { "Return: " ^ $2 }
@@ -82,6 +88,9 @@ if_stmt:
     IF PAREN_L expr PAREN_R BRACE_L stmts BRACE_R ELSE BRACE_L stmts BRACE_R { "if with catch-all else" }
   | IF PAREN_L expr PAREN_R BRACE_L stmts BRACE_R ELSE if_stmt { "continuation if" }
   | IF PAREN_L expr PAREN_R BRACE_L stmts BRACE_R { "start of if" }
+
+while_stmt:
+    WHILE PAREN_L expr PAREN_R BRACE_L stmts BRACE_R { "while (" ^ $3 ^ ") {\n" ^ (List.fold_left (fun a b -> a ^ ", " ^ b) "" (List.rev $6)) ^ "\n}" }
 
 arg_list:
     arg_list COMMA dtype_with_name { $3::$1 }
@@ -104,6 +113,7 @@ expr:
   | expr AND expr      { $1 ^ " && " ^ $3 }
   | expr OR expr       { $1 ^ " || " ^ $3 }
   | NOT expr           { " ! " ^ $2 }
+  | PAREN_L expr PAREN_R { "(" ^ $2 ^ ")" }
   // refer to a name
   | name               { $1 }
   // call a function

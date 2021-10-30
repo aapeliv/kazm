@@ -2,6 +2,7 @@ from parent.module import name
 
 double main(int arg, double[] doubles) {
   var = 5 * 7/3;
+  int number = (5*3) / 28;
   if (5 == func(5, 1)) {
     return test(one, two);
   } else if (1 > 3) {
