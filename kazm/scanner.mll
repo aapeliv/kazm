@@ -1,9 +1,16 @@
 { open Parser }
 
+
+let digit = ['0'-'9']
+let exp = 'e'['-''+']?['0'-'9']+
+let double = (
+    ((digit)+'.'(digit)* (exp)?) |
+    ((digit)* '.'(digit)+(exp)?) |
+    ((digit)+exp)
+)
+
 rule tokenize = parse
   [' ' '\t' '\r' '\n'] { tokenize lexbuf }
-| "from" { FROM }
-| "import" { IMPORT }
 | '(' { PAREN_L }
 | ')' { PAREN_R }
 | '{' { BRACE_L }
@@ -22,7 +29,7 @@ rule tokenize = parse
 | "+=" { PLUSEQ }
 | "-=" { MINUSEQ }
 | "*+" { TIMESEQ }
-| "/=" { DIVIDEEQ }
+| "/=" { DIVIDEQ }
 | "&&" { AND }
 | "||" { OR }
 | '!' { NOT } (* "!" in C-Net *)
@@ -48,6 +55,24 @@ rule tokenize = parse
 | "return" { RETURN }
 | "break" { BREAK }
 | "continue" { CONTINUE }
+| "true" {TRUE}
+| "false" {FALSE}
 | ['0'-'9']+ as intlit { INT_LITERAL(int_of_string intlit) }
-| ['a'-'z''_']+ as strlit { STRING_LITERAL(strlit) }
+| ['a'-'z''_']+ as strlit { ID(strlit) }
+| double as doublelit {DOUBLE_LITERAL(doublelit)}
+| '''     { STRING_LITERAL (parsestringSQ (Buffer.create 100) lexbuf) }
+| '"'     { STRING_LITERAL (parsestringDQ (Buffer.create 100) lexbuf) }
 | eof { EOF }
+| _ as character     { raise (Failure("Undefined character: " ^ Char.escaped character)) }
+
+and parsestringSQ buffer = parse
+    '''                 { Buffer.contents buffer }
+  | newline             { Buffer.add_string buffer (Lexing.lexeme lexbuf); parsestringSQ buffer lexbuf }
+  | [^ '''  '\n' '\r']+ { Buffer.add_string buffer (Lexing.lexeme lexbuf); parsestringSQ buffer lexbuf }
+  | eof                 { raise (Failure("Non-terminated single quotes")) }
+
+and parsestringDQ buffer = parse
+    '"'                 { Buffer.contents buffer }
+  | newline             { Buffer.add_string buffer (Lexing.lexeme lexbuf); parsestringDQ buffer lexbuf }
+  | [^ '"'  '\n' '\r']+ { Buffer.add_string buffer (Lexing.lexeme lexbuf); parsestringDQ buffer lexbuf }
+  | eof                 { raise (Failure("Non-terminated double quotes")) }
