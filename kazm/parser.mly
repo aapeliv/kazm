@@ -8,8 +8,6 @@ let concat_stmts stmts = join_str_list stmts "\n"
 let concat_list list = join_str_list list ", "
 %}
 
-%token IMPORT
-
 %token PAREN_L PAREN_R BRACE_L BRACE_R SQB_L SQB_R /* ( ) { } [ ] */
 %token DOT SEMI COMMA MOD ASSIGN  /* . ; , * % = */
 %token PLUS MINUS TIMES DIVIDE  /* + - * / */
@@ -56,10 +54,6 @@ blocks:
 
 block:
   func { $1 }
-  | import_stmt { $1 }
-
-import_stmt:
-    IMPORT name { "Importing " ^ $2 }
 
 func:
     dtype_with_name PAREN_L arg_list PAREN_R BRACE_L stmts BRACE_R {
