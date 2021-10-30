@@ -8,7 +8,7 @@ let concat_stmts stmts = join_str_list stmts "\n"
 let concat_list list = join_str_list list ", "
 %}
 
-%token PAREN_L PAREN_R BRACE_L BRACE_R SQB_L SQB_R /* ( ) { } [ ] */
+%token PAREN_L PAREN_R BRACE_L BRACE_R SQB_L SQB_R SQB_PAIR /* ( ) { } [ ] */
 %token DOT SEMI COMMA MOD ASSIGN  /* . ; , * % = */
 %token PLUS MINUS TIMES DIVIDE  /* + - * / */
 %token PLUSEQ MINUSEQ TIMESEQ DIVIDEQ /* + - * / += -= *= /= */
@@ -27,6 +27,7 @@ let concat_list list = join_str_list list ", "
 
 %nonassoc NOELSE
 %nonassoc ELSE
+%nonassoc PAREN_L PAREN_R BRACE_L BRACE_R SQB_L SQB_R
 %left SEMICO
 %left IF
 %right ASSIGN PLUSEQ MINUSEQ TIMESEQ DIVIDEQ
@@ -113,8 +114,6 @@ arg_list:
 expr:
     INT_LITERAL        { string_of_int $1 }
   | STRING_LITERAL     { "string_literal: " ^ $1 }
-  // | expr SQB_L expr SQB_R { "array access at pos " ^ $3 ^ " of " ^ $1 }
-  // | expr DOT expr { "(" ^ $1 ^ "." ^ $3 ^ ")" }
   | expr PLUS expr     { "(" ^ $1 ^ " + " ^ $3 ^ ")" }
   | expr MINUS expr    { "(" ^ $1 ^ " - " ^ $3 ^ ")" }
   | expr TIMES expr    { "(" ^ $1 ^ " * " ^ $3 ^ ")" }
@@ -134,17 +133,26 @@ expr:
   | assign_expr        { "(" ^ $1 ^ ")" }
   // call a function
   | full_name PAREN_L expr_list PAREN_R { "(calling " ^ $1 ^ " with expr_list " ^ (concat_list $3) ^ ")" }
+  | array_element { $1 }
   // refer to a name
   | full_name          { "(" ^ $1 ^ ")" }
   | TRUE               { "true" }
   | FALSE              { "false" }
 
+array_element:
+  // array access
+  | expr SQB_L expr SQB_R { "array access at pos " ^ $3 ^ " of " ^ $1 }
+
 assign_expr:
-    full_name ASSIGN expr   { $1 ^ " = " ^ $3 }
-  | full_name PLUSEQ expr   { $1 ^ " += " ^ $3 }
-  | full_name MINUSEQ expr  { $1 ^ " -= " ^ $3 }
-  | full_name TIMESEQ expr  { $1 ^ " *= " ^ $3 }
-  | full_name DIVIDEQ expr  { $1 ^ " /= " ^ $3 }
+    full_name_or_array_element ASSIGN expr   { $1 ^ " = " ^ $3 }
+  | full_name_or_array_element PLUSEQ expr   { $1 ^ " += " ^ $3 }
+  | full_name_or_array_element MINUSEQ expr  { $1 ^ " -= " ^ $3 }
+  | full_name_or_array_element TIMESEQ expr  { $1 ^ " *= " ^ $3 }
+  | full_name_or_array_element DIVIDEQ expr  { $1 ^ " /= " ^ $3 }
+
+full_name_or_array_element:
+    full_name { $1 }
+  | array_element { $1 }
 
 expr_list:
     { [] }
@@ -171,7 +179,7 @@ dtype:
     VOID { "void" }
   | singular_type { $1 }
   // arrays
-  | singular_type SQB_L SQB_R { "array of " ^ $1 }
+  | singular_type SQB_PAIR { "array of " ^ $1 }
 
 singular_type:
   // primitives

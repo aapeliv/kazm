@@ -116,7 +116,7 @@ class String {
     int start = me.str.len;
     for (int i = 0; i< you.str.len; i+=1){
       // TODO: array access doesn't work!
-      //str2[start] = you[i];
+      str[start] = you[i];
       start += 1;
     }
     //[h, e, l, l, o, , w, o, r, l, d]

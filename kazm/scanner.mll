@@ -8,6 +8,7 @@ rule tokenize = parse
 | ')' { PAREN_R }
 | '{' { BRACE_L }
 | '}' { BRACE_R }
+| "[]" { SQB_PAIR }
 | '[' { SQB_L }
 | ']' { SQB_R }
 | '.' { DOT }
