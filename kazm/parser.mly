@@ -68,7 +68,7 @@ func:
 
 stmts:
     stmts stmt { $2::$1 }
-  | stmt { $1::[] }
+  | { [] }
 
 stmt:
     EMPTY { "empty" }
@@ -78,6 +78,7 @@ stmt:
   | decl_var_stmt SEMI { $1 }
   | if_stmt { $1 }
   | while_stmt { $1 }
+  | for_stmt { $1 }
 
 return_stmt:
     RETURN expr { "Return: " ^ $2 }
@@ -88,10 +89,14 @@ if_stmt:
   | IF PAREN_L expr PAREN_R BRACE_L stmts BRACE_R { "start of if" }
 
 while_stmt:
-    WHILE PAREN_L expr PAREN_R BRACE_L stmts BRACE_R { "while (" ^ $3 ^ ") {\n" ^ (concat_list $6) ^ "\n}" }
+    WHILE PAREN_L expr PAREN_R BRACE_L stmts BRACE_R { "while (" ^ $3 ^ ") {\n" ^ (concat_stmts $6) ^ "\n}" }
+
+for_stmt:
+    FOR PAREN_L expr SEMI expr SEMI expr PAREN_R BRACE_L stmts BRACE_R { "for (" ^ $3 ^"; " ^ $5 ^ "; " ^ $7 ^ ") {\n" ^ (concat_stmts $10) ^ "\n}" }
 
 arg_list:
-    arg_list COMMA dtype_with_name { $3::$1 }
+    { [] }
+  | arg_list COMMA dtype_with_name { $3::$1 }
   | dtype_with_name { $1::[] }
 
 expr:
@@ -118,7 +123,8 @@ expr:
   | call_expr          { $1 }
 
 expr_list:
-    expr_list COMMA expr { $3::$1 }
+    { [] }
+  | expr_list COMMA expr { $3::$1 }
   | expr { $1::[] }
 
 call_expr:
