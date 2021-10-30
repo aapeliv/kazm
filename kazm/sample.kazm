@@ -20,6 +20,27 @@ int[] func2() {
   }
 }
 
+char[] w(int id) {
+  // if statements
+  if (id == 1) {
+    return "id is 1";
+  } else if (id == 2) {
+    return "id is 2";
+  } else {
+    return "unknown id";
+  }
+}
+
+void w2() {
+  int i = 0;
+  while (1) {
+    if (i % 200 > 100) {
+      break;
+    }
+    i += 1;
+  }
+}
+
 double main(int arg, double[] doubles) {
   test("testing", two);
   var = 5 * 7/3;

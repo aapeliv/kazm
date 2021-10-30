@@ -20,7 +20,6 @@ let concat_list list = join_str_list list ", "
 %token RETURN BREAK
 %token CLASS ME
 %token TRUE FALSE
-%token CONTINUE
 
 %token<string> NAME
 %token<string> STRING_LITERAL
@@ -68,12 +67,16 @@ stmt:
     EMPTY { "empty" }
   | expr SEMI { $1 }
   | return_stmt SEMI { $1 }
+  | break_stmt SEMI { $1 }
   | if_stmt { $1 }
   | while_stmt { $1 }
   | for_stmt { $1 }
 
 return_stmt:
     RETURN expr { "Return: " ^ $2 }
+
+break_stmt:
+    BREAK { "Break." }
 
 if_stmt:
     IF PAREN_L expr PAREN_R BRACE_L stmts BRACE_R ELSE BRACE_L stmts BRACE_R { "if with catch-all else" }
