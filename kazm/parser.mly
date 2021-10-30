@@ -126,6 +126,8 @@ expr:
   | call_expr          { $1 }
   // refer to a name
   | full_name          { $1 }
+  | TRUE               { "true" }
+  | FALSE              { "false" }
 
 assign_expr:
     full_name ASSIGN expr   { $1 ^ " = " ^ $3 }

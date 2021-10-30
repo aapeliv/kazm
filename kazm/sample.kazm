@@ -34,7 +34,7 @@ char[] w(int id) {
 void w2() {
   int i = 0;
   // while loops with breaks
-  while (1) {
+  while (true) {
     if (i % 200 > 100) {
       break;
     }

@@ -44,6 +44,8 @@ rule tokenize = parse
 | "while" { WHILE }
 | "return" { RETURN }
 | "break" { BREAK }
+| "true" { TRUE }
+| "false" { FALSE }
 | "\"" ([^'\"']+ as str) "\"" { STRING_LITERAL(str) }
 | ['0'-'9']+ as int { INT_LITERAL(int_of_string int) }
 | ['A'-'Z''a'-'z''_''0'-'9']+ as str { IDENTIFIER(str) }
