@@ -1,7 +1,7 @@
 open Ast
 
 let check_call call =
-  let Call(name, arg) = call in
+  let Call(name, _) = call in
     if String.equal name "println" then () else raise (Failure ("Unknown function " ^ name))
 
 let check_func func =
@@ -10,4 +10,6 @@ let check_func func =
 
 let check prog =
   (* Since the syntax is so simple, just check the called function is valid *)
-  let PFuncs(funcs) = prog in List.map check_func funcs
+  let PFuncs(funcs) = prog in
+    List.map check_func funcs;
+    if List.exists (function Func(name, _) -> (String.equal name "main")) funcs then () else raise (Failure ("Missing main"))
