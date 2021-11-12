@@ -1,10 +1,8 @@
-(* External function name, string input and junk *)
-type a_call = Call of string * string * string
+(* External function name, string input *)
+type a_call = Call of string * string
 
-(* Name, list of calls and junk *)
-type a_func = Func of string * a_call list * string
+(* Name, list of calls *)
+type a_func = Func of string * a_call list
 
-(* Functions and junk *)
-type program = PPair of a_func list * string
-
-type lit = Discard_input of string
+(* Functions *)
+type program = PFuncs of a_func list
