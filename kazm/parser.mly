@@ -48,16 +48,11 @@ let concat_list list = join_str_list list ", "
 %%
 
 program:
-    blocks EOF { $1 }
-
-blocks:
-    blocks func { let PFuncs(funcs) = $1 in PFuncs($2::funcs) }
+    program func { let PFuncs(funcs) = $1 in PFuncs($2::funcs) }
   | { PFuncs([]) }
 
 func:
-    dtype_with_simple_name PAREN_L PAREN_R BRACE_L stmts BRACE_R {
-      Func($1, $5)
-    }
+    dtype_with_simple_name PAREN_L PAREN_R BRACE_L stmts BRACE_R { Func($1, $5) }
 
 stmts:
     stmts stmt { $2::$1 }
