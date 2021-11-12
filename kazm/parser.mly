@@ -48,28 +48,31 @@ let concat_list list = join_str_list list ", "
 %%
 
 program:
-    blocks EOF { Program(concat_stmts $1) }
+    blocks EOF { $1 }
 
 blocks:
-    blocks block { $2::$1 }
-  | { [] }
+    blocks block {
+      let PPair(funcs1, junk1) = $1 in
+        let PPair(funcs2, junk2) = $2 in
+          PPair(funcs1 @ funcs2, junk1 ^ junk2) }
+  | { PPair([], "") }
 
 block:
-    func { $1 }
-  | class_ { $1 }
+    func { PPair([$1], "") }
+  | class_ { PPair([], $1) }
 
 class_:
     CLASS simple_name BRACE_L class_body BRACE_R SEMI { "decl'd class " ^ $2 ^ "\n body:\n" ^ concat_stmts $4 }
 
 class_body:
-    class_body func { $2::$1 }
+    class_body func { $1 }
   | class_body func_ctr { $2::$1 }
   | class_body decl_var_expr SEMI { $2::$1 }
   | { [] }
 
 func:
     dtype_with_simple_name PAREN_L arg_list PAREN_R BRACE_L stmts BRACE_R {
-      "function " ^ $1 ^ " with arg list " ^ (concat_list $3) ^ " and body: " ^ concat_stmts $6
+      Func($1 ^ concat_list $3, [], concat_stmts $6)
     }
 
 // constructor
