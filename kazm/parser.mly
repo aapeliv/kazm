@@ -48,36 +48,11 @@ let concat_list list = join_str_list list ", "
 %%
 
 program:
-    blocks EOF { Program(concat_stmts $1) }
-
-blocks:
-    blocks block { $2::$1 }
-  | { [] }
-
-block:
-    func { $1 }
-  | class_ { $1 }
-
-class_:
-    CLASS simple_name BRACE_L class_body BRACE_R SEMI { "decl'd class " ^ $2 ^ "\n body:\n" ^ concat_stmts $4 }
-
-class_body:
-    class_body func { $2::$1 }
-  | class_body func_ctr { $2::$1 }
-  | class_body decl_var_expr SEMI { $2::$1 }
-  | { [] }
+    program func { let PFuncs(funcs) = $1 in PFuncs($2::funcs) }
+  | { PFuncs([]) }
 
 func:
-    dtype_with_simple_name PAREN_L arg_list PAREN_R BRACE_L stmts BRACE_R {
-      "function " ^ $1 ^ " with arg list " ^ (concat_list $3) ^ " and body: " ^ concat_stmts $6
-    }
-
-// constructor
-func_ctr:
-    simple_name PAREN_L arg_list PAREN_R BRACE_L stmts BRACE_R {
-      "constructor function " ^ $1 ^ " with arg list " ^ (concat_list $3) ^ " and body: " ^ concat_stmts $6
-    }
-
+    dtype_with_simple_name PAREN_L PAREN_R BRACE_L stmts BRACE_R { Func($1, $5) }
 
 stmts:
     stmts stmt { $2::$1 }
@@ -85,111 +60,15 @@ stmts:
 
 stmt:
     expr SEMI { $1 }
-  | return_stmt SEMI { $1 }
-  | break_stmt SEMI { $1 }
-  | if_stmt { $1 }
-  | while_stmt { $1 }
-  | for_stmt { $1 }
-
-return_stmt:
-    RETURN expr { "Return: " ^ $2 }
-
-break_stmt:
-    BREAK { "Break." }
-
-if_stmt:
-    IF PAREN_L expr PAREN_R BRACE_L stmts BRACE_R ELSE BRACE_L stmts BRACE_R { "if with catch-all else" }
-  | IF PAREN_L expr PAREN_R BRACE_L stmts BRACE_R ELSE if_stmt { "continuation if" }
-  | IF PAREN_L expr PAREN_R BRACE_L stmts BRACE_R { "start of if" }
-
-while_stmt:
-    WHILE PAREN_L expr PAREN_R BRACE_L stmts BRACE_R { "while (" ^ $3 ^ ") {\n" ^ (concat_stmts $6) ^ "\n}" }
-
-for_stmt:
-    FOR PAREN_L expr SEMI expr SEMI expr PAREN_R BRACE_L stmts BRACE_R { "for (" ^ $3 ^"; " ^ $5 ^ "; " ^ $7 ^ ") {\n" ^ (concat_stmts $10) ^ "\n}" }
-
-arg_list:
-    { [] }
-  | arg_list COMMA dtype_with_simple_name { $3::$1 }
-  | dtype_with_simple_name { $1::[] }
 
 expr:
-    INT_LITERAL        { string_of_int $1 }
-  | STRING_LITERAL     { "string_literal: " ^ $1 }
-  | DOUBLE_LITERAL     { "double_literal: " ^ (string_of_float $1)}
-  | CHAR_LITERAL       { "char_literal: " ^ Char.escaped $1}
-  | expr PLUS expr     { "(" ^ $1 ^ " + " ^ $3 ^ ")" }
-  | expr MINUS expr    { "(" ^ $1 ^ " - " ^ $3 ^ ")" }
-  | expr TIMES expr    { "(" ^ $1 ^ " * " ^ $3 ^ ")" }
-  | expr DIVIDE expr   { "(" ^ $1 ^ " / " ^ $3 ^ ")" }
-  | expr MOD expr      { "(" ^ $1 ^ " % " ^ $3 ^ ")" }
-  | expr EQ expr       { "(" ^ $1 ^ " == " ^ $3 ^ ")" }
-  | expr NEQ expr      { "(" ^ $1 ^ " != " ^ $3 ^ ")" }
-  | expr LT expr       { "(" ^ $1 ^ " < " ^ $3 ^ ")" }
-  | expr LEQ expr      { "(" ^ $1 ^ " <= " ^ $3 ^ ")" }
-  | expr GT expr       { "(" ^ $1 ^ " > " ^ $3 ^ ")" }
-  | expr GEQ expr      { "(" ^ $1 ^ " >= " ^ $3 ^ ")" }
-  | expr AND expr      { "(" ^ $1 ^ " && " ^ $3 ^ ")" }
-  | expr OR expr       { "(" ^ $1 ^ " || " ^ $3 ^ ")" }
-  | NOT expr           { "(! " ^ $2 ^ ")" }
-  | PAREN_L expr PAREN_R { "(" ^ $2 ^ ")" }
-  | assign_new_var_expr { "(" ^ $1 ^ ")" }
-  | assign_expr        { "(" ^ $1 ^ ")" }
-  // call a function
-  | full_name PAREN_L expr_list PAREN_R { "(calling " ^ $1 ^ " with expr_list " ^ (concat_list $3) ^ ")" }
-  | array_element { $1 }
-  // refer to a name
-  | full_name          { "(" ^ $1 ^ ")" }
-  | TRUE               { "true" }
-  | FALSE              { "false" }
-
-array_element:
-  // array access
-  | expr SQB_L expr SQB_R { "array access at pos " ^ $3 ^ " of " ^ $1 }
-
-assign_expr:
-    full_name_or_array_element ASSIGN expr   { $1 ^ " = " ^ $3 }
-  | full_name_or_array_element PLUSEQ expr   { $1 ^ " += " ^ $3 }
-  | full_name_or_array_element MINUSEQ expr  { $1 ^ " -= " ^ $3 }
-  | full_name_or_array_element TIMESEQ expr  { $1 ^ " *= " ^ $3 }
-  | full_name_or_array_element DIVIDEQ expr  { $1 ^ " /= " ^ $3 }
-
-full_name_or_array_element:
-    full_name { $1 }
-  | array_element { $1 }
-
-expr_list:
-    { [] }
-  | expr_list COMMA expr { $3::$1 }
-  | expr { $1::[] }
-
-decl_var_expr:
-    dtype_with_simple_name { "declaring new var " ^ $1 }
-
-assign_new_var_expr:
-    dtype_with_simple_name ASSIGN expr { "assigning new var " ^ $3 ^ " to " ^ $1 }
-
-dtype_with_simple_name:
-    dtype simple_name { $2 ^ " (t: " ^ $1 ^ ")" }
-
-full_name:
-    expr DOT IDENTIFIER { $1 ^ "." ^ $3 }
-  | IDENTIFIER { $1 }
+    simple_name PAREN_L STRING_LITERAL PAREN_R { Call($1, $3) }
 
 simple_name:
     IDENTIFIER { $1 }
 
+dtype_with_simple_name:
+    dtype simple_name { $2 }
+
 dtype:
     VOID { "void" }
-  | singular_type { $1 }
-  // arrays
-  | singular_type SQB_PAIR { "array of " ^ $1 }
-
-singular_type:
-  // primitives
-    BOOL { "bool" }
-  | CHAR { "char" }
-  | INT { "int" }
-  | DOUBLE { "double" }
-  // user-defined
-  | IDENTIFIER { "custom dtype:" ^ $1 }
