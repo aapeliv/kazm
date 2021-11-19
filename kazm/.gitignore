@@ -4,3 +4,7 @@ parser.output
 
 parser.ml
 parser.mli
+hello_world.ll
+hello_world.s
+builtins.o
+hello_world

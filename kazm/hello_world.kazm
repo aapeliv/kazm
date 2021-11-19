@@ -1,3 +1,6 @@
 void main() {
+  print("without newline: ");
   println("hello world");
+  true;
+  false;
 }

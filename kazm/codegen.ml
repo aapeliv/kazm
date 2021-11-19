@@ -7,6 +7,7 @@ let gen prog =
   let m = L.create_module context "kazm" in
 
   (* Set up types in the context *)
+  let i1_t = L.i1_type context in
   let i8_t = L.i8_type context in
   let char_t = i8_t in
   let void_t = L.void_type context in
@@ -26,21 +27,23 @@ let gen prog =
     (* TODO: make everything not void, TODO: allow arguments *)
     let lfunc = L.define_function name (L.function_type void_t [| |]) m in
     let builder = L.builder_at_end context (L.entry_block lfunc) in
-    let construct_func = function
-      A.Call(cname, carg) ->
-        let arg_str = L.build_global_stringptr (carg ^ "\n") "arg" builder in
-        if
-          String.equal cname "println"
-        then
-          L.build_call println_func [| arg_str |] "" builder
-        else
-          raise (Failure ("Calling unkonwn function " ^ cname ^ ". Can only call println..."))
+    let codegen_expr = function
+        A.Call(cname, carg) ->
+          let arg_str = L.build_global_stringptr carg "arg" builder in
+          (match cname with
+            "println" -> L.build_call println_func [| arg_str |] "" builder
+          | "print" -> L.build_call print_func [| arg_str |] "" builder
+          | _ -> raise (Failure ("Calling unkonwn function " ^ cname ^ ". Can only call println...")))
+      | A.BoolLit(truthy) -> L.const_int i1_t (if truthy then 1 else 0)
+    in
+    let codegen_stmt = function
+        A.Expr(e) -> codegen_expr e
     in
     (* Create all the calls *)
-    List.map construct_func calls;
+    ignore (List.map codegen_stmt calls);
     L.build_ret_void builder
   in
 
   let A.PFuncs(funcs) = prog in
-    List.map gen_func funcs;
+    ignore (List.map gen_func funcs);
   m

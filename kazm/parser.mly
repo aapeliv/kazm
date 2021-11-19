@@ -3,9 +3,9 @@
 %{
 open Ast
 
-let join_str_list str_list delimiter = List.fold_left (fun a b -> a ^ delimiter ^ b) "" (List.rev str_list)
+(* let join_str_list str_list delimiter = List.fold_left (fun a b -> a ^ delimiter ^ b) "" (List.rev str_list)
 let concat_stmts stmts = join_str_list stmts "\n"
-let concat_list list = join_str_list list ", "
+let concat_list list = join_str_list list ", " *)
 %}
 
 %token PAREN_L PAREN_R BRACE_L BRACE_R SQB_L SQB_R SQB_PAIR /* ( ) { } [ ] */
@@ -48,21 +48,26 @@ let concat_list list = join_str_list list ", "
 %%
 
 program:
-    program func { let PFuncs(funcs) = $1 in PFuncs($2::funcs) }
-  | { PFuncs([]) }
+    funcs { PFuncs(List.rev $1) }
+
+funcs:
+    funcs func { $2::$1 }
+  | { [] }
 
 func:
-    dtype_with_simple_name PAREN_L PAREN_R BRACE_L stmts BRACE_R { Func($1, $5) }
+    dtype_with_simple_name PAREN_L PAREN_R BRACE_L stmts BRACE_R { Func($1, List.rev $5) }
 
 stmts:
     stmts stmt { $2::$1 }
   | { [] }
 
 stmt:
-    expr SEMI { $1 }
+    expr SEMI { Expr($1) }
 
 expr:
     simple_name PAREN_L STRING_LITERAL PAREN_R { Call($1, $3) }
+  | TRUE { BoolLit(true) }
+  | FALSE { BoolLit(false) }
 
 simple_name:
     IDENTIFIER { $1 }
