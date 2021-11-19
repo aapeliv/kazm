@@ -10,7 +10,7 @@ let gen prog =
   let i8_t = L.i8_type context in
   let char_t = i8_t in
   let void_t = L.void_type context in
-  let char_ptr_t   = L.pointer_type char_t in
+  let char_ptr_t = L.pointer_type char_t in
 
   (* Types and decls of builtins, currently print and println *)
   let print_t : L.lltype =
