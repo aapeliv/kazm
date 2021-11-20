@@ -1,0 +1,11 @@
+/* Tests whether Kazm can handle single line comments */ 
+
+int main() {
+
+    //int a = 3;
+
+    int a = 4; //a = 5;
+    
+    println(a);
+}
+

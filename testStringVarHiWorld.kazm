@@ -1,0 +1,5 @@
+/* Tests whether kazm support printing of string var */ 
+int main() {
+    string a = "Hello, World!";
+    println(a);
+}

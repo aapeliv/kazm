@@ -1,0 +1,8 @@
+/* Test whether Kazm can handle comments within comments without getting confused */ 
+int main() {
+    // Single comment /* */ 
+
+    /* // // // //*    still comment // */ 
+
+    println("Testing nested comments");
+}

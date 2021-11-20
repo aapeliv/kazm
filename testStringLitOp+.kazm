@@ -1,0 +1,8 @@
+// Tests whether Kazm can support string var concatenation 
+
+int main() {
+    string a = "Hello, ";
+    string b = "World!";
+
+    println(a+b);
+}

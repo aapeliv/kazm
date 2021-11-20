@@ -1,0 +1,6 @@
+// Tests whether Kazm can support string var and literal concatenation (string var on left)
+
+int main() {
+    string a = "Hello, ";
+    println(a + "World!");
+}

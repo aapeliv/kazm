@@ -1,0 +1,9 @@
+/* Tests whether Kazm can handle assignment after declaration */ 
+
+int main() {
+    int x;
+    x = 10;
+    println(x);
+}
+
+

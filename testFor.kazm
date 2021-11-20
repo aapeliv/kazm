@@ -1,0 +1,8 @@
+/* Tests whether Kazm can do a 'for' loop */ 
+
+int main() {
+    for (int i = 0; i<10; i +=1){
+        println(i);
+    }
+
+}

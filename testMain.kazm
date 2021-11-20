@@ -1,0 +1,5 @@
+/* Tests whether Kazm can declare main as 'int' */ 
+
+int main() {
+    return 0;
+}
