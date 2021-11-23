@@ -1,0 +1,7 @@
+/* Test *= in Kazm */ 
+
+int main(){
+    int x = 10;
+    x *= 10;
+    println("x == " + x);
+}

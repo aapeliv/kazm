@@ -1,0 +1,13 @@
+/* Test '-' in kazm */ 
+
+int main() {
+    
+    double y = 5.0;
+
+    y = y - 1;
+
+
+    println("y == " + y); // want 4.0 
+
+    return 0;
+}

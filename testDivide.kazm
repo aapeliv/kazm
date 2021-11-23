@@ -1,0 +1,13 @@
+/* Test '/' in Kazm */ 
+
+int main(){
+    int x = 10;
+
+    int y = 3;
+
+    int z = x/y;
+    
+    println("z == " + z); // want 3
+
+    return 0;
+}

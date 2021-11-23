@@ -1,0 +1,11 @@
+/* Test '*' in Kazm */ 
+
+int main() {
+    double x = 3.2;
+
+    x *= 2;
+
+    println("x == " + x); //6.4
+
+    return 0;
+}

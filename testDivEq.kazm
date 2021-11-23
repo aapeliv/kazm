@@ -1,0 +1,9 @@
+/* Test /= in kazm */ 
+
+int main() {
+    int x = 100;
+
+    x /= 10;
+
+    println("x == " + x);
+}

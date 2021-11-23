@@ -1,0 +1,15 @@
+/* test break in kazm */ 
+
+int main() {
+    int x = 10;
+
+    while ( x < 20){
+
+        if (x == 16){
+            break;
+        }
+        x = x + 1;
+
+    }
+    println("x == " + )
+}
