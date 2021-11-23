@@ -1,0 +1,13 @@
+/* Test whitespace in kazm */ 
+
+int main() {
+
+
+    int x =           15;
+
+    String a = "my string is this long      : )";
+    println(x);
+
+    println(a);
+    return 0;
+}

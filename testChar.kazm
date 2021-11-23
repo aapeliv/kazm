@@ -1,0 +1,8 @@
+/* Test char */ 
+
+int main() {
+    char a = 'a';
+    println("a == " + a);
+
+    return 0;
+}

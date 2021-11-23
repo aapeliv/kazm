@@ -9,7 +9,7 @@ int main(){
     } else if (!x && !y){
         println("both false");
     }
-    else if ( (!x && 7) || (x && !y) ){
+    else if ( (!x && 7) || (x && !y) ){ // should get caught here --> check && and || 
         println("mixed");
     }
     return 0;

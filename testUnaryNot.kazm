@@ -1,0 +1,12 @@
+/* Test Unary not */ 
+
+int main() {
+    bool a = true;
+    bool b = !a;
+
+    println(b);
+
+    b = !b;
+
+    println(b);
+}
