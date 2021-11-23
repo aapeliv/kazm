@@ -1,0 +1,7 @@
+/* Test type checking */ 
+
+int main() {
+    int x = 3.14; //should be error 
+
+    return 0;
+}
