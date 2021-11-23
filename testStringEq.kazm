@@ -1,0 +1,10 @@
+/* Test == in Kazm on Strings */ 
+
+int main(){
+    String a = "Kazm";
+    String b = "Kazm";
+    if (a == b){
+        println("yay");
+    }
+    return 0;
+}

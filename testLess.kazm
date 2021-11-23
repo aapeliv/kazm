@@ -1,0 +1,14 @@
+/* Test < on char in kazm */ 
+
+int main() {
+    char a = 'a';
+    char b = 'b';
+
+    if ( b < a){
+        println("sad");
+    }
+    else if (a < b){
+        println("yay");
+    }
+    return 0;
+}

@@ -1,0 +1,11 @@
+/* Test >= on ints in Kazm */ 
+
+int main() {
+    int x = 5;
+    int y = 4;
+
+    if ( x >= y && x > y){
+        println("yay");
+    }
+    return 0;
+}
