@@ -1,0 +1,7 @@
+/* Test bool in kazm */ 
+
+int main(){
+    bool a = true;
+    bool b = false;
+    return 0;
+}

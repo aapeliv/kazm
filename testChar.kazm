@@ -1,4 +1,4 @@
-/* Test char */ 
+/* Test char */
 
 int main() {
     char a = 'a';

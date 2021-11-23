@@ -1,0 +1,6 @@
+/* Test String in kazm */ 
+
+int main() {
+    String a = "a";
+    return 0;
+}

@@ -1,0 +1,7 @@
+/* Test bad bool */ 
+
+int main(){
+    bool a = True;
+
+    return 0;
+}

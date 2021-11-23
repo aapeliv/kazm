@@ -1,0 +1,6 @@
+/* Test Double */ 
+
+int main() {
+    double a = 3.14;
+    return 0;
+}

@@ -1,0 +1,7 @@
+/* Test STring with single quot init */ 
+
+int main() {
+    String a = 'a';
+
+    return 0;
+}
