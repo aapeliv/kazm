@@ -1,0 +1,10 @@
+/* Test single 'if/else' statements in kazm */ 
+int main() {
+    int x = 3;
+    if (x != 3){
+        println(x != 3);
+    } else {
+        print(x == 3);
+    }
+
+}

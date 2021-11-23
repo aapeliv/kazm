@@ -1,0 +1,20 @@
+/* tested nested if statements in kazm */ 
+
+int main() {
+    double y = 10.1;
+
+    if ( y < 50){
+        if ( y > 15){
+            println("y > 15");
+        } 
+        if ( y < 15){
+            println("y < 15);
+        }
+        if (y < 13){
+            println("y < 13");
+        }
+        else {
+            println("else");
+        }
+    }
+}

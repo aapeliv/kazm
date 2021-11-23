@@ -1,0 +1,5 @@
+/* Tests return value of main method */ 
+
+int main() {
+    return "xyz";
+}

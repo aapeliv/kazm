@@ -1,0 +1,14 @@
+/* Test 'else if' in kazm */ 
+
+int main() {
+    int x;
+    x = 10;
+    if (x < 10){
+        println("x < 10; x == " + x);
+    } else if (x > 10 ){
+        println("x > 10; x == " + x);
+    } else {
+        println("x == 10");
+    }
+    return 0;
+}

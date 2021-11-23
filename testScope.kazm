@@ -1,0 +1,15 @@
+/* Test scope within kazm program */ 
+
+int main() {
+
+    double a = 3.14;
+
+    {
+        double x = 6.28;
+
+        println("a == " + a);
+    }
+    println("a == " + a);
+    println("x == " + x); // should be error
+    return 0;
+}
