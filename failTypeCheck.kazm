@@ -1,0 +1,10 @@
+/* Test function return type checking */ 
+
+int add(int x, int y){
+    double a = 4.0;
+    return a;
+}
+
+int main() {
+    return add(5, 6);
+}

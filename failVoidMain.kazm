@@ -1,0 +1,5 @@
+/* Test void main */ 
+
+void main() {
+    return 0;
+}
