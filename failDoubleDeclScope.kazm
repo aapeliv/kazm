@@ -1,0 +1,12 @@
+/* Test double declaration + assignment * /
+
+
+int main () {
+
+    int x = 4;
+    double x = 3.14;
+
+    return 0;
+
+
+}

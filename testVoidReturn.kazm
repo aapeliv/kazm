@@ -1,0 +1,11 @@
+/* Test void return */ 
+
+void fxn() {
+    return;
+}
+
+int main() {
+    print("before");
+    fxn();
+    print("after");
+}

@@ -1,0 +1,14 @@
+/* Test bad conditional logic */ 
+
+
+int main() {
+
+    int x = 4;
+
+    if ( x == 4 && x = 4) { //x = 4 is not a boolean 
+        print("if statement");
+    }
+
+    return 0;
+
+}

@@ -1,0 +1,7 @@
+/* Illegal Reassignment */ 
+
+int main() {
+    String x = "Kazm'
+    int y = x;
+    return 0;
+}
