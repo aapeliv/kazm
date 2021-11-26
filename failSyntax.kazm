@@ -1,0 +1,6 @@
+/* Test bad Syntax */ 
+
+
+Int main() {
+    return 0;
+}
