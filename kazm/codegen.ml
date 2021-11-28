@@ -21,28 +21,30 @@ let gen prog =
   let println_func : L.llvalue =
     L.declare_function "println" print_t m in
 
+  let rec codegen_expr builder = function
+      A.Call(cname, carg) ->
+        let arg_str = L.build_global_stringptr carg "arg" builder in
+        (match cname with
+          "println" -> L.build_call println_func [| arg_str |] "" builder
+        | "print" -> L.build_call print_func [| arg_str |] "" builder
+        | _ -> raise (Failure ("Calling unkonwn function " ^ cname ^ ". Can only call println...")))
+    | A.BoolLit(truthy) -> L.const_int i1_t (if truthy then 1 else 0)
+  in
+
+  let rec codegen_stmt builder = function
+      A.Expr(e) -> ignore (codegen_expr builder e)
+    | A.Block(e_lst) -> ignore (List.map (codegen_stmt builder) e_lst)
+    (* | A.If(cond, s) ->  *)
+  in
+
   let gen_func func =
     let A.Func(name, calls) = func in
     (* Defines the func *)
     (* TODO: make everything not void, TODO: allow arguments *)
     let lfunc = L.define_function name (L.function_type void_t [| |]) m in
     let builder = L.builder_at_end context (L.entry_block lfunc) in
-    let codegen_expr = function
-        A.Call(cname, carg) ->
-          let arg_str = L.build_global_stringptr carg "arg" builder in
-          (match cname with
-            "println" -> L.build_call println_func [| arg_str |] "" builder
-          | "print" -> L.build_call print_func [| arg_str |] "" builder
-          | _ -> raise (Failure ("Calling unkonwn function " ^ cname ^ ". Can only call println...")))
-      | A.BoolLit(truthy) -> L.const_int i1_t (if truthy then 1 else 0)
-    in
-    let rec codegen_stmt = function
-        A.Expr(e) -> ignore (codegen_expr e)
-      | A.Block(e_lst) -> ignore (List.map codegen_stmt e_lst)
-      (* | A.If(cond, s) ->  *)
-    in
     (* Create all the calls *)
-    ignore (List.map codegen_stmt calls);
+    ignore (List.map (codegen_stmt builder) calls);
     L.build_ret_void builder
   in
 
