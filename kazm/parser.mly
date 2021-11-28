@@ -63,6 +63,10 @@ stmts:
 
 stmt:
     expr SEMI { Expr($1) }
+  | if_stmt { $1 }
+
+if_stmt:
+    IF PAREN_L expr PAREN_R BRACE_L stmts BRACE_R { If($3, Block(List.rev $6)) }
 
 expr:
     simple_name PAREN_L STRING_LITERAL PAREN_R { Call($1, $3) }

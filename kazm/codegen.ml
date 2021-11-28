@@ -36,8 +36,10 @@ let gen prog =
           | _ -> raise (Failure ("Calling unkonwn function " ^ cname ^ ". Can only call println...")))
       | A.BoolLit(truthy) -> L.const_int i1_t (if truthy then 1 else 0)
     in
-    let codegen_stmt = function
-        A.Expr(e) -> codegen_expr e
+    let rec codegen_stmt = function
+        A.Expr(e) -> ignore (codegen_expr e)
+      | A.Block(e_lst) -> ignore (List.map codegen_stmt e_lst)
+      (* | A.If(cond, s) ->  *)
     in
     (* Create all the calls *)
     ignore (List.map codegen_stmt calls);

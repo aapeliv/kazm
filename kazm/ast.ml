@@ -5,6 +5,8 @@ type expr =
 
 type stmt =
     Expr of expr
+  | Block of stmt list
+  | If of expr * stmt
 
 (* Name, list of calls *)
 type a_func = Func of string * stmt list
