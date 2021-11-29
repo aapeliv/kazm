@@ -28,7 +28,8 @@ let gen prog =
   let all_funcs = SMap.empty in
   let all_funcs = add_func_decl all_funcs "print" void_t [char_ptr_t] in
   let all_funcs = add_func_decl all_funcs "println" void_t [char_ptr_t] in
-  let all_funcs = add_func_decl all_funcs "print_int" void_t [i32_t] in
+  let all_funcs = add_func_decl all_funcs "int_print" void_t [i32_t] in
+  let all_funcs = add_func_decl all_funcs "int_println" void_t [i32_t] in
 
   (* Codegen for an expression *)
   let rec codegen_expr builder = function

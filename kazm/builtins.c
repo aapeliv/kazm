@@ -8,6 +8,10 @@ void print(char* str) {
   printf("%s", str);
 }
 
-void print_int(int val) {
+void int_print(int val) {
   printf("%d", val);
+}
+
+void int_println(int val) {
+  printf("%d\n", val);
 }
