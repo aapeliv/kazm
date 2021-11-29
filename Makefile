@@ -7,7 +7,7 @@ test : all testall.sh
 # "make all" builds the executable as well as the utils library
 
 .PHONY : all
-all : kazm.native  #utils.o
+all : kazm.native  builtins.o
 
 # "make kazm.native" compiles the compiler
 #
@@ -29,5 +29,6 @@ clean :
 
 # Can use this to test utils.c later
 
-#utils : utils.c
-# cc -o utils -DBUILD_TEST utils.c
+builtins : builtins.c
+	cc -o builtins builtins.c
+	#-DBUILD_TEST
