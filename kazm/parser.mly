@@ -3,9 +3,9 @@
 %{
 open Ast
 
-let join_str_list str_list delimiter = List.fold_left (fun a b -> a ^ delimiter ^ b) "" (List.rev str_list)
+(* let join_str_list str_list delimiter = List.fold_left (fun a b -> a ^ delimiter ^ b) "" (List.rev str_list)
 let concat_stmts stmts = join_str_list stmts "\n"
-let concat_list list = join_str_list list ", "
+let concat_list list = join_str_list list ", " *)
 %}
 
 %token PAREN_L PAREN_R BRACE_L BRACE_R SQB_L SQB_R SQB_PAIR /* ( ) { } [ ] */
@@ -48,27 +48,74 @@ let concat_list list = join_str_list list ", "
 %%
 
 program:
-    program func { let PFuncs(funcs) = $1 in PFuncs($2::funcs) }
-  | { PFuncs([]) }
+    funcs { PFuncs(List.rev $1) }
+
+funcs:
+    funcs func { $2::$1 }
+  | { [] }
 
 func:
-    dtype_with_simple_name PAREN_L PAREN_R BRACE_L stmts BRACE_R { Func($1, $5) }
+    dtype_with_simple_name PAREN_L PAREN_R BRACE_L stmts BRACE_R { Func($1, List.rev $5) }
 
 stmts:
     stmts stmt { $2::$1 }
   | { [] }
 
 stmt:
-    expr SEMI { $1 }
+    expr SEMI { Expr($1) }
+  | assign_new_var_expr SEMI { $1 }
+  | if_stmt { $1 }
+  | while_stmt { $1 }
+  | return_stmt SEMI { $1 }
+
+if_stmt:
+    IF PAREN_L expr PAREN_R BRACE_L stmts BRACE_R ELSE BRACE_L stmts BRACE_R { If($3, Block(List.rev $6), Block(List.rev $10)) }
+  | IF PAREN_L expr PAREN_R BRACE_L stmts BRACE_R { If($3, Block(List.rev $6), Block([])) }
+
+while_stmt:
+    WHILE PAREN_L expr PAREN_R BRACE_L stmts BRACE_R { While($3, Block(List.rev $6)) }
+
+return_stmt:
+    RETURN expr { Return($2) }
+  | RETURN { ReturnVoid }
 
 expr:
-    simple_name PAREN_L STRING_LITERAL PAREN_R { Call($1, $3) }
+    simple_name PAREN_L expr_list PAREN_R { Call($1, $3) }
+  | DOUBLE_LITERAL { DoubleLit($1) }
+  | STRING_LITERAL { StrLit($1) }
+  | INT_LITERAL { IntLit($1) }
+  | TRUE { BoolLit(true) }
+  | FALSE { BoolLit(false) }
+  | simple_name { Ref($1) }
+  | PAREN_L expr PAREN_R { $2 }
+  | expr PLUS expr     { Binop($1, OpPlus, $3) }
+  | expr MINUS expr    { Binop($1, OpMinus, $3) }
+  | expr TIMES expr    { Binop($1, OpTimes, $3) }
+  | expr DIVIDE expr   { Binop($1, OpDivide, $3) }
+  | expr MOD expr      { Binop($1, OpMod, $3) }
+  | expr EQ expr       { Binop($1, OpEq, $3) }
+  | expr NEQ expr      { Binop($1, OpNeq, $3) }
+  | expr LT expr       { Binop($1, OpLt, $3) }
+  | expr LEQ expr      { Binop($1, OpLeq, $3) }
+  | expr GT expr       { Binop($1, OpGt, $3) }
+  | expr GEQ expr      { Binop($1, OpGeq, $3) }
+
+expr_list:
+    { [] }
+  | expr_list COMMA expr { $1 @ [$3] }
+  | expr { $1::[] }
+
+assign_new_var_expr:
+    dtype_with_simple_name ASSIGN expr { Assign($1, $3) }
 
 simple_name:
     IDENTIFIER { $1 }
 
 dtype_with_simple_name:
-    dtype simple_name { $2 }
+    dtype simple_name { Bind($1, $2) }
 
 dtype:
-    VOID { "void" }
+    VOID { Void }
+  | INT { Int }
+  | DOUBLE { Double }
+  | BOOL { Bool }

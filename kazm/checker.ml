@@ -1,8 +1,9 @@
 open Ast
 
-let check_call call =
-  let Call(name, _) = call in
-    if String.equal name "println" then () else raise (Failure ("Unknown function " ^ name))
+let check_call call = function
+    Call("println", _) -> ()
+  | Call("print", _) -> ()
+  | Call(name, _) -> raise (Failure ("Unknown function " ^ name))
 
 let check_func func =
   let Func(name, calls) = func in
