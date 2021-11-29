@@ -23,3 +23,9 @@ void double_print(double val) {
 void double_println(double val) {
   printf("%f\n", val);
 }
+
+// Useful before variables work to test loops, etc
+int _the_next_int = 0;
+int next_int() {
+  return _the_next_int++;
+}

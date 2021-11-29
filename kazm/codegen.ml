@@ -51,6 +51,7 @@ let gen prog =
   let all_funcs = add_func_decl all_funcs "int_println" void_t [i32_t] in
   let all_funcs = add_func_decl all_funcs "double_print" void_t [double_t] in
   let all_funcs = add_func_decl all_funcs "double_println" void_t [double_t] in
+  let all_funcs = add_func_decl all_funcs "next_int" i32_t [] in
 
   (* Codegen function definitions *)
   let codegen_func_sig all_funcs func =
