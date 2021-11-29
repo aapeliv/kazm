@@ -104,7 +104,6 @@ let gen prog =
       L.build_store (codegen_expr builder e) lh builder
       )
     | A.ReturnVoid -> ignore (L.build_ret_void builder)
-    (* TODO: only returning ints now *)
     | A.Return(expr) -> ignore (L.build_ret (codegen_expr builder expr) builder)
     (* | A.If(cond, s) ->  *)
   in
@@ -114,16 +113,10 @@ let gen prog =
     let A.Func(bind, calls) = func in
     let A.Bind(typ, name) = bind in
     (* Defines the func *)
-    (* TODO: make everything not void, TODO: allow arguments *)
     let lfunc = SMap.find name all_funcs in
     let builder = L.builder_at_end context (L.entry_block lfunc) in
     (* Create all the calls *)
     ignore (List.map (codegen_stmt builder) calls);
-    (* let build_ret = function
-        A.Void -> L.build_ret_void
-      | other -> L.build_ret (typ_to_t other)
-    in
-    build_ret builder *)
   in
 
   let A.PFuncs(funcs) = prog in
