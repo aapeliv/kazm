@@ -55,7 +55,7 @@ funcs:
   | { [] }
 
 func:
-    dtype_with_simple_name PAREN_L PAREN_R BRACE_L stmts BRACE_R { let Bind(t, n) = $1 in Func(n, List.rev $5) }
+    dtype_with_simple_name PAREN_L PAREN_R BRACE_L stmts BRACE_R { Func($1, List.rev $5) }
 
 stmts:
     stmts stmt { $2::$1 }

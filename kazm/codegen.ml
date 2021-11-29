@@ -25,11 +25,29 @@ let gen prog =
     SMap.add name (codegen_func_decl name ret_t arg_ts) map
   in
 
+  (* Map our AST type to LLVM type *)
+  let typ_to_t = function
+      A.Void -> void_t
+    | A.Bool -> i1_t
+    | A.Int -> i32_t
+  in
+
   let all_funcs = SMap.empty in
+  (* Builtins... *)
   let all_funcs = add_func_decl all_funcs "print" void_t [char_ptr_t] in
   let all_funcs = add_func_decl all_funcs "println" void_t [char_ptr_t] in
   let all_funcs = add_func_decl all_funcs "int_print" void_t [i32_t] in
   let all_funcs = add_func_decl all_funcs "int_println" void_t [i32_t] in
+
+  (* Codegen function declarations so we can call them later *)
+  let codegen_func_sig all_funcs func =
+    let A.Func(bind, _) = func in
+    let A.Bind(typ, name) = bind in
+    add_func_decl all_funcs name (typ_to_t typ) []
+  in
+
+  let A.PFuncs(funcs) = prog in
+  let all_funcs = List.fold_left codegen_func_sig all_funcs funcs in
 
   (* Codegen for an expression *)
   let rec codegen_expr builder = function
@@ -45,13 +63,6 @@ let gen prog =
     | A.IntLit(value) -> L.const_int i32_t value
     (* New string literal (just make a new global string) *)
     | A.StrLit(value) -> L.build_global_stringptr value "globalstring" builder
-  in
-
-  (* Map our AST type to LLVM type *)
-  let typ_to_t = function
-      A.Void -> void_t
-    | A.Bool -> i1_t
-    | A.Int -> i32_t
   in
 
   (* Codegen for a statement *)
@@ -73,7 +84,8 @@ let gen prog =
 
   (* Codegen for function body *)
   let gen_func func =
-    let A.Func(name, calls) = func in
+    let A.Func(bind, calls) = func in
+    let A.Bind(typ, name) = bind in
     (* Defines the func *)
     (* TODO: make everything not void, TODO: allow arguments *)
     let lfunc = L.define_function name (L.function_type void_t [| |]) m in

@@ -16,6 +16,6 @@ type stmt =
   | If of expr * stmt
   | Assign of bind * expr
 
-type a_func = Func of string * stmt list
+type a_func = Func of bind * stmt list
 
 type program = PFuncs of a_func list

@@ -1,3 +1,7 @@
+void test() {
+  println("In test");
+}
+
 void main() {
   print("without newline: ");
   println("! hello world");
@@ -6,5 +10,5 @@ void main() {
   20;
   true;
   false;
-  //test(a);
+  //test();
 }
