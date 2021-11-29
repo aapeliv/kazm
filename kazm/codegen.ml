@@ -9,6 +9,7 @@ let gen prog =
   (* Set up types in the context *)
   let i1_t = L.i1_type context in
   let i8_t = L.i8_type context in
+  let i32_t = L.i32_type context in
   let char_t = i8_t in
   let void_t = L.void_type context in
   let char_ptr_t = L.pointer_type char_t in
@@ -29,11 +30,23 @@ let gen prog =
         | "print" -> L.build_call print_func [| arg_str |] "" builder
         | _ -> raise (Failure ("Calling unkonwn function " ^ cname ^ ". Can only call println...")))
     | A.BoolLit(truthy) -> L.const_int i1_t (if truthy then 1 else 0)
+    | A.IntLit(value) -> L.const_int i32_t value
+  in
+
+  let typ_to_t = function
+      A.Void -> void_t
+    | A.Bool -> i1_t
+    | A.Int -> i32_t
   in
 
   let rec codegen_stmt builder = function
       A.Expr(e) -> ignore (codegen_expr builder e)
     | A.Block(e_lst) -> ignore (List.map (codegen_stmt builder) e_lst)
+    | A.Assign(bind, e) -> ignore (
+      let A.Bind(typ, name) = bind in
+      let lh = L.build_alloca (typ_to_t typ) name builder in
+      L.build_store (codegen_expr builder e) lh builder
+    )
     (* | A.If(cond, s) ->  *)
   in
 

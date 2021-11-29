@@ -55,7 +55,7 @@ funcs:
   | { [] }
 
 func:
-    dtype_with_simple_name PAREN_L PAREN_R BRACE_L stmts BRACE_R { Func($1, List.rev $5) }
+    dtype_with_simple_name PAREN_L PAREN_R BRACE_L stmts BRACE_R { let Bind(t, n) = $1 in Func(n, List.rev $5) }
 
 stmts:
     stmts stmt { $2::$1 }
@@ -63,6 +63,7 @@ stmts:
 
 stmt:
     expr SEMI { Expr($1) }
+  | assign_new_var_expr SEMI { $1 }
   | if_stmt { $1 }
 
 if_stmt:
@@ -70,14 +71,20 @@ if_stmt:
 
 expr:
     simple_name PAREN_L STRING_LITERAL PAREN_R { Call($1, $3) }
+  | INT_LITERAL { IntLit($1) }
   | TRUE { BoolLit(true) }
   | FALSE { BoolLit(false) }
+
+assign_new_var_expr:
+    dtype_with_simple_name ASSIGN expr { Assign($1, $3) }
 
 simple_name:
     IDENTIFIER { $1 }
 
 dtype_with_simple_name:
-    dtype simple_name { $2 }
+    dtype simple_name { Bind($1, $2) }
 
 dtype:
-    VOID { "void" }
+    VOID { Void }
+  | INT { Int }
+  | BOOL { Bool }

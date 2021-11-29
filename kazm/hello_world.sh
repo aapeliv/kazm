@@ -1,3 +1,5 @@
+set -e
+
 # compile kazm
 opam config exec -- ocamlbuild -use-ocamlfind kazm.native
 # run the kazm compiler to output LLVM IR
