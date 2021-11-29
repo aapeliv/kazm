@@ -113,7 +113,7 @@ let gen prog =
         ); builder
       | A.ReturnVoid -> ignore (L.build_ret_void builder); builder
       | A.Return(expr) -> ignore (L.build_ret (codegen_expr builder expr) builder); builder
-      | A.If(cond, s) ->
+      | A.If(cond, true_stmts, false_stmts) ->
         (* Codegen the condition evaluation *)
         let gend_cond = codegen_expr builder cond in
         (* Generate the block that we come back to after both branches *)
@@ -126,23 +126,21 @@ let gen prog =
 
         (* True branch *)
         (* Add the block we go to if we take this branch (cond is true) *)
-        let true_blk = L.append_block context "true" fn in
+        let true_blk = L.append_block context "take" fn in
         let true_builder = L.builder_at_end context true_blk in
         (* Build this branch's statements into this block *)
-        codegen_stmt true_builder s;
+        codegen_stmt true_builder true_stmts;
         build_join true_builder;
 
-        (*
         (* False branch *)
         (* Add the block we go to if we don't take this branch (cond is false) *)
-        let false_blk = L.append_block context "false" fn in
+        let false_blk = L.append_block context "dont_take" fn in
         let false_builder = L.builder_at_end context false_blk in
-        codegen_stmt false_builder s;
+        codegen_stmt false_builder false_stmts;
         build_join false_builder;
-        *)
 
         (* Build the actual conditional branch *)
-        ignore (L.build_cond_br gend_cond true_blk join_blk builder);
+        ignore (L.build_cond_br gend_cond true_blk false_blk builder);
         (* Finally return the new builder at end of merge *)
         join_builder
     in

@@ -72,7 +72,8 @@ return_stmt:
   | RETURN { ReturnVoid }
 
 if_stmt:
-    IF PAREN_L expr PAREN_R BRACE_L stmts BRACE_R { If($3, Block(List.rev $6)) }
+    IF PAREN_L expr PAREN_R BRACE_L stmts BRACE_R ELSE BRACE_L stmts BRACE_R { If($3, Block(List.rev $6), Block(List.rev $10)) }
+  | IF PAREN_L expr PAREN_R BRACE_L stmts BRACE_R { If($3, Block(List.rev $6), Block([])) }
 
 expr:
     simple_name PAREN_L expr_list PAREN_R { Call($1, $3) }

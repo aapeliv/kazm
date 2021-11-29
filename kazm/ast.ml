@@ -17,7 +17,7 @@ type expr =
 type stmt =
     Expr of expr
   | Block of stmt list
-  | If of expr * stmt
+  | If of expr * stmt * stmt
   | Assign of bind * expr
   | ReturnVoid
   | Return of expr
