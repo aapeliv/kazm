@@ -100,9 +100,9 @@ let gen prog =
     (* Takes builder and statement and returns a builder *)
     let rec codegen_stmt builder = function
       (* For expressions we just codegen the expression *)
-        A.Expr(e) -> ignore (codegen_expr builder e); builder
-      (* Fir a block of statements, just call us recursively on each *)
-      | A.Block(e_lst) -> ignore (List.map (codegen_stmt builder) e_lst); builder
+        A.Expr(e) -> codegen_expr builder e; builder
+      (* For a block of statements, just fold *)
+      | A.Block(es) -> List.fold_left codegen_stmt builder es
       (* Assign expression e to a *new* bind(type, name) *)
       | A.Assign(bind, e) -> ignore (
         let A.Bind(typ, name) = bind in
@@ -113,15 +113,43 @@ let gen prog =
         ); builder
       | A.ReturnVoid -> ignore (L.build_ret_void builder); builder
       | A.Return(expr) -> ignore (L.build_ret (codegen_expr builder expr) builder); builder
-      (* | A.If(cond, s) ->
+      | A.If(cond, s) ->
         (* Codegen the condition evaluation *)
         let gend_cond = codegen_expr builder cond in
-        (* Generate the block that we come back to after each branch *)
-        let join_blk = L.append_block context "join" fn in *)
+        (* Generate the block that we come back to after both branches *)
+        let join_blk = L.append_block context "join" fn in
+        let join_builder = L.builder_at_end context join_blk in
+
+        (* This function takes a builder and builds a `br` instruction, which
+          (br)anches back to the start of the join_blk block made above *)
+        let build_join = L.build_br join_blk in
+
+        (* True branch *)
+        (* Add the block we go to if we take this branch (cond is true) *)
+        let true_blk = L.append_block context "true" fn in
+        let true_builder = L.builder_at_end context true_blk in
+        (* Build this branch's statements into this block *)
+        codegen_stmt true_builder s;
+        build_join true_builder;
+
+        (*
+        (* False branch *)
+        (* Add the block we go to if we don't take this branch (cond is false) *)
+        let false_blk = L.append_block context "false" fn in
+        let false_builder = L.builder_at_end context false_blk in
+        codegen_stmt false_builder s;
+        build_join false_builder;
+        *)
+
+        (* Build the actual conditional branch *)
+        ignore (L.build_cond_br gend_cond true_blk join_blk builder);
+        (* Finally return the new builder at end of merge *)
+        join_builder
     in
 
     (* Build all statements *)
-    codegen_stmt (L.builder_at_end context (L.entry_block fn)) (A.Block body)
+    let fn_builder = L.builder_at_end context (L.entry_block fn) in
+    codegen_stmt fn_builder (A.Block body)
   in
 
   let A.PFuncs(funcs) = prog in

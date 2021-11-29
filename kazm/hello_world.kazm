@@ -1,30 +1,10 @@
-void test() {
-  println("In test");
-  int_println(2+2);
-  return;
-}
-
-int thing() {
-  return 5;
-}
-
 void main() {
-  print("thing() = ");
-  int_println(thing());
-  print("without newline: ");
-  println("! hello world");
-  int_println(27);
-  print("Integer arithmetic: 6 should equal ");
-  int_println((4 + 11) / 3 + (7 - 6));
-  // check brackets
-  int_println((1 + 1) * (2 + 2));
-  int a = 20;
-  double b = 3.0;
-  print("Double 3.14 is: ");
-  double_println(3.14);
-  20;
-  true;
-  false;
-  test();
+  println("Start of fn");
+  if (true) {
+    println("Took if");
+  }
+
+  println("After if");
+
   return;
 }
