@@ -65,15 +65,19 @@ stmt:
     expr SEMI { Expr($1) }
   | assign_new_var_expr SEMI { $1 }
   | if_stmt { $1 }
+  | while_stmt { $1 }
   | return_stmt SEMI { $1 }
-
-return_stmt:
-    RETURN expr { Return($2) }
-  | RETURN { ReturnVoid }
 
 if_stmt:
     IF PAREN_L expr PAREN_R BRACE_L stmts BRACE_R ELSE BRACE_L stmts BRACE_R { If($3, Block(List.rev $6), Block(List.rev $10)) }
   | IF PAREN_L expr PAREN_R BRACE_L stmts BRACE_R { If($3, Block(List.rev $6), Block([])) }
+
+while_stmt:
+    WHILE PAREN_L expr PAREN_R BRACE_L stmts BRACE_R { While($3, Block(List.rev $6)) }
+
+return_stmt:
+    RETURN expr { Return($2) }
+  | RETURN { ReturnVoid }
 
 expr:
     simple_name PAREN_L expr_list PAREN_R { Call($1, $3) }
@@ -89,6 +93,12 @@ expr:
   | expr TIMES expr    { Binop($1, OpTimes, $3) }
   | expr DIVIDE expr   { Binop($1, OpDivide, $3) }
   | expr MOD expr      { Binop($1, OpMod, $3) }
+  | expr EQ expr       { Binop($1, OpEq, $3) }
+  | expr NEQ expr      { Binop($1, OpNeq, $3) }
+  | expr LT expr       { Binop($1, OpLt, $3) }
+  | expr LEQ expr      { Binop($1, OpLeq, $3) }
+  | expr GT expr       { Binop($1, OpGt, $3) }
+  | expr GEQ expr      { Binop($1, OpGeq, $3) }
 
 expr_list:
     { [] }

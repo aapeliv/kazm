@@ -80,15 +80,20 @@ let gen prog =
     | A.Binop(e1, op, e2) ->
       (* Lookup right thing to build in llvm *)
       let lbuild = match op with
-          OpPlus -> L.build_add
-        | OpMinus -> L.build_sub
-        | OpTimes -> L.build_mul
-        | OpDivide -> L.build_sdiv
-        | OpMod -> L.build_srem
+          A.OpPlus -> L.build_add
+        | A.OpMinus -> L.build_sub
+        | A.OpTimes -> L.build_mul
+        | A.OpDivide -> L.build_sdiv
+        | A.OpMod -> L.build_srem
+        | A.OpEq -> L.build_icmp L.Icmp.Eq
+        | A.OpNeq -> L.build_icmp L.Icmp.Ne
+        | A.OpLt -> L.build_icmp L.Icmp.Slt
+        | A.OpLeq -> L.build_icmp L.Icmp.Sle
+        | A.OpGt -> L.build_icmp L.Icmp.Sgt
+        | A.OpGeq -> L.build_icmp L.Icmp.Sge
       in
       lbuild (codegen_expr builder e1) (codegen_expr builder e2) "im" builder
   in
-
   (* Codegen for function body *)
   let gen_func func =
     let A.Func(bind, body) = func in
@@ -113,6 +118,7 @@ let gen prog =
         ); builder
       | A.ReturnVoid -> ignore (L.build_ret_void builder); builder
       | A.Return(expr) -> ignore (L.build_ret (codegen_expr builder expr) builder); builder
+      (* If-statements *)
       | A.If(cond, true_stmts, false_stmts) ->
         (* Codegen the condition evaluation *)
         let gend_cond = codegen_expr builder cond in
@@ -143,6 +149,7 @@ let gen prog =
         ignore (L.build_cond_br gend_cond true_blk false_blk builder);
         (* Finally return the new builder at end of merge *)
         join_builder
+      (* While-statements *)
     in
 
     (* Build all statements *)
