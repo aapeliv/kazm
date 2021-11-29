@@ -15,3 +15,11 @@ void int_print(int val) {
 void int_println(int val) {
   printf("%d\n", val);
 }
+
+void double_print(double val) {
+  printf("%f", val);
+}
+
+void double_println(double val) {
+  printf("%f\n", val);
+}

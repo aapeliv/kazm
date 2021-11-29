@@ -12,6 +12,7 @@ let gen prog =
   let i1_t = L.i1_type context in
   let i8_t = L.i8_type context in
   let i32_t = L.i32_type context in
+  let double_t = L.double_type context in
   let char_t = i8_t in
   let void_t = L.void_type context in
   let char_ptr_t = L.pointer_type char_t in
@@ -39,6 +40,7 @@ let gen prog =
       A.Void -> void_t
     | A.Bool -> i1_t
     | A.Int -> i32_t
+    | A.Double -> double_t
   in
 
   let all_funcs = SMap.empty in
@@ -47,6 +49,8 @@ let gen prog =
   let all_funcs = add_func_decl all_funcs "println" void_t [char_ptr_t] in
   let all_funcs = add_func_decl all_funcs "int_print" void_t [i32_t] in
   let all_funcs = add_func_decl all_funcs "int_println" void_t [i32_t] in
+  let all_funcs = add_func_decl all_funcs "double_print" void_t [double_t] in
+  let all_funcs = add_func_decl all_funcs "double_println" void_t [double_t] in
 
   (* Codegen function definitions *)
   let codegen_func_sig all_funcs func =
@@ -70,6 +74,7 @@ let gen prog =
     | A.BoolLit(value) -> L.const_int i1_t (if value then 1 else 0)
     (* New 32-bit integer literal *)
     | A.IntLit(value) -> L.const_int i32_t value
+    | A.DoubleLit(value) -> L.const_float double_t value
     (* New string literal (just make a new global string) *)
     | A.StrLit(value) -> L.build_global_stringptr value "globalstring" builder
   in

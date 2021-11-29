@@ -71,6 +71,7 @@ if_stmt:
 
 expr:
     simple_name PAREN_L expr_list PAREN_R { Call($1, $3) }
+  | DOUBLE_LITERAL { DoubleLit($1) }
   | STRING_LITERAL { StrLit($1) }
   | INT_LITERAL { IntLit($1) }
   | TRUE { BoolLit(true) }
@@ -94,4 +95,5 @@ dtype_with_simple_name:
 dtype:
     VOID { Void }
   | INT { Int }
+  | DOUBLE { Double }
   | BOOL { Bool }

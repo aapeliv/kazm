@@ -1,13 +1,14 @@
-type typ = Void | Int | Bool
+type typ = Void | Int | Double | Bool
 
 type bind = Bind of typ * string
 
 type expr =
     Call of string * expr list
   | IntLit of int
+  | DoubleLit of float
   | BoolLit of bool
   | StrLit of string
-  (* refer to variable with name *)
+  (* refer to variable by name *)
   | Ref of string
 
 type stmt =

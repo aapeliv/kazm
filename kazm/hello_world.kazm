@@ -7,6 +7,9 @@ void main() {
   println("! hello world");
   int_println(27);
   int a = 20;
+  double b = 3.0;
+  print("Double 3.14 is: ");
+  double_println(3.14);
   20;
   true;
   false;
