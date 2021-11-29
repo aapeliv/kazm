@@ -1,3 +1,13 @@
+void test_loops() {
+  println("Before while");
+  while (next_int() < 3) {
+    println("next_int() < 3");
+  }
+  println("After while");
+
+  return;
+}
+
 // Function calls
 void test() {
   println("In test");
@@ -11,6 +21,7 @@ int thing() {
 }
 
 void main() {
+  test_loops();
   // If statements
   println("Start of fn");
   if (true) {
@@ -43,16 +54,16 @@ void main() {
   // Testing conditionals
   println("Next ints: ");
   int_println(next_int());
-  if (next_int() < 3) {
-    println("was less than 3");
+  if (next_int() < 6) {
+    println("was less than 6");
   } else {
-    println("was not less than 3");
+    println("was not less than 6");
   }
   int_println(next_int());
-  if (next_int() < 3) {
-    println("was less than 3");
+  if (next_int() < 6) {
+    println("was less than 6");
   } else {
-    println("was not less than 3");
+    println("was not less than 6");
   }
   int_println(next_int());
 

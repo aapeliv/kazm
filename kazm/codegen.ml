@@ -122,7 +122,7 @@ let gen prog =
       (* If-statements *)
       | A.If(cond, true_stmts, false_stmts) ->
         (* Codegen the condition evaluation *)
-        let gend_cond = codegen_expr builder cond in
+        let gcond = codegen_expr builder cond in
         (* Generate the block that we come back to after both branches *)
         let join_blk = L.append_block context "join" fn in
         let join_builder = L.builder_at_end context join_blk in
@@ -147,10 +147,37 @@ let gen prog =
         build_join false_builder;
 
         (* Build the actual conditional branch *)
-        ignore (L.build_cond_br gend_cond true_blk false_blk builder);
+        ignore (L.build_cond_br gcond true_blk false_blk builder);
         (* Finally return the new builder at end of merge *)
         join_builder
       (* While-statements *)
+      | A.While(cond, stmts) ->
+        (* Start at the start block and its builder *)
+        let start_blk = L.append_block context "start" fn in
+        let start_builder = L.builder_at_end context start_blk in
+
+        (* Loop block that we keep repeating *)
+        let loop_blk = L.append_block context "loop" fn in
+        let loop_builder = L.builder_at_end context loop_blk in
+        (* Loop body (an iteration) *)
+        codegen_stmt loop_builder stmts;
+        (* Back to start after a loop iteration *)
+        L.build_br start_blk loop_builder;
+
+        (* Generate the end block where we end up after the while cond becomes false *)
+        let end_blk = L.append_block context "end" fn in
+        let end_builder = L.builder_at_end context end_blk in
+
+        (* Codegen the condition evaluation *)
+        let gcond = codegen_expr start_builder cond in
+        (* Build the branch instr *)
+        ignore (L.build_cond_br gcond loop_blk end_blk start_builder);
+
+        (* Branch to start *)
+        ignore (L.build_br start_blk builder);
+
+        (* Continue building after the end of the loop *)
+        end_builder
     in
 
     (* Build all statements *)
