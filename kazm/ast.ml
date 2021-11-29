@@ -3,10 +3,10 @@ type typ = Void | Int | Bool
 type bind = Bind of typ * string
 
 type expr =
-    (* External function name, string input *)
-    Call of string * string
+    Call of string * expr list
   | IntLit of int
   | BoolLit of bool
+  | StrLit of string
 
 type stmt =
     Expr of expr

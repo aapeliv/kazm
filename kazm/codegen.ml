@@ -23,14 +23,16 @@ let gen prog =
     L.declare_function "println" print_t m in
 
   let rec codegen_expr builder = function
-      A.Call(cname, carg) ->
-        let arg_str = L.build_global_stringptr carg "arg" builder in
+      A.Call(cname, exprs) ->
+        (* let arg_str = L.build_global_stringptr carg "arg" builder in *)
+        let arg_array = Array.of_list (List.map (codegen_expr builder) exprs) in
         (match cname with
-          "println" -> L.build_call println_func [| arg_str |] "" builder
-        | "print" -> L.build_call print_func [| arg_str |] "" builder
+          "println" -> L.build_call println_func arg_array "" builder
+        | "print" -> L.build_call print_func arg_array "" builder
         | _ -> raise (Failure ("Calling unkonwn function " ^ cname ^ ". Can only call println...")))
-    | A.BoolLit(truthy) -> L.const_int i1_t (if truthy then 1 else 0)
+    | A.BoolLit(value) -> L.const_int i1_t (if value then 1 else 0)
     | A.IntLit(value) -> L.const_int i32_t value
+    | A.StrLit(value) -> L.build_global_stringptr value "globalstring" builder
   in
 
   let typ_to_t = function

@@ -70,10 +70,16 @@ if_stmt:
     IF PAREN_L expr PAREN_R BRACE_L stmts BRACE_R { If($3, Block(List.rev $6)) }
 
 expr:
-    simple_name PAREN_L STRING_LITERAL PAREN_R { Call($1, $3) }
+    simple_name PAREN_L expr_list PAREN_R { Call($1, $3) }
+  | STRING_LITERAL { StrLit($1) }
   | INT_LITERAL { IntLit($1) }
   | TRUE { BoolLit(true) }
   | FALSE { BoolLit(false) }
+
+expr_list:
+    { [] }
+  | expr_list COMMA expr { $1 @ [$3] }
+  | expr { $1::[] }
 
 assign_new_var_expr:
     dtype_with_simple_name ASSIGN expr { Assign($1, $3) }
