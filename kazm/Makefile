@@ -30,5 +30,4 @@ clean :
 # Can use this to test utils.c later
 
 builtins : builtins.c
-	cc -o builtins builtins.c
-	#-DBUILD_TEST
+	cc -o builtins -DBUILD_TEST builtins.c
