@@ -1,6 +1,8 @@
 module A = Ast
 module L = Llvm
 
+module SMap = Map.Make(String)
+
 let gen prog =
   (* Set up module & context *)
   let context = L.global_context () in
@@ -13,6 +15,19 @@ let gen prog =
   let char_t = i8_t in
   let void_t = L.void_type context in
   let char_ptr_t = L.pointer_type char_t in
+
+  let codegen_func_decl name ret_t arg_ts =
+    let func_t = L.function_type ret_t (Array.of_list arg_ts) in
+      L.declare_function name func_t m
+  in
+
+  let add_func_decl map name ret_t arg_ts =
+    SMap.add name (codegen_func_decl name ret_t arg_ts) map
+  in
+
+  let all_funcs = SMap.empty in
+  let all_funcs = add_func_decl all_funcs "print" void_t [char_ptr_t] in
+  let all_funcs = add_func_decl all_funcs "println" void_t [char_ptr_t] in
 
   (* Types and decls of builtins, currently print and println *)
   let print_t : L.lltype =
@@ -29,9 +44,9 @@ let gen prog =
         (* let arg_str = L.build_global_stringptr carg "arg" builder in *)
         let arg_array = Array.of_list (List.map (codegen_expr builder) exprs) in
         (match cname with
-          "println" -> L.build_call println_func arg_array "" builder
-        | "print" -> L.build_call print_func arg_array "" builder
-        | _ -> raise (Failure ("Calling unkonwn function " ^ cname ^ ". Can only call println...")))
+          "println" -> L.build_call (SMap.find "println" all_funcs) arg_array "" builder
+        | "print" -> L.build_call (SMap.find "print" all_funcs) arg_array "" builder
+        | _ -> raise (Failure ("Calling unkonwn function " ^ cname ^ ".")))
     (* New bool literal *)
     | A.BoolLit(value) -> L.const_int i1_t (if value then 1 else 0)
     (* New 32-bit integer literal *)
