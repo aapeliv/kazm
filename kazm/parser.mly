@@ -75,6 +75,7 @@ expr:
   | INT_LITERAL { IntLit($1) }
   | TRUE { BoolLit(true) }
   | FALSE { BoolLit(false) }
+  | simple_name { Ref($1) }
 
 expr_list:
     { [] }

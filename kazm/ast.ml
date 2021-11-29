@@ -7,6 +7,8 @@ type expr =
   | IntLit of int
   | BoolLit of bool
   | StrLit of string
+  (* refer to variable with name *)
+  | Ref of string
 
 type stmt =
     Expr of expr
@@ -14,8 +16,6 @@ type stmt =
   | If of expr * stmt
   | Assign of bind * expr
 
-(* Name, list of calls *)
 type a_func = Func of string * stmt list
 
-(* Functions *)
 type program = PFuncs of a_func list
