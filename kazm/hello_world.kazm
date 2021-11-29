@@ -1,12 +1,43 @@
+// Function calls
+void test() {
+  println("In test");
+  int_println(2+2);
+  return;
+}
+
+// Return non-void
+int thing() {
+  return 5;
+}
+
 void main() {
+  // If statements
   println("Start of fn");
   if (true) {
     println("Took if");
   } else {
     println("Took second branch");
   }
-
   println("After if");
 
+  print("thing() = ");
+  // Can get the return value from non-void function and use it
+  int_println(thing());
+  print("without newline: ");
+  println("! hello world");
+  // Can print int
+  int_println(27);
+  // Can do arithmetic incl precedence
+  print("Integer arithmetic: 6 should equal ");
+  int_println((4 + 11) / 3 + (7 - 6));
+  // check brackets
+  int_println((1 + 1) * (2 + 2));
+  // Can define vars (can't use them before type system)
+  int a = 20;
+  double b = 3.0;
+  print("Double 3.14 is: ");
+  double_println(3.14);
+  // Can call other functions
+  test();
   return;
 }
