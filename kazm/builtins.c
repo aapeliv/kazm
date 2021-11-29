@@ -7,3 +7,7 @@ void println(char* str) {
 void print(char* str) {
   printf("%s", str);
 }
+
+void print_int(int val) {
+  printf("%d", val);
+}

@@ -1,6 +1,7 @@
 void main() {
   print("without newline: ");
-  println("hello world");
+  print_int(27);
+  println("! hello world");
   int a = 20;
   20;
   true;

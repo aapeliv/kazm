@@ -28,14 +28,7 @@ let gen prog =
   let all_funcs = SMap.empty in
   let all_funcs = add_func_decl all_funcs "print" void_t [char_ptr_t] in
   let all_funcs = add_func_decl all_funcs "println" void_t [char_ptr_t] in
-
-  (* Types and decls of builtins, currently print and println *)
-  let print_t : L.lltype =
-    L.function_type void_t [| char_ptr_t |] in
-  let print_func : L.llvalue =
-    L.declare_function "print" print_t m in
-  let println_func : L.llvalue =
-    L.declare_function "println" print_t m in
+  let all_funcs = add_func_decl all_funcs "print_int" void_t [i32_t] in
 
   (* Codegen for an expression *)
   let rec codegen_expr builder = function
@@ -43,10 +36,8 @@ let gen prog =
       A.Call(cname, exprs) ->
         (* let arg_str = L.build_global_stringptr carg "arg" builder in *)
         let arg_array = Array.of_list (List.map (codegen_expr builder) exprs) in
-        (match cname with
-          "println" -> L.build_call (SMap.find "println" all_funcs) arg_array "" builder
-        | "print" -> L.build_call (SMap.find "print" all_funcs) arg_array "" builder
-        | _ -> raise (Failure ("Calling unkonwn function " ^ cname ^ ".")))
+        (* todo: need to make sure these functions actually exist, etc *)
+        L.build_call (SMap.find cname all_funcs) arg_array "" builder
     (* New bool literal *)
     | A.BoolLit(value) -> L.const_int i1_t (if value then 1 else 0)
     (* New 32-bit integer literal *)
