@@ -77,6 +77,16 @@ let gen prog =
     | A.DoubleLit(value) -> L.const_float double_t value
     (* New string literal (just make a new global string) *)
     | A.StrLit(value) -> L.build_global_stringptr value "globalstring" builder
+    | A.Binop(e1, op, e2) ->
+      (* Lookup right thing to build in llvm *)
+      let lbuild = match op with
+          OpPlus -> L.build_add
+        | OpMinus -> L.build_sub
+        | OpTimes -> L.build_mul
+        | OpDivide -> L.build_sdiv
+        | OpMod -> L.build_srem
+      in
+      lbuild (codegen_expr builder e1) (codegen_expr builder e2) "im" builder
   in
 
   (* Codegen for a statement *)

@@ -77,6 +77,12 @@ expr:
   | TRUE { BoolLit(true) }
   | FALSE { BoolLit(false) }
   | simple_name { Ref($1) }
+  | PAREN_L expr PAREN_R { $2 }
+  | expr PLUS expr     { Binop($1, OpPlus, $3) }
+  | expr MINUS expr    { Binop($1, OpMinus, $3) }
+  | expr TIMES expr    { Binop($1, OpTimes, $3) }
+  | expr DIVIDE expr   { Binop($1, OpDivide, $3) }
+  | expr MOD expr      { Binop($1, OpMod, $3) }
 
 expr_list:
     { [] }

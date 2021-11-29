@@ -6,6 +6,10 @@ void main() {
   print("without newline: ");
   println("! hello world");
   int_println(27);
+  print("Integer arithmetic: 6 should equal ");
+  int_println((4 + 11) / 3 + (7 - 6));
+  // check brackets
+  int_println((1 + 1) * (2 + 2));
   int a = 20;
   double b = 3.0;
   print("Double 3.14 is: ");
