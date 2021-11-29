@@ -25,6 +25,15 @@ let gen prog =
     SMap.add name (codegen_func_decl name ret_t arg_ts) map
   in
 
+  let codegen_func_def name ret_t arg_ts =
+    let func_t = L.function_type ret_t (Array.of_list arg_ts) in
+      L.define_function name func_t m
+  in
+
+  let add_func_def map name ret_t arg_ts =
+    SMap.add name (codegen_func_def name ret_t arg_ts) map
+  in
+
   (* Map our AST type to LLVM type *)
   let typ_to_t = function
       A.Void -> void_t
@@ -39,11 +48,11 @@ let gen prog =
   let all_funcs = add_func_decl all_funcs "int_print" void_t [i32_t] in
   let all_funcs = add_func_decl all_funcs "int_println" void_t [i32_t] in
 
-  (* Codegen function declarations so we can call them later *)
+  (* Codegen function definitions *)
   let codegen_func_sig all_funcs func =
     let A.Func(bind, _) = func in
     let A.Bind(typ, name) = bind in
-    add_func_decl all_funcs name (typ_to_t typ) []
+    add_func_def all_funcs name (typ_to_t typ) []
   in
 
   let A.PFuncs(funcs) = prog in
@@ -88,7 +97,7 @@ let gen prog =
     let A.Bind(typ, name) = bind in
     (* Defines the func *)
     (* TODO: make everything not void, TODO: allow arguments *)
-    let lfunc = L.define_function name (L.function_type void_t [| |]) m in
+    let lfunc = SMap.find name all_funcs in
     let builder = L.builder_at_end context (L.entry_block lfunc) in
     (* Create all the calls *)
     ignore (List.map (codegen_stmt builder) calls);
