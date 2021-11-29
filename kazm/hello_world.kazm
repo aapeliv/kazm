@@ -1,8 +1,16 @@
 void test() {
   println("In test");
+  int_println(2+2);
+  return;
+}
+
+int thing() {
+  return 5;
 }
 
 void main() {
+  print("thing() = ");
+  int_println(thing());
   print("without newline: ");
   println("! hello world");
   int_println(27);
@@ -18,4 +26,5 @@ void main() {
   true;
   false;
   test();
+  return;
 }

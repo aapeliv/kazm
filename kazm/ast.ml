@@ -19,6 +19,8 @@ type stmt =
   | Block of stmt list
   | If of expr * stmt
   | Assign of bind * expr
+  | ReturnVoid
+  | Return of expr
 
 type a_func = Func of bind * stmt list
 

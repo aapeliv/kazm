@@ -65,6 +65,11 @@ stmt:
     expr SEMI { Expr($1) }
   | assign_new_var_expr SEMI { $1 }
   | if_stmt { $1 }
+  | return_stmt SEMI { $1 }
+
+return_stmt:
+    RETURN expr { Return($2) }
+  | RETURN { ReturnVoid }
 
 if_stmt:
     IF PAREN_L expr PAREN_R BRACE_L stmts BRACE_R { If($3, Block(List.rev $6)) }
