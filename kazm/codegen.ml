@@ -89,34 +89,39 @@ let gen prog =
       lbuild (codegen_expr builder e1) (codegen_expr builder e2) "im" builder
   in
 
-  (* Codegen for a statement *)
-  let rec codegen_stmt builder = function
-    (* For expressions we just codegen the expression *)
-      A.Expr(e) -> ignore (codegen_expr builder e)
-    (* Fir a block of statements, just call us recursively on each *)
-    | A.Block(e_lst) -> ignore (List.map (codegen_stmt builder) e_lst)
-    (* Assign expression e to a *new* bind(type, name) *)
-    | A.Assign(bind, e) -> ignore (
-      let A.Bind(typ, name) = bind in
-      (* Left hand side of the assignment, allocate memory and create a var *)
-      let lh = L.build_alloca (typ_to_t typ) name builder in
-      (* Codegen the expression and store in this var *)
-      L.build_store (codegen_expr builder e) lh builder
-      )
-    | A.ReturnVoid -> ignore (L.build_ret_void builder)
-    | A.Return(expr) -> ignore (L.build_ret (codegen_expr builder expr) builder)
-    (* | A.If(cond, s) ->  *)
-  in
-
   (* Codegen for function body *)
   let gen_func func =
-    let A.Func(bind, calls) = func in
+    let A.Func(bind, body) = func in
     let A.Bind(typ, name) = bind in
     (* Defines the func *)
-    let lfunc = SMap.find name all_funcs in
-    let builder = L.builder_at_end context (L.entry_block lfunc) in
-    (* Create all the calls *)
-    ignore (List.map (codegen_stmt builder) calls);
+    let fn = SMap.find name all_funcs in
+
+    (* Codegen for a statement *)
+    (* Takes builder and statement and returns a builder *)
+    let rec codegen_stmt builder = function
+      (* For expressions we just codegen the expression *)
+        A.Expr(e) -> ignore (codegen_expr builder e); builder
+      (* Fir a block of statements, just call us recursively on each *)
+      | A.Block(e_lst) -> ignore (List.map (codegen_stmt builder) e_lst); builder
+      (* Assign expression e to a *new* bind(type, name) *)
+      | A.Assign(bind, e) -> ignore (
+        let A.Bind(typ, name) = bind in
+        (* Left hand side of the assignment, allocate memory and create a var *)
+        let lh = L.build_alloca (typ_to_t typ) name builder in
+        (* Codegen the expression and store in this var *)
+        L.build_store (codegen_expr builder e) lh builder
+        ); builder
+      | A.ReturnVoid -> ignore (L.build_ret_void builder); builder
+      | A.Return(expr) -> ignore (L.build_ret (codegen_expr builder expr) builder); builder
+      (* | A.If(cond, s) ->
+        (* Codegen the condition evaluation *)
+        let gend_cond = codegen_expr builder cond in
+        (* Generate the block that we come back to after each branch *)
+        let join_blk = L.append_block context "join" fn in *)
+    in
+
+    (* Build all statements *)
+    codegen_stmt (L.builder_at_end context (L.entry_block fn)) (A.Block body)
   in
 
   let A.PFuncs(funcs) = prog in
