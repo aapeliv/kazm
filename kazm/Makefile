@@ -17,7 +17,7 @@ all : kazm.native builtins.o
 #
 # See https://github.com/ocaml/ocamlbuild/blob/master/manual/manual.adoc
 
-microc.native :
+kazm.native :
 	opam config exec -- \
 	ocamlbuild -use-ocamlfind kazm.native
 
