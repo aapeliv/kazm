@@ -43,22 +43,22 @@ let _ =
   |] false
 
 
-  (*  arr.c - John Recommends: *)
+(*  arr.c - John Recommends: *)
 
-  let struct_Arr_type : L.lltype = L.named_struct_type context "Arr"
-  (*
+let struct_Arr_type : L.lltype = L.named_struct_type context "Arr"
+(*
   struct Arr {
     int len;
     int capacity;
     void *data;
   }
-  *)
-  let _ = 
-    L.struct_set_body struct_Arr_type
-    [|
-      i32_t;                  (* int len       *)
-      i32_t;                  (* int capacity  *)
-      L.pointer_type void_t   (* Void *        *)
-    |] false
+*)
+let _ = 
+  L.struct_set_body struct_Arr_type
+  [|
+    i32_t;                  (* int len       *)
+    i32_t;                  (* int capacity  *)
+    L.pointer_type void_t   (* Void *        *)
+  |] false
 
 
