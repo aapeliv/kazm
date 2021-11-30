@@ -56,9 +56,9 @@ let _ =
   let _ = 
     L.struct_set_body struct_Arr_type
     [|
-      i32_t;                  (* int len     *)
-      i32_t;                  (* int max_len *)
-      L.pointer_type void_t   (* Void *      *)
+      i32_t;                  (* int len       *)
+      i32_t;                  (* int capacity  *)
+      L.pointer_type void_t   (* Void *        *)
     |] false
 
 
