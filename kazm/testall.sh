@@ -31,7 +31,7 @@ globalerror=0
 keep=0
 
 Usage() {
-    echo "Usage: testall.sh [options] [.mc files]"
+    echo "Usage: testall.sh [options] [.kazm files]"
     echo "-k    Keep intermediate files"
     echo "-h    Print this help"
     exit 1
