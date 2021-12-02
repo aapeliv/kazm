@@ -1,0 +1,19 @@
+int fun(int x, int y)
+{
+  prints("hello world");
+  return x;
+}
+
+int main()
+{
+  int i;
+  bool b;
+  
+  b = true;
+  i = 1;
+
+  fun(i = 2, i = i+1);
+
+  print(i);
+  return 0;
+}
