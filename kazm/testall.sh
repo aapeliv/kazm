@@ -15,10 +15,10 @@ LLC="llc"
 # Path to the C compiler
 CC="cc"
 
-# Path to the microc compiler.  Usually "./kazm.native"
+# Path to the kazm compiler.  Usually "./kazm.native"
 # Try "_build/kazm.native" if ocamlbuild was unable to create a symbolic link.
 KAZM="./kazm.native"
-#MICROC="_build/kazm.native"
+#KAZM="_build/kazm.native"
 
 # Set time limit for all operations
 ulimit -t 30
@@ -92,10 +92,10 @@ Check() {
     generatedfiles=""
 
     generatedfiles="$generatedfiles ${basename}.ll ${basename}.s ${basename}.exe ${basename}.out" &&
-    Run "$KAZM" "$1" ">" "${basename}.ll" &&
-    Run "$LLC" "-relocation-model=pic" "${basename}.ll" ">" "${basename}.s" &&
-    Run "$CC" "-o" "${basename}.exe" "${basename}.s" "builtins.o" &&
-    Run "./${basename}.exe" > "${basename}.out" &&
+    echo "first" && Run "$KAZM" "$1" ">" "${basename}.ll" &&
+    echo "Got here"  && Run "$LLC" "-relocation-model=pic" "${basename}.ll" ">" "${basename}.s" &&
+    echo "3rd" && Run "$CC" "-o" "${basename}.exe" "${basename}.s" "builtins.o" &&
+    echo "4th" && Run "./${basename}.exe" > "${basename}.out" &&
     Compare ${basename}.out ${reffile}.out ${basename}.diff
 
     # Report the status and clean up the generated files
@@ -176,7 +176,7 @@ if [ $# -ge 1 ]
 then
     files=$@
 else
-    files="tests/test*.kazm tests/fail*.kazm"
+    files="tests/test-*.kazm tests/fail-*.kazm"
 fi
 
 for file in $files

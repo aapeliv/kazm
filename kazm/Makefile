@@ -17,16 +17,21 @@ all : kazm.native builtins.o
 #
 # See https://github.com/ocaml/ocamlbuild/blob/master/manual/manual.adoc
 
+
+# Dependencies for ocamlbuild 
+
 kazm.native :
 	opam config exec -- \
 	ocamlbuild -use-ocamlfind kazm.native
 
 # "make clean" removes all generated files
+# Added *.o 
 
 .PHONY : clean
 clean :
 	ocamlbuild -clean
-	rm -rf testall.log ocamlllvm *.diff
+	rm -rf testall.log ocamlllvm *.diff 
+
 
 # Testing the "printbig" example
 

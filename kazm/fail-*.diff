@@ -1,0 +1,2 @@
+/usr/bin/diff: fail-*.err: No such file or directory
+/usr/bin/diff: tests/fail-*.err: No such file or directory
