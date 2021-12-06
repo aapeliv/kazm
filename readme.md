@@ -38,9 +38,9 @@ In the OCaml/LLVM docker container:
 cd kazm
 docker run --rm -it -v $(pwd):/home/kazm -w=/home/kazm columbiasedwards/plt
 # now inside the container
-opam config exec -- ocamlbuild -use-ocamlfind sast_test.native
+opam config exec -- ocamlbuild -use-ocamlfind sastprinter.native
 # run the kazm compiler to output LLVM IR
-cat sast_test.in | ./sast_test.native > sast_test.ll
+cat sast_test.in | ./sastprinter.native > sast_test.ll
 # compile LLVM IR into assembly
 llc --relocation-model=pic sast_test.ll
 # compile builtins
