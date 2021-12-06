@@ -101,6 +101,30 @@ let gen (bind_list, sfunction_decls) =
       in
       lbuild (codegen_expr builder e1) (codegen_expr builder e2) "im" builder
   in
+
+  (* Set up tables for globals, locals, and function parameters *)
+  let locals_tbl = SMap.empty in 
+  let params_tbl = SMap.empty in
+  let globals_tbl = SMap.empty in 
+
+  (* lookup will be used within a function *)
+  let lookup name = 
+    try SMap.find name locals_tbl with 
+      | Not_found -> 
+        try SMap.find name params_tbl with 
+        | Not_found ->
+          try SMap.find name globals_tbl with 
+          | Not_found -> raise (Failure("Unknown variable " ^ name))
+  in
+
+  (* Generate globals *)
+  let codegen_globals globals = 
+    let add_to_globals_tbl tbl (t, n) = 
+      let init = L.const_int (typ_to_t t) 0 in 
+      SMap.add n (L.define_global n init m) tbl
+    in List.map (add_to_globals_tbl globals_tbl) globals
+  in 
+
   (* Codegen for function body *)
   let gen_func func =
     (* let A.Func(bind, body) = func in *)
