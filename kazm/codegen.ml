@@ -147,9 +147,13 @@ let gen (sglobals, sfunction_decls) =
     let body =  func.sbody in
     let typ = func.styp in 
     let name = func.sfname in 
+    let formals = func.sformals in
+    let locals = func.slocals in 
     (* Defines the func *)
     let fn = SMap.find name all_funcs in
-
+    (* Clear locals_tbl and params_tbl *)
+    let locals_tbl = SMap.empty in 
+    let params_tbl = SMap.empty in 
     (* Codegen for a statement *)
     (* Takes builder and statement and returns a builder *)
     let rec codegen_stmt builder = function
@@ -215,10 +219,13 @@ let gen (sglobals, sfunction_decls) =
 
         (* Branch to start *)
         ignore (L.build_br start_blk builder);
-
+        
+        (* Generate locals *)
+        ignore(codegen_locals formals locals builder fn);
         (* Continue building after the end of the loop *)
         end_builder
-    in
+
+    in    
 
     (* Build all statements *)
     let fn_builder = L.builder_at_end context (L.entry_block fn) in
