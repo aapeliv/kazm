@@ -35,10 +35,20 @@ let check (globals, functions) =
       fname = name;
       formals = [(ty, "x")];
       locals = []; body = [] } map
-    in List.fold_left add_bind StringMap.empty [ ("print", Int);
+    in let smap =  StringMap.add "next_int" {
+      typ = Int;
+      fname = "next_int";
+      formals = [];
+      locals = []; body = [] } StringMap.empty 
+    in List.fold_left add_bind smap [ ("print", Int);
 			                         ("printb", Bool);
 			                         ("printf", Float);
                                ("prints", String);
+                               ("println", String);
+                               ("int_print", Int);
+                               ("int_println", Int);
+                               ("double_print", Double);
+                               ("double_println", Double);
 			                         ("printbig", Int) ]
   in
 

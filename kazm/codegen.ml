@@ -1,9 +1,10 @@
 module A = Ast
 module L = Llvm
+open Sast
 
 module SMap = Map.Make(String)
 
-let gen prog =
+let gen (bind_list, sfunction_decls) =
   (* Set up module & context *)
   let context = L.global_context () in
   let m = L.create_module context "kazm" in
@@ -55,50 +56,58 @@ let gen prog =
 
   (* Codegen function definitions *)
   let codegen_func_sig all_funcs func =
-    let A.Func(bind, _) = func in
-    let A.Bind(typ, name) = bind in
-    add_func_def all_funcs name (typ_to_t typ) []
+    (* let A.Func(bind, _) = func in *)
+    (* let A.Bind(typ, name) = bind in *)
+    add_func_def all_funcs func.sfname (typ_to_t func.styp) []
   in
 
-  let A.PFuncs(funcs) = prog in
-  let all_funcs = List.fold_left codegen_func_sig all_funcs funcs in
+  (* let A.PFuncs(funcs) = prog in *)
+  (* let all_funcs = List.fold_left codegen_func_sig all_funcs funcs in *)
+  let all_funcs = List.fold_left codegen_func_sig all_funcs sfunction_decls in
 
   (* Codegen for an expression *)
-  let rec codegen_expr builder = function
+  let rec codegen_expr builder ((typ, e) : sexpr) = match e with
     (* Function call *)
-      A.Call(cname, exprs) ->
+      SCall(cname, exprs) ->
         (* let arg_str = L.build_global_stringptr carg "arg" builder in *)
         let arg_array = Array.of_list (List.map (codegen_expr builder) exprs) in
         (* todo: need to make sure these functions actually exist, etc *)
         L.build_call (SMap.find cname all_funcs) arg_array "" builder
     (* New bool literal *)
-    | A.BoolLit(value) -> L.const_int i1_t (if value then 1 else 0)
+    | SBoolLit(value) -> L.const_int i1_t (if value then 1 else 0)
     (* New 32-bit integer literal *)
-    | A.IntLit(value) -> L.const_int i32_t value
-    | A.DoubleLit(value) -> L.const_float double_t value
+    | SLiteral(value) -> L.const_int i32_t value
+    | SDliteral(value) -> L.const_float double_t (float_of_string value)
     (* New string literal (just make a new global string) *)
-    | A.StrLit(value) -> L.build_global_stringptr value "globalstring" builder
-    | A.Binop(e1, op, e2) ->
+    | SStringLit(value) -> L.build_global_stringptr value "globalstring" builder
+    (* Assign expression e to a new bind(type, name) *)
+    | SAssign(s, value) -> let e' = codegen_expr builder value in
+                           let lh = L.build_alloca (typ_to_t typ) s builder in
+                           ignore(L.build_store e' lh builder); e'
+    | SBinop(e1, op, e2) ->
       (* Lookup right thing to build in llvm *)
       let lbuild = match op with
-          A.OpPlus -> L.build_add
-        | A.OpMinus -> L.build_sub
-        | A.OpTimes -> L.build_mul
-        | A.OpDivide -> L.build_sdiv
-        | A.OpMod -> L.build_srem
-        | A.OpEq -> L.build_icmp L.Icmp.Eq
-        | A.OpNeq -> L.build_icmp L.Icmp.Ne
-        | A.OpLt -> L.build_icmp L.Icmp.Slt
-        | A.OpLeq -> L.build_icmp L.Icmp.Sle
-        | A.OpGt -> L.build_icmp L.Icmp.Sgt
-        | A.OpGeq -> L.build_icmp L.Icmp.Sge
+          A.Add -> L.build_add
+        | A.Sub -> L.build_sub
+        | A.Mult -> L.build_mul
+        | A.Div -> L.build_sdiv
+        | A.Mod -> L.build_srem
+        | A.Equal -> L.build_icmp L.Icmp.Eq
+        | A.Neq -> L.build_icmp L.Icmp.Ne
+        | A.Less -> L.build_icmp L.Icmp.Slt
+        | A.Leq -> L.build_icmp L.Icmp.Sle
+        | A.Greater -> L.build_icmp L.Icmp.Sgt
+        | A.Geq -> L.build_icmp L.Icmp.Sge
       in
       lbuild (codegen_expr builder e1) (codegen_expr builder e2) "im" builder
   in
   (* Codegen for function body *)
   let gen_func func =
-    let A.Func(bind, body) = func in
-    let A.Bind(typ, name) = bind in
+    (* let A.Func(bind, body) = func in *)
+    (* let A.Bind(typ, name) = bind in *) 
+    let body =  func.sbody in
+    let typ = func.styp in 
+    let name = func.sfname in 
     (* Defines the func *)
     let fn = SMap.find name all_funcs in
 
@@ -106,21 +115,13 @@ let gen prog =
     (* Takes builder and statement and returns a builder *)
     let rec codegen_stmt builder = function
       (* For expressions we just codegen the expression *)
-        A.Expr(e) -> codegen_expr builder e; builder
+        SExpr(e) -> codegen_expr builder e; builder
       (* For a block of statements, just fold *)
-      | A.Block(es) -> List.fold_left codegen_stmt builder es
-      (* Assign expression e to a *new* bind(type, name) *)
-      | A.Assign(bind, e) -> ignore (
-        let A.Bind(typ, name) = bind in
-        (* Left hand side of the assignment, allocate memory and create a var *)
-        let lh = L.build_alloca (typ_to_t typ) name builder in
-        (* Codegen the expression and store in this var *)
-        L.build_store (codegen_expr builder e) lh builder
-        ); builder
-      | A.ReturnVoid -> ignore (L.build_ret_void builder); builder
-      | A.Return(expr) -> ignore (L.build_ret (codegen_expr builder expr) builder); builder
+      | SBlock(es) -> List.fold_left codegen_stmt builder es
+      | SReturnVoid -> ignore (L.build_ret_void builder); builder
+      | SReturn(expr) -> ignore (L.build_ret (codegen_expr builder expr) builder); builder
       (* If-statements *)
-      | A.If(cond, true_stmts, false_stmts) ->
+      | SIf(cond, true_stmts, false_stmts) ->
         (* Codegen the condition evaluation *)
         let gcond = codegen_expr builder cond in
         (* Generate the block that we come back to after both branches *)
@@ -151,7 +152,7 @@ let gen prog =
         (* Finally return the new builder at end of merge *)
         join_builder
       (* While-statements *)
-      | A.While(cond, stmts) ->
+      | SWhile(cond, stmts) ->
         (* Start at the start block and its builder *)
         let start_blk = L.append_block context "start" fn in
         let start_builder = L.builder_at_end context start_blk in
@@ -182,9 +183,9 @@ let gen prog =
 
     (* Build all statements *)
     let fn_builder = L.builder_at_end context (L.entry_block fn) in
-    codegen_stmt fn_builder (A.Block body)
+    codegen_stmt fn_builder (SBlock body)
   in
 
-  let A.PFuncs(funcs) = prog in
+  let funcs = sfunction_decls in
     ignore (List.map gen_func funcs);
   m
