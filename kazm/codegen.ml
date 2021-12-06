@@ -4,7 +4,7 @@ open Sast
 
 module SMap = Map.Make(String)
 
-let gen (bind_list, sfunction_decls) =
+let gen (sglobals, sfunction_decls) =
   (* Set up module & context *)
   let context = L.global_context () in
   let m = L.create_module context "kazm" in
@@ -125,6 +125,21 @@ let gen (bind_list, sfunction_decls) =
     in List.map (add_to_globals_tbl globals_tbl) globals
   in 
 
+  (* Generate locals *)
+  let codegen_locals formals locals builder fn = 
+    let add_to_params_tbl tbl (t, n) v = (* type name value *)
+      L.set_value_name n v;
+      let formal = L.build_alloca (typ_to_t t) n builder in 
+        L.build_store v formal builder; 
+      SMap.add n formal tbl 
+    and add_to_locals_tbl tbl (t, n) = 
+      let local = L.build_alloca (typ_to_t t) n builder in
+      SMap.add n local tbl 
+    in 
+    List.map2 (add_to_params_tbl params_tbl) formals (Array.to_list (L.params fn));
+    List.map (add_to_locals_tbl locals_tbl) locals
+  in 
+
   (* Codegen for function body *)
   let gen_func func =
     (* let A.Func(bind, body) = func in *)
@@ -209,6 +224,9 @@ let gen (bind_list, sfunction_decls) =
     let fn_builder = L.builder_at_end context (L.entry_block fn) in
     codegen_stmt fn_builder (SBlock body)
   in
+
+  (* Generate globals *)
+  let _ = codegen_globals sglobals in
 
   let funcs = sfunction_decls in
     ignore (List.map gen_func funcs);

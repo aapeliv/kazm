@@ -34,7 +34,7 @@ type sfunc_decl = {
     sbody : sstmt list;
   }
 
-type sprogram = bind list * sfunc_decl list
+type sprogram = bind list * bind list * sfunc_decl list
 
 (* Pretty-printing functions *)
 
