@@ -1,6 +1,6 @@
-int fun()
+int fun(int a)
 {
-  return 1;
+  return 2;
 }
 
 int main()
@@ -9,7 +9,11 @@ int main()
   bool b;
   
   b = true;
-  i = fun();
+  i = fun(1);
 
   return 0;
 }
+
+// when I have return 1; in int fun(int a) it is fine
+// the problem is when I have return a; 
+// I guess this is because we can assign but not use values 

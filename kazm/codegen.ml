@@ -18,9 +18,29 @@ let gen (sglobals, sfunction_decls) =
   let void_t = L.void_type context in
   let char_ptr_t = L.pointer_type char_t in
 
+  (* Map our AST type to LLVM type *)
+  let typ_to_t = function
+      A.Void -> void_t
+    | A.Bool -> i1_t
+    | A.Int -> i32_t
+    | A.Double -> double_t
+  in
+
   let codegen_func_decl name ret_t arg_ts =
-    let func_t = L.function_type ret_t (Array.of_list arg_ts) in
-      L.declare_function name func_t m
+    let helper name arg_ts = match name with 
+      | "print" -> (Array.of_list [char_ptr_t])
+      | "println" -> (Array.of_list [char_ptr_t]) 
+      | "int_print" -> (Array.of_list [i32_t])
+      | "int_println" -> (Array.of_list [i32_t])
+      | "double_print" -> (Array.of_list [double_t])
+      | "double_println" -> (Array.of_list [double_t])
+      | "next_int" -> (Array.of_list [])
+      | _ -> (Array.of_list (List.map typ_to_t arg_ts))
+    in
+    let func_t = 
+      L.function_type ret_t (helper name arg_ts) 
+    in 
+    L.declare_function name func_t m
   in
 
   let add_func_decl map name ret_t arg_ts =
@@ -36,29 +56,20 @@ let gen (sglobals, sfunction_decls) =
     SMap.add name (codegen_func_def name ret_t arg_ts) map
   in
 
-  (* Map our AST type to LLVM type *)
-  let typ_to_t = function
-      A.Void -> void_t
-    | A.Bool -> i1_t
-    | A.Int -> i32_t
-    | A.Double -> double_t
-  in
-
   let all_funcs = SMap.empty in
   (* Builtins... *)
-  let all_funcs = add_func_decl all_funcs "print" void_t [char_ptr_t] in
-  let all_funcs = add_func_decl all_funcs "println" void_t [char_ptr_t] in
-  let all_funcs = add_func_decl all_funcs "int_print" void_t [i32_t] in
-  let all_funcs = add_func_decl all_funcs "int_println" void_t [i32_t] in
-  let all_funcs = add_func_decl all_funcs "double_print" void_t [double_t] in
-  let all_funcs = add_func_decl all_funcs "double_println" void_t [double_t] in
+  (* we have hard coded the arg_ts for now, modify when character types are properly supported *)
+  let all_funcs = add_func_decl all_funcs "print" void_t [] in
+  let all_funcs = add_func_decl all_funcs "println" void_t [] in
+  let all_funcs = add_func_decl all_funcs "int_print" void_t [] in
+  let all_funcs = add_func_decl all_funcs "int_println" void_t [] in
+  let all_funcs = add_func_decl all_funcs "double_print" void_t [] in
+  let all_funcs = add_func_decl all_funcs "double_println" void_t [] in
   let all_funcs = add_func_decl all_funcs "next_int" i32_t [] in
 
   (* Codegen function definitions *)
   let codegen_func_sig all_funcs func =
-    (* let A.Func(bind, _) = func in *)
-    (* let A.Bind(typ, name) = bind in *)
-    add_func_def all_funcs func.sfname (typ_to_t func.styp) []
+    add_func_def all_funcs func.sfname (typ_to_t func.styp) [] (* func.sformals *)
   in
 
   (* let A.PFuncs(funcs) = prog in *)
@@ -66,6 +77,7 @@ let gen (sglobals, sfunction_decls) =
   let all_funcs = List.fold_left codegen_func_sig all_funcs sfunction_decls in
 
   (* Codegen for an expression *)
+  (* when I change *)
   let rec codegen_expr builder ((typ, e) : sexpr) = match e with
     (* Function call *)
       SCall(cname, exprs) ->
