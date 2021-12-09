@@ -21,6 +21,9 @@ int thing() {
 }
 
 void main() {
+  int a;
+  double b;
+
   test_loops();
   // If statements
   println("Start of fn");
@@ -44,8 +47,8 @@ void main() {
   // check brackets
   int_println((1 + 1) * (2 + 2));
   // Can define vars (can't use them before type system)
-  int a = 20;
-  double b = 3.0;
+  a = 20;
+  b = 3.0;
   print("Double 3.14 is: ");
   double_println(3.14);
   // Can call other functions

@@ -100,6 +100,7 @@ let gen (bind_list, sfunction_decls) =
         | A.Geq -> L.build_icmp L.Icmp.Sge
       in
       lbuild (codegen_expr builder e1) (codegen_expr builder e2) "im" builder
+    | _ -> raise (Failure ("sast cannot be matched"))
   in
   (* Codegen for function body *)
   let gen_func func =

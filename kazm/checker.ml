@@ -40,16 +40,12 @@ let check (globals, functions) =
       fname = "next_int";
       formals = [];
       locals = []; body = [] } StringMap.empty 
-    in List.fold_left add_bind smap [ ("print", Int);
-			                         ("printb", Bool);
-			                         ("printf", Float);
-                               ("prints", String);
+    in List.fold_left add_bind smap [ ("print", String);
                                ("println", String);
                                ("int_print", Int);
                                ("int_println", Int);
                                ("double_print", Double);
-                               ("double_println", Double);
-			                         ("printbig", Int) ]
+                               ("double_println", Double)]
   in
 
   (* Add function name to symbol table *)
