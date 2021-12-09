@@ -4,6 +4,9 @@ open Sast
 
 module SMap = Map.Make(String)
 
+let log_to_file str=
+ignore()
+
 let gen (sglobals, sfunction_decls) =
   (* Set up module & context *)
   let context = L.global_context () in
@@ -76,8 +79,22 @@ let gen (sglobals, sfunction_decls) =
   (* let all_funcs = List.fold_left codegen_func_sig all_funcs funcs in *)
   let all_funcs = List.fold_left codegen_func_sig all_funcs sfunction_decls in
 
+  (* Set up tables for globals, locals, and function parameters *)
+  let locals_tbl = SMap.empty in 
+  let params_tbl = SMap.empty in
+  let globals_tbl = SMap.empty in 
+
+  (* lookup will be used within a function *)
+  let lookup name = 
+    try SMap.find name locals_tbl with 
+      | Not_found -> 
+        try SMap.find name params_tbl with 
+        | Not_found ->
+          try SMap.find name globals_tbl with 
+          | Not_found -> raise (Failure("Unknown variable " ^ name))
+  in
+
   (* Codegen for an expression *)
-  (* when I change *)
   let rec codegen_expr builder ((typ, e) : sexpr) = match e with
     (* Function call *)
       SCall(cname, exprs) ->
@@ -92,7 +109,10 @@ let gen (sglobals, sfunction_decls) =
     | SDliteral(value) -> L.const_float double_t (float_of_string value)
     (* New string literal (just make a new global string) *)
     | SStringLit(value) -> L.build_global_stringptr value "globalstring" builder
+    (* Handle new variables; s is the name of the variable *)
+    | SId (s) -> L.build_load (lookup s) s builder 
     (* Assign expression e to a new bind(type, name) *)
+    (* s is the name of the lhs variable that receives the assignment, value the expr on the rhs *)
     | SAssign(s, value) -> let e' = codegen_expr builder value in
                            let lh = L.build_alloca (typ_to_t typ) s builder in
                            ignore(L.build_store e' lh builder); e'
@@ -114,20 +134,7 @@ let gen (sglobals, sfunction_decls) =
       lbuild (codegen_expr builder e1) (codegen_expr builder e2) "im" builder
   in
 
-  (* Set up tables for globals, locals, and function parameters *)
-  let locals_tbl = SMap.empty in 
-  let params_tbl = SMap.empty in
-  let globals_tbl = SMap.empty in 
 
-  (* lookup will be used within a function *)
-  let lookup name = 
-    try SMap.find name locals_tbl with 
-      | Not_found -> 
-        try SMap.find name params_tbl with 
-        | Not_found ->
-          try SMap.find name globals_tbl with 
-          | Not_found -> raise (Failure("Unknown variable " ^ name))
-  in
 
   (* Generate globals *)
   let codegen_globals globals = 
@@ -138,7 +145,7 @@ let gen (sglobals, sfunction_decls) =
   in 
 
   (* Generate locals *)
-  let codegen_locals formals locals builder fn = 
+  (* let codegen_locals formals locals builder fn = 
     let add_to_params_tbl tbl (t, n) v = (* type name value *)
       L.set_value_name n v;
       let formal = L.build_alloca (typ_to_t t) n builder in 
@@ -148,9 +155,10 @@ let gen (sglobals, sfunction_decls) =
       let local = L.build_alloca (typ_to_t t) n builder in
       SMap.add n local tbl 
     in 
-    List.map2 (add_to_params_tbl params_tbl) formals (Array.to_list (L.params fn));
+    List.fold_left2 add_to_params_tbl params_tbl formals (Array.to_list (L.params fn));
+    (* ignore(List.map2 (add_to_params_tbl params_tbl) formals (Array.to_list (L.params fn))); *)
     List.map (add_to_locals_tbl locals_tbl) locals
-  in 
+  in  *)
 
   (* Codegen for function body *)
   let gen_func func =
@@ -166,6 +174,7 @@ let gen (sglobals, sfunction_decls) =
     (* Clear locals_tbl and params_tbl *)
     let locals_tbl = SMap.empty in 
     let params_tbl = SMap.empty in 
+    
     (* Codegen for a statement *)
     (* Takes builder and statement and returns a builder *)
     let rec codegen_stmt builder = function
@@ -231,16 +240,62 @@ let gen (sglobals, sfunction_decls) =
 
         (* Branch to start *)
         ignore (L.build_br start_blk builder);
-        
-        (* Generate locals *)
-        ignore(codegen_locals formals locals builder fn);
+      
         (* Continue building after the end of the loop *)
         end_builder
 
     in    
 
+
+
+
     (* Build all statements *)
     let fn_builder = L.builder_at_end context (L.entry_block fn) in
+
+
+    let rec zipWith3
+    (f : 'a -> 'b -> 'c -> 'd)
+    (l1 : 'a list)
+    (l2 : 'b list)
+    (l3 : 'c list) : 'd list
+    = match l1, l2, l3 with 
+    | [], _, _ -> []
+    | _, [], _ -> []
+    | _, _, [] -> []
+    | h1::t1, h2::t2, h3::t3 -> 
+      let r = f h1 h2 h3 in
+      r :: zipWith3 f t1 t2 t3 
+    in 
+
+    (* Move local generation here *)
+    let codegen_locals local_vars = 
+      let add_formal table (the_type, name, value) = 
+      (* let add_formal table (the_type,name) value = *)
+        L.set_value_name name value;
+        let local = L.build_alloca (typ_to_t the_type) name fn_builder in 
+        SMap.add name local table
+      in
+      let add_local table (the_type,name) =
+        let t = typ_to_t the_type
+        in
+        let local_var = L.build_alloca t name fn_builder
+        in SMap.add name local_var table
+      (* in *)
+      (* let _ = List.map2 (add_formal params_tbl) formals (Array.to_list (L.params fn))  *)
+      in 
+      let aux_formals = List.split formals in
+      let values = Array.to_list (L.params fn) in 
+      let concatenated_formals = zipWith3 (fun x y z -> (x,y,z)) (fst aux_formals) (snd aux_formals) values in 
+      ignore(List.map (add_formal params_tbl) concatenated_formals); 
+      (* ignore(List.map2 (add_formal params_tbl) formals (Array.to_list (L.params fn))); *)
+      (* in *) (* formals is bind list where bind is typ * string *)
+      ignore(List.map (add_local locals_tbl) local_vars);
+
+    in codegen_locals locals;
+
+    (* Generate locals *)
+    (* let _ = codegen_locals formals locals fn_builder fn in *)
+    (* ignore(codegen_locals formals locals fn_builder fn); *)
     codegen_stmt fn_builder (SBlock body)
   in
 

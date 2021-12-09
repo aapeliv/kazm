@@ -25,6 +25,7 @@ type sstmt =
   | SWhile of sexpr * sstmt
   | SBreak
   | SReturnVoid
+  (* | SDecl of  *)
 
 type sfunc_decl = {
     styp : typ;

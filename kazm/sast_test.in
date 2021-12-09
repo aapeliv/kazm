@@ -1,13 +1,15 @@
 int fun(int a)
 {
-  return 2;
+  int c;
+  // c = a;
+  return 3;
 }
 
 int main()
 {
   int i;
   bool b;
-  
+
   b = true;
   i = fun(1);
 
