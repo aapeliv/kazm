@@ -44,7 +44,7 @@ for filename in glob("tests/*.kazm"):
     out_file = Path(f"tests/{name}.out")
     run_err_file = Path(f"tests/{name}.err")
     compile_err_file = Path(f"tests/{name}.cerr")
-    assert out_file.exists() or run_err_file.exists() or compile_err_file.exists()
+    assert out_file.exists() or run_err_file.exists() or compile_err_file.exists(), f"Test '{name}' must pass, fail, or fail to compile"
     tests.append((filename, name, out_file, run_err_file, compile_err_file))
 
 print(f"Picked up {len(tests)} tests.")
