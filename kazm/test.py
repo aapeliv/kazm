@@ -89,14 +89,14 @@ for filename, name, out_file, run_err_file, compile_err_file in tests:
             code, data, err = pipe_through(["./kazm.native"], f.read())
             # failed to compile
         if code != 0:
+            stdout = err.decode("utf8")
             if not compile_err_file.exists():
                 # wasn't supposed to fail to compile
-                output = err.decode("utf8")
+                output = stdout
                 raise TestFailed("failed to compile with kazm")
             else:
                 # failed to compile as expected, check outputs match
-                print(err.decode("utf8"))
-                diff = gen_diff(err.decode("utf8"), compile_err_file.read_text())
+                diff = gen_diff(stdout, compile_err_file.read_text())
                 if diff != "":
                     output = "diff:\n" + diff
                     raise TestFailed("wrong compile error from kazm")
@@ -133,16 +133,15 @@ for filename, name, out_file, run_err_file, compile_err_file in tests:
             raise TestFailed("didn't run")
         raise TestPassed()
     except TestPassed:
-        passed = True
+        status = "pass"
     except TestFailed as e:
-        passed = False
+        status = "fail"
         description = str(e)
 
     # print nice output
-    status = "pass" if passed else "fail"
-    color = green if passed else red
-    status_line = f"...{status}"
-    test_output += color(f"{name:.<40}{status_line:.>40}") + "\n"
+    color = green if status == "pass" else red
+    print(color(f"  ...{status}"))
+    test_output += color(f"{name:.<40}{status:.>40}") + "\n"
     if description:
         test_output += color(f"{description:>80}\n")
     if output:
