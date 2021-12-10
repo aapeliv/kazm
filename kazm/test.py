@@ -49,13 +49,23 @@ for filename in glob("tests/*.kazm"):
 
 print(f"Picked up {len(tests)} tests.")
 
-test_output = f"\n\n{'':*<33} Test output {'':*<34}\n"
+test_output = f"\n\n{'':*<33} Test results {'':*<33}\n\n"
 
 def green(msg):
     return "\033[32m" + msg + "\033[0m"
 
 def red(msg):
     return "\033[31m" + msg + "\033[0m"
+
+def gen_diff(output, expected):
+    return "\n".join(
+                difflib.unified_diff(
+                    expected.strip().splitlines(),
+                    output.strip().splitlines(),
+                    fromfile="expected",
+                    tofile="output",
+                )
+            )
 
 for filename, name, out_file, run_err_file, compile_err_file in tests:
     description = None
@@ -95,11 +105,9 @@ for filename, name, out_file, run_err_file, compile_err_file in tests:
                 raise TestException("didn't expect to run but it did")
             else:
                 # ran and expected to run
-                diff = "\n".join(
-                    difflib.unified_diff(stdout.strip(), out_file.read_text().strip(), fromfile="output", tofile="expected")
-                )
+                diff = gen_diff(stdout, out_file.read_text())
                 if diff != "":
-                    output = diff
+                    output = "diff:\n" + diff
                     raise TestException("ran but with wrong output")
         else:
             # didn't run
@@ -116,9 +124,8 @@ for filename, name, out_file, run_err_file, compile_err_file in tests:
     status_line = f"...{status}"
     test_output += color(f"{name:.<40}{status_line:.>40}") + "\n"
     if description:
-        test_output += f"{description:>80}\n"
+        test_output += color(f"{description:>80}\n")
     if output:
-        test_output += "\n".join([f"    {line}" for line in output.splitlines()])
-        test_output += "\n\n"
+        test_output += "\n" + "\n".join([f"    {line}" for line in output.splitlines()]) + "\n\n"
 
 print(test_output)
