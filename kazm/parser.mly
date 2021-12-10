@@ -53,10 +53,10 @@ decls:
 fdecl:
    typ IDENTIFIER PAREN_L formals_opt PAREN_R BRACE_L vdecl_list stmts BRACE_R
      { { typ = $1;
-	       fname = $2;
-	       formals = List.rev $4;
-	       locals = List.rev $7;
-	       body = List.rev $8 } }
+         fname = $2;
+         formals = List.rev $4;
+         locals = List.rev $7;
+         body = List.rev $8 } }
 
 formals_opt:
     /* nothing */ { [] }

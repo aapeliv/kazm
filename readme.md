@@ -3,6 +3,7 @@
 ## Running all tests
 
 ```sh
+cd kazm/
 docker run --rm -it -v $(pwd):/home/kazm -w=/home/kazm aapeliv/plt ./test.py
 ```
 
