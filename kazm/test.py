@@ -37,6 +37,12 @@ tests = []
 class TestException(Exception):
     pass
 
+class TestFailed(TestException):
+    pass
+
+class TestPassed(TestException):
+    pass
+
 for filename in sorted(glob("tests/*.kazm")):
     assert filename.startswith("tests/")
     assert filename.endswith(".kazm")
@@ -79,42 +85,56 @@ for filename, name, out_file, run_err_file, compile_err_file in tests:
         # executable
         ex_file = f"{tmp_dir}/{name}"
         print(f" Compiling '{name}' through kazm...")
-        with open(filename, "rb") as f, open(ll_file, "wb") as o:
+        with open(filename, "rb") as f:
             code, data, err = pipe_through(["./kazm.native"], f.read())
             # failed to compile
-            if code != 0:
+        if code != 0:
+            if not compile_err_file.exists():
+                # wasn't supposed to fail to compile
                 output = err.decode("utf8")
-                raise TestException("failed to compile with kazm")
+                raise TestFailed("failed to compile with kazm")
+            else:
+                # failed to compile as expected, check outputs match
+                print(err.decode("utf8"))
+                diff = gen_diff(err.decode("utf8"), compile_err_file.read_text())
+                if diff != "":
+                    output = "diff:\n" + diff
+                    raise TestFailed("wrong compile error from kazm")
+                else:
+                    raise TestPassed()
+        with open(ll_file, "wb") as o:
             o.write(data)
         print(f" Compiling '{name}' through LLVM...")
         code, _, stderr = run(["llc", "--relocation-model=pic", ll_file, f"-o={s_file}"])
         # failed to compile llvm
         if code != 0:
             output = stderr
-            raise TestException("failed to compile with llvm")
+            raise TestFailed("failed to compile with llvm")
         print(f" Linking '{name}' through cc...")
         code, _, stderr = run(["cc", "-o", ex_file, builtins_o, s_file])
         if code != 0:
             output = stderr
-            raise TestException("failed to link")
+            raise TestFailed("failed to link")
         # actually run the code
         code, stdout, stderr = run([ex_file])
         if code == 0:
             if not out_file.exists():
                 # it ran but didn't expect it to run
-                raise TestException("didn't expect to run but it did")
+                raise TestFailed("didn't expect to run but it did")
             else:
                 # ran and expected to run
                 diff = gen_diff(stdout, out_file.read_text())
                 if diff != "":
                     output = "diff:\n" + diff
-                    raise TestException("ran but with wrong output")
+                    raise TestFailed("ran but with wrong output")
         else:
             # didn't run
             output = stderr
-            raise TestException("didn't run")
+            raise TestFailed("didn't run")
+        raise TestPassed()
+    except TestPassed:
         passed = True
-    except TestException as e:
+    except TestFailed as e:
         passed = False
         description = str(e)
 
