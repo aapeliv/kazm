@@ -45,7 +45,8 @@ let gen (bind_list, sfunction_decls) =
   in
 
   (* Given a builder and our type, build a dummy return (e.g. if there's a missing return) *)
-  let build_default_return builder = function
+  let build_default_return typ builder =
+    match typ with
       A.Void -> L.build_ret_void builder; builder
     | A.Bool -> L.build_ret (L.const_int i1_t 0) builder; builder
     | A.Int -> L.build_ret (L.const_int i32_t 0) builder; builder
@@ -109,6 +110,15 @@ let gen (bind_list, sfunction_decls) =
       in
       lbuild (codegen_expr builder e1) (codegen_expr builder e2) "im" builder
     | _ -> raise (Failure ("sast cannot be matched"))
+  in
+
+  (* Add terminator to end of a basic block *)
+  let add_terminator builder build_terminator =
+    (* llvm.moe: block_terminator returns the terminator of the BB,
+      insertion_block returns the current block we're inserting into with builder *)
+    match L.block_terminator (L.insertion_block builder) with
+      Some _ -> ()
+    | None -> ignore (build_terminator builder)
   in
 
   (* Codegen for function body *)
@@ -196,11 +206,7 @@ let gen (bind_list, sfunction_decls) =
     (* Build all statements *)
     let fn_builder = L.builder_at_end context (L.entry_block fn) in
     let end_builder = codegen_stmt fn_builder (SBlock body) in
-    (* llvm.moe: block_terminator returns the terminator of the BB,
-      insertion_block returns the current block we're inserting into with builder *)
-    match L.block_terminator (L.insertion_block end_builder) with
-      Some _ -> ()
-    | None -> ignore (build_default_return end_builder typ)
+    ignore (add_terminator end_builder (build_default_return typ))
   in
 
   let funcs = sfunction_decls in
