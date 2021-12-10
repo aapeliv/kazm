@@ -1,5 +1,12 @@
 # PLT class group project
 
+## Running all tests
+
+```sh
+docker run --rm -it -v $(pwd):/home/kazm -w=/home/kazm aapeliv/plt ./test.py
+```
+
+
 ## Running the parser
 
 ```sh
