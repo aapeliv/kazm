@@ -1,12 +1,17 @@
 _build/
-kazm.native
+*.native
 parser.output
 
+*.ll
+*.s
+*.o
 parser.ml
 parser.mli
-hello_world.ll
-hello_world.s
-builtins.o
 hello_world
+*.log
+
+sast_printer
+kazm
+sast_test
 
 experiments/
