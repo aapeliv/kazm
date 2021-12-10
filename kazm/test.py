@@ -73,6 +73,9 @@ def gen_diff(output, expected):
                 )
             )
 
+failed = 0
+passed = 0
+
 for filename, name, out_file, run_err_file, compile_err_file in tests:
     description = None
     output = None
@@ -129,13 +132,15 @@ for filename, name, out_file, run_err_file, compile_err_file in tests:
                     raise TestFailed("ran but with wrong output")
         else:
             # didn't run
-            output = stderr
-            raise TestFailed("didn't run")
+            output = f"code: {code}\n" + stderr
+            raise TestFailed("returned with non-zero exit code")
         raise TestPassed()
     except TestPassed:
         status = "pass"
+        passed += 1
     except TestFailed as e:
         status = "fail"
+        failed += 1
         description = str(e)
 
     # print nice output
@@ -146,5 +151,13 @@ for filename, name, out_file, run_err_file, compile_err_file in tests:
         test_output += color(f"{description:>80}\n")
     if output:
         test_output += "\n" + "\n".join([f"    {line}" for line in output.splitlines()]) + "\n\n"
+
+
+total_tests = len(tests)
+assert passed + failed == total_tests
+test_output += "\n\n\n"
+test_output += red(f"Fail{failed:.>21} tests") + "\n"
+test_output += green(f"Pass{passed:.>21} tests") + "\n"
+test_output += f"Total{total_tests:.>20} tests\n"
 
 print(test_output)
