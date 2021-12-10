@@ -1,9 +1,9 @@
 set -e
 
 # compile kazm
-opam config exec -- ocamlbuild -use-ocamlfind kazm.native
+opam config exec -- ocamlbuild -use-ocamlfind sastprinter.native
 # run the kazm compiler to output LLVM IR
-cat hello_world.kazm | ./kazm.native > hello_world.ll
+cat hello_world.kazm | ./sastprinter.native > hello_world.ll
 # compile LLVM IR into assembly
 llc --relocation-model=pic hello_world.ll
 # compile builtins
