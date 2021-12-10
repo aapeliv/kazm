@@ -20,7 +20,7 @@ int thing() {
   return 5;
 }
 
-void main() {
+int main() {
   int a;
   double b;
 
@@ -55,7 +55,7 @@ void main() {
   test();
 
   // Testing conditionals
-  println("Next ints: ");
+  println("Next ints:");
   int_println(next_int());
   if (next_int() < 6) {
     println("was less than 6");
@@ -70,5 +70,5 @@ void main() {
   }
   int_println(next_int());
 
-  return;
+  return 0;
 }

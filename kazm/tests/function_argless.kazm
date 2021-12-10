@@ -1,0 +1,9 @@
+void other_func() {
+  println("In other func");
+}
+
+void main() {
+  println("About to call other_func()");
+  other_func();
+  println("Done.");
+}

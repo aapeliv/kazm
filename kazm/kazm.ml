@@ -1,7 +1,6 @@
 let _ =
   let lexbuf = Lexing.from_channel stdin in
-  let program = Parser.program Scanner.tokenize lexbuf in
-  (* let _ = Printer.string_of_program program in *)
-  (* let _ = Checker.check program in *)
-  let m = Codegen.gen program in
+  let ast = Parser.program Scanner.tokenize lexbuf in
+  let sast = Checker.check ast in
+  let m = Codegen.gen sast in
   print_endline (Llvm.string_of_llmodule m)
