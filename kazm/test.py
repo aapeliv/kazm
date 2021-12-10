@@ -37,7 +37,7 @@ tests = []
 class TestException(Exception):
     pass
 
-for filename in glob("tests/*.kazm"):
+for filename in sorted(glob("tests/*.kazm")):
     assert filename.startswith("tests/")
     assert filename.endswith(".kazm")
     name = filename[len("tests/"):-len(".kazm")]
