@@ -26,10 +26,15 @@ def run(args):
 
 print(f"Building kazm...")
 print(f" Compiling kazm.native")
-run(["opam", "config", "exec", "--", "ocamlbuild", "-use-ocamlfind", "kazm.native"])
+code, stdout, _ = run(["opam", "config", "exec", "--", "ocamlbuild", "-use-ocamlfind", "kazm.native"])
+if code != 0:
+    print("Failed to compile kazm.native")
+    print(stdout)
+    exit(1)
 print(f" Compiling builtins")
 builtins_o = f"{tmp_dir}/builtins.o"
-run(["cc", "-c", "builtins.c", "-o", builtins_o])
+code, _, _ = run(["cc", "-c", "builtins.c", "-o", builtins_o])
+assert code == 0, "Failed to compile builtins"
 
 
 tests = []

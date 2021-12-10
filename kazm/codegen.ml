@@ -44,6 +44,14 @@ let gen (bind_list, sfunction_decls) =
     | A.Double -> double_t
   in
 
+  (* Given a builder and our type, build a dummy return (e.g. if there's a missing return) *)
+  let build_default_return builder = function
+      A.Void -> L.build_ret_void builder; builder
+    | A.Bool -> L.build_ret (L.const_int i1_t 0) builder; builder
+    | A.Int -> L.build_ret (L.const_int i32_t 0) builder; builder
+    | A.Double -> L.build_ret (L.const_float double_t 0.) builder; builder
+  in
+
   let all_funcs = SMap.empty in
   (* Builtins... *)
   let all_funcs = add_func_decl all_funcs "print" void_t [char_ptr_t] in
@@ -102,6 +110,7 @@ let gen (bind_list, sfunction_decls) =
       lbuild (codegen_expr builder e1) (codegen_expr builder e2) "im" builder
     | _ -> raise (Failure ("sast cannot be matched"))
   in
+
   (* Codegen for function body *)
   let gen_func func =
     (* let A.Func(bind, body) = func in *)
@@ -125,6 +134,12 @@ let gen (bind_list, sfunction_decls) =
       | SIf(cond, true_stmts, false_stmts) ->
         (* Codegen the condition evaluation *)
         let gcond = codegen_expr builder cond in
+
+        (* Add the block we go to if we take this branch (cond is true) *)
+        let true_blk = L.append_block context "take" fn in
+        (* Add the block we go to if we don't take this branch (cond is false) *)
+        let false_blk = L.append_block context "dont_take" fn in
+
         (* Generate the block that we come back to after both branches *)
         let join_blk = L.append_block context "join" fn in
         let join_builder = L.builder_at_end context join_blk in
@@ -133,17 +148,13 @@ let gen (bind_list, sfunction_decls) =
           (br)anches back to the start of the join_blk block made above *)
         let build_join = L.build_br join_blk in
 
-        (* True branch *)
-        (* Add the block we go to if we take this branch (cond is true) *)
-        let true_blk = L.append_block context "take" fn in
+        (* True branch building *)
         let true_builder = L.builder_at_end context true_blk in
         (* Build this branch's statements into this block *)
         codegen_stmt true_builder true_stmts;
         build_join true_builder;
 
-        (* False branch *)
-        (* Add the block we go to if we don't take this branch (cond is false) *)
-        let false_blk = L.append_block context "dont_take" fn in
+        (* False branch building *)
         let false_builder = L.builder_at_end context false_blk in
         codegen_stmt false_builder false_stmts;
         build_join false_builder;
@@ -184,7 +195,12 @@ let gen (bind_list, sfunction_decls) =
 
     (* Build all statements *)
     let fn_builder = L.builder_at_end context (L.entry_block fn) in
-    codegen_stmt fn_builder (SBlock body)
+    let end_builder = codegen_stmt fn_builder (SBlock body) in
+    (* llvm.moe: block_terminator returns the terminator of the BB,
+      insertion_block returns the current block we're inserting into with builder *)
+    match L.block_terminator (L.insertion_block end_builder) with
+      Some _ -> ()
+    | None -> ignore (build_default_return end_builder typ)
   in
 
   let funcs = sfunction_decls in
