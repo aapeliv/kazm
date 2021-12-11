@@ -1,0 +1,8 @@
+int multiply(int a, int b) {
+  return a * b;
+}
+
+int main() {
+  int_println(multiply(3, 6));
+  int_println(multiply(17, 6-3));
+}
