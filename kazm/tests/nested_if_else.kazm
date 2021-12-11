@@ -1,8 +1,7 @@
-void main() {
+int main() {
   if (true) {
   } else {
     if (false) {
     }
   }
-  return;
 }

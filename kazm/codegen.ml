@@ -161,13 +161,13 @@ let gen (bind_list, sfunction_decls) =
         (* True branch building *)
         let true_builder = L.builder_at_end context true_blk in
         (* Build this branch's statements into this block *)
-        codegen_stmt true_builder true_stmts;
-        build_join true_builder;
+        let true_builder_done = codegen_stmt true_builder true_stmts in
+        add_terminator true_builder_done build_join;
 
         (* False branch building *)
         let false_builder = L.builder_at_end context false_blk in
-        codegen_stmt false_builder false_stmts;
-        build_join false_builder;
+        let false_builder_done = codegen_stmt false_builder false_stmts in
+        add_terminator false_builder_done build_join;
 
         (* Build the actual conditional branch *)
         ignore (L.build_cond_br gcond true_blk false_blk builder);
