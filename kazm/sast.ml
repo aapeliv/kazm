@@ -32,7 +32,7 @@ type sfunc_decl = {
     sformals : bind list;
     slocals : bind list;
     sbody : sstmt list;
-  }
+}
 
 type sclass_decl = {
     scname : class_t;

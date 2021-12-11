@@ -49,6 +49,13 @@ let gen (bind_list, sfunction_decls, sclass_decls) =
     | A.Double -> double_t
   in
 
+  let codegen_class_decl cls =
+    let arg_ts = List.map (fun v -> typ_to_t (fst v)) cls.scvars in
+    let cls_t = L.struct_type context (Array.of_list arg_ts) in
+    (* ignore (L.set_value_name cls.scname cls_t); *)
+    cls_t
+  in
+
   (* Given a builder and our type, build a dummy return (e.g. if there's a missing return) *)
   let build_default_return typ ctx =
     let Ctx(builder, sp) = ctx in
@@ -272,6 +279,6 @@ let gen (bind_list, sfunction_decls, sclass_decls) =
     ignore (add_terminator ctx' (build_default_return typ))
   in
 
-  let funcs = sfunction_decls in
-    ignore (List.map gen_func funcs);
+  ignore (List.map codegen_class_decl sclass_decls);
+  ignore (List.map gen_func sfunction_decls);
   m
