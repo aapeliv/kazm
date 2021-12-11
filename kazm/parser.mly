@@ -70,7 +70,7 @@ fdecl:
          body = List.rev $8 } }
 
 cdecl:
-    CLASS IDENTIFIER BRACE_L class_body BRACE_R SEMI { { cname = $2; cvars = $4 } }
+    CLASS CLASS_IDENTIFIER BRACE_L class_body BRACE_R SEMI { { cname = $2; cvars = $4 } }
 
 class_body:
     var_decls { $1 }
@@ -81,7 +81,7 @@ formals_opt:
 
 /* doesnt have a type yet */ 
 constructor: 
-  IDENTIFIER PAREN_L formals_opt PAREN_R BRACE_L var_decls stmts BRACE_R { {
+  CLASS_IDENTIFIER PAREN_L formals_opt PAREN_R BRACE_L var_decls stmts BRACE_R { {
       fname = $1;
       formals = List.rev $3;
       locals = List.rev $6;
@@ -99,7 +99,7 @@ typ:
   | INT { Int }
   | DOUBLE { Double }
   | STRING { String }
-  | CLASS IDENTIFIER { ClassT($2) }
+  | CLASS_IDENTIFIER { ClassT($2) }
 
 var_decls:
     { [] }
