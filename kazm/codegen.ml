@@ -71,14 +71,10 @@ let gen (bind_list, sfunction_decls) =
 
   (* Codegen function definitions *)
   let codegen_func_sig all_funcs func =
-    (* let A.Func(bind, _) = func in *)
-    (* let A.Bind(typ, name) = bind in *)
     let arg_types = List.map (fun sformal -> typ_to_t (fst sformal)) func.sformals in
     add_func_def all_funcs func.sfname (typ_to_t func.styp) arg_types
   in
 
-  (* let A.PFuncs(funcs) = prog in *)
-  (* let all_funcs = List.fold_left codegen_func_sig all_funcs funcs in *)
   let all_funcs = List.fold_left codegen_func_sig all_funcs sfunction_decls in
 
   let new_scope ctx =
@@ -92,21 +88,10 @@ let gen (bind_list, sfunction_decls) =
     | Scope(Some parent, map) -> if SMap.mem name map then SMap.find name map else find_var parent name
   in
 
-  let find_var_in_ctx ctx name =
-    let Ctx(_, sp) = ctx in
-    find_var sp name
-  in
-
   let add_var scope name l =
     let Scope(p, map) = scope in
     let map' = SMap.add name l map in
     Scope(p, map')
-  in
-
-  let add_var_to_ctx ctx name l =
-    let Ctx(b, sp) = ctx in
-    let sp' = add_var sp name l in
-    Ctx(b, sp)
   in
 
   (* Codegen for an expression *)
