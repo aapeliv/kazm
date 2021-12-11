@@ -3,7 +3,6 @@ on: [push]
 jobs:
   test:
     runs-on: ubuntu-latest
-    container: aapeliv/plt
     steps:
     - uses: actions/checkout@v2
-    - run: cd kazm/ && opam init -a && ./test.py
+    - run: cd kazm/ && docker run --rm -it -v $(pwd):/home/kazm -w=/home/kazm aapeliv/plt ./test.py
