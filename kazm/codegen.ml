@@ -9,7 +9,7 @@ type vscope = Scope of (vscope option) * L.llvalue SMap.t
 (* A codegen context: builder and variable scope *)
 type ctx_t = Ctx of L.llbuilder * vscope
 
-let gen (bind_list, sfunction_decls) =
+let gen (bind_list, sfunction_decls, sclass_decls) =
   (* Set up module & context *)
   let context = L.global_context () in
   let m = L.create_module context "kazm" in

@@ -3,7 +3,8 @@ type op = Add | Sub | Mult | Div | Equal | Neq | Less | Leq | Greater | Geq |
 
 type uop = Neg | Not
 
-type typ = Int | Bool | Double | Void | String | Char | Float
+type class_t = string
+type typ = Int | Bool | Double | Void | String | Char | Float | ClassT of class_t
 type bind = typ * string
 
 type expr =
@@ -37,7 +38,12 @@ type func_decl = {
     body : stmt list;
 }
 
-type program = bind list * func_decl list
+type class_decl = {
+    cname : class_t;
+    cvars : bind list;
+}
+
+type program = bind list * func_decl list * class_decl list
 
 let string_of_op = function
     Add -> "+"

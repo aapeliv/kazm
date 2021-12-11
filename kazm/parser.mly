@@ -46,9 +46,19 @@ program:
   decls EOF { $1 }
 
 decls:
-   /* nothing */ { ([], []) }
- | decls var_decl { ((fst $1 @ [$2]), snd $1) }
- | decls fdecl { (fst $1, (snd $1 @ [$2])) }
+   /* nothing */ { ([], [], []) }
+ | decls var_decl {
+   let (f, s, t) = $1 in
+   (f @ [$2], s, t)
+  }
+ | decls fdecl {
+   let (f, s, t) = $1 in
+   (f, s @ [$2], t)
+  }
+ | decls cdecl {
+   let (f, s, t) = $1 in
+   (f, s, t @ [$2])
+ }
 
 fdecl:
    typ IDENTIFIER PAREN_L formals_opt PAREN_R BRACE_L var_decls stmts BRACE_R
@@ -57,6 +67,12 @@ fdecl:
          formals = List.rev $4;
          locals = List.rev $7;
          body = List.rev $8 } }
+
+cdecl:
+    CLASS IDENTIFIER BRACE_L class_body BRACE_R SEMI { { cname = $2; cvars = $4 } }
+
+class_body:
+    var_decls { $1 }
 
 formals_opt:
     /* nothing */ { [] }

@@ -7,7 +7,7 @@ module StringMap = Map.Make(String)
    throws an exception if something is wrong.
    Check each global variable, then check each function *)
 
-let check (globals, functions) =
+let check (globals, functions, classes) =
 
   (* Verify a list of bindings has no void types or duplicate names *)
   let check_binds (kind : string) (binds : bind list) =
@@ -71,6 +71,11 @@ let check (globals, functions) =
   in
 
   let _ = find_func "main" in (* Ensure "main" is defined *)
+
+  let check_class cls =
+    {  scname = cls.cname;
+      scvars = cls.cvars; }
+  in
 
   let check_function func =
     (* Make sure no formals or locals are void or duplicates *)
@@ -193,4 +198,4 @@ let check (globals, functions) =
     SBlock(sl) -> sl
       | _ -> raise (Failure ("internal error: block didn't become a block?"))
     }
-  in (globals, List.map check_function functions)
+  in (globals, List.map check_function functions, List.map check_class classes)
