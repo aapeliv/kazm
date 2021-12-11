@@ -47,11 +47,11 @@ program:
 
 decls:
    /* nothing */ { ([], []) }
- | decls vdecl { ((fst $1 @ [$2]), snd $1) }
+ | decls var_decl { ((fst $1 @ [$2]), snd $1) }
  | decls fdecl { (fst $1, (snd $1 @ [$2])) }
 
 fdecl:
-   typ IDENTIFIER PAREN_L formals_opt PAREN_R BRACE_L vdecl_list stmts BRACE_R
+   typ IDENTIFIER PAREN_L formals_opt PAREN_R BRACE_L var_decls stmts BRACE_R
      { { typ = $1;
          fname = $2;
          formals = List.rev $4;
@@ -63,7 +63,7 @@ formals_opt:
   | formal_list   { $1 }
 
 formal_list:
-    typ IDENTIFIER                    { [($1,$2)]     }
+    typ IDENTIFIER { [($1,$2)] }
   | formal_list COMMA typ IDENTIFIER { ($3,$4) :: $1 }
 
 typ:
@@ -74,11 +74,11 @@ typ:
   | DOUBLE { Double }
   | STRING { String }
 
-vdecl_list:
-    /* nothing */    { [] }
-  | vdecl_list vdecl { $2 :: $1 }
+var_decls:
+    { [] }
+  | var_decls var_decl { $2 :: $1 }
 
-vdecl:
+var_decl:
    typ IDENTIFIER SEMI { ($1, $2) }
 
 stmts:
