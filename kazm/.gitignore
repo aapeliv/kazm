@@ -11,6 +11,8 @@ parser.mli
 hello_world
 *.log
 
+loggy.txt
+
 sast_printer
 kazm
 sast_test
