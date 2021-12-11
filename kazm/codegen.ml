@@ -47,10 +47,10 @@ let gen (bind_list, sfunction_decls) =
   (* Given a builder and our type, build a dummy return (e.g. if there's a missing return) *)
   let build_default_return typ builder =
     match typ with
-      A.Void -> L.build_ret_void builder; builder
-    | A.Bool -> L.build_ret (L.const_int i1_t 0) builder; builder
-    | A.Int -> L.build_ret (L.const_int i32_t 0) builder; builder
-    | A.Double -> L.build_ret (L.const_float double_t 0.) builder; builder
+      A.Void -> ignore (L.build_ret_void builder); builder
+    | A.Bool -> ignore (L.build_ret (L.const_int i1_t 0) builder); builder
+    | A.Int -> ignore (L.build_ret (L.const_int i32_t 0) builder); builder
+    | A.Double -> ignore (L.build_ret (L.const_float double_t 0.) builder); builder
   in
 
   let all_funcs = SMap.empty in
@@ -76,11 +76,11 @@ let gen (bind_list, sfunction_decls) =
   let all_funcs = List.fold_left codegen_func_sig all_funcs sfunction_decls in
 
   (* Codegen for an expression *)
-  let rec codegen_expr builder ((typ, e) : sexpr) = match e with
+  let rec codegen_expr sp builder ((typ, e) : sexpr) = match e with
     (* Function call *)
       SCall(cname, exprs) ->
         (* let arg_str = L.build_global_stringptr carg "arg" builder in *)
-        let arg_array = Array.of_list (List.map (codegen_expr builder) exprs) in
+        let arg_array = Array.of_list (List.map (codegen_expr sp builder) exprs) in
         (* todo: need to make sure these functions actually exist, etc *)
         L.build_call (SMap.find cname all_funcs) arg_array "" builder
     (* New bool literal *)
@@ -91,9 +91,9 @@ let gen (bind_list, sfunction_decls) =
     (* New string literal (just make a new global string) *)
     | SStringLit(value) -> L.build_global_stringptr value "globalstring" builder
     (* Assign expression e to a new bind(type, name) *)
-    | SAssign(s, value) -> let e' = codegen_expr builder value in
+    | SAssign(s, value) -> let e' = codegen_expr sp builder value in
                            let lh = L.build_alloca (typ_to_t typ) s builder in
-                           ignore(L.build_store e' lh builder); e'
+                           ignore (L.build_store e' lh builder); e'
     | SBinop(e1, op, e2) ->
       (* Lookup right thing to build in llvm *)
       let lbuild = match op with
@@ -109,7 +109,7 @@ let gen (bind_list, sfunction_decls) =
         | A.Greater -> L.build_icmp L.Icmp.Sgt
         | A.Geq -> L.build_icmp L.Icmp.Sge
       in
-      lbuild (codegen_expr builder e1) (codegen_expr builder e2) "im" builder
+      lbuild (codegen_expr sp builder e1) (codegen_expr sp builder e2) "im" builder
     | _ -> raise (Failure ("sast cannot be matched"))
   in
 
@@ -135,17 +135,17 @@ let gen (bind_list, sfunction_decls) =
 
     (* Codegen for a statement *)
     (* Takes builder and statement and returns a builder *)
-    let rec codegen_stmt builder = function
+    let rec codegen_stmt sp builder = function
       (* For expressions we just codegen the expression *)
-        SExpr(e) -> codegen_expr builder e; builder
+        SExpr(e) -> ignore (codegen_expr sp builder e); builder
       (* For a block of statements, just fold *)
-      | SBlock(es) -> List.fold_left codegen_stmt builder es
+      | SBlock(es) -> List.fold_left (codegen_stmt sp) builder es
       | SEmptyReturn -> build_default_return typ builder
-      | SReturn(expr) -> ignore (L.build_ret (codegen_expr builder expr) builder); builder
+      | SReturn(expr) -> ignore (L.build_ret (codegen_expr sp builder expr) builder); builder
       (* If-statements *)
       | SIf(cond, true_stmts, false_stmts) ->
         (* Codegen the condition evaluation *)
-        let gcond = codegen_expr builder cond in
+        let gcond = codegen_expr sp builder cond in
 
         (* Add the block we go to if we take this branch (cond is true) *)
         let true_blk = L.append_block context "take" fn in
@@ -163,12 +163,12 @@ let gen (bind_list, sfunction_decls) =
         (* True branch building *)
         let true_builder = L.builder_at_end context true_blk in
         (* Build this branch's statements into this block *)
-        let true_builder_done = codegen_stmt true_builder true_stmts in
+        let true_builder_done = codegen_stmt sp true_builder true_stmts in
         add_terminator true_builder_done build_join;
 
         (* False branch building *)
         let false_builder = L.builder_at_end context false_blk in
-        let false_builder_done = codegen_stmt false_builder false_stmts in
+        let false_builder_done = codegen_stmt sp false_builder false_stmts in
         add_terminator false_builder_done build_join;
 
         (* Build the actual conditional branch *)
@@ -185,16 +185,16 @@ let gen (bind_list, sfunction_decls) =
         let loop_blk = L.append_block context "loop" fn in
         let loop_builder = L.builder_at_end context loop_blk in
         (* Loop body (an iteration) *)
-        codegen_stmt loop_builder stmts;
+        ignore (codegen_stmt sp loop_builder stmts);
         (* Back to start after a loop iteration *)
-        L.build_br start_blk loop_builder;
+        ignore (L.build_br start_blk loop_builder);
 
         (* Generate the end block where we end up after the while cond becomes false *)
         let end_blk = L.append_block context "end" fn in
         let end_builder = L.builder_at_end context end_blk in
 
         (* Codegen the condition evaluation *)
-        let gcond = codegen_expr start_builder cond in
+        let gcond = codegen_expr sp start_builder cond in
         (* Build the branch instr *)
         ignore (L.build_cond_br gcond loop_blk end_blk start_builder);
 
@@ -215,8 +215,9 @@ let gen (bind_list, sfunction_decls) =
       SMap.add name local_copy map
     in
     let vars = List.fold_left2 add_param vars formals (Array.to_list (L.params fn)) in
+    let fn_scope = (None, vars) in
     (* Build all statements *)
-    let builder_done = codegen_stmt fn_builder (SBlock body) in
+    let builder_done = codegen_stmt fn_scope fn_builder (SBlock body) in
     ignore (add_terminator builder_done (build_default_return typ))
   in
 
