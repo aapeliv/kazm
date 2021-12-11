@@ -82,16 +82,9 @@ let gen (bind_list, sfunction_decls) =
     match e with
     (* Function call *)
       SCall(cname, exprs) ->
-        let accum old_ctx expr =
-          let (new_ctx, gend_expr) = codegen_expr old_ctx expr in
-          (new_ctx, gend_expr)
-        in
-        let (new_ctx, args_evaluted) = Future.fold_left_map accum ctx exprs in
-        (* let arg_str = L.build_global_stringptr carg "arg" builder in *)
-        let arg_array = Array.of_list args_evaluted in
-        (* todo: need to make sure these functions actually exist, etc *)
-        let ex = L.build_call (SMap.find cname all_funcs) arg_array "" builder in
-        (new_ctx, ex)
+        let (ctx', args) = Future.fold_left_map codegen_expr ctx exprs in
+        let ex = L.build_call (SMap.find cname all_funcs) (Array.of_list args) "" builder in
+        (ctx', ex)
     (* New bool literal *)
     | SBoolLit(value) -> (ctx, L.const_int i1_t (if value then 1 else 0))
     (* New 32-bit integer literal *)
@@ -100,7 +93,7 @@ let gen (bind_list, sfunction_decls) =
     (* New string literal (just make a new global string) *)
     | SStringLit(value) -> (ctx, L.build_global_stringptr value "globalstring" builder)
     (* Assign expression e to a new bind(type, name) *)
-    | SAssign(s, value) -> let (new_ctx, e') = codegen_expr ctx value in
+    | SAssign(s, value) -> let (ctx', e') = codegen_expr ctx value in
                            let lh = L.build_alloca (typ_to_t typ) s builder in
                            (* TODO *)
                            ignore (L.build_store e' lh builder); (ctx, e')
