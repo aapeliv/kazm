@@ -16,6 +16,7 @@ open Ast
 %token TRUE FALSE
 
 %token<string> IDENTIFIER
+%token<string> CLASS_NAME
 %token<string> STRING_LITERAL
 %token<float> DOUBLE_LITERAL
 %token<char> CHAR_LITERAL
@@ -69,7 +70,7 @@ fdecl:
          body = List.rev $8 } }
 
 cdecl:
-    CLASS IDENTIFIER BRACE_L class_body BRACE_R SEMI { { cname = $2; cvars = $4 } }
+    CLASS CLASS_NAME BRACE_L class_body BRACE_R SEMI { { cname = $2; cvars = $4 } }
 
 class_body:
     var_decls { $1 }
@@ -89,7 +90,7 @@ typ:
   | INT { Int }
   | DOUBLE { Double }
   | STRING { String }
-  | IDENTIFIER { ClassT($1) }
+  | CLASS_NAME { ClassT($1) }
 
 var_decls:
     { [] }

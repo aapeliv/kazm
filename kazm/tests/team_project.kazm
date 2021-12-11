@@ -1,9 +1,9 @@
-class TeamProject {
+class class__TeamProject {
   int num_members;
   double capacity;
   //String name;
 };
 
 int main() {
-  TeamProject project;
+  class__TeamProject project;
 }
