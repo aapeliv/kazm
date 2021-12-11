@@ -166,3 +166,5 @@ test_output += green(f"Pass{passed:.>21} tests") + "\n"
 test_output += f"Total{total_tests:.>20} tests\n"
 
 print(test_output)
+
+exit(failed)
