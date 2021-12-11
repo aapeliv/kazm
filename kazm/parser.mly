@@ -15,7 +15,7 @@ open Ast
 %token CLASS
 %token TRUE FALSE
 
-%token<string> IDENTIFIER
+%token<string> IDENTIFIER CLASS_IDENTIFIER
 %token<string> CLASS_NAME
 %token<string> STRING_LITERAL
 %token<float> DOUBLE_LITERAL
@@ -79,9 +79,9 @@ formals_opt:
     /* nothing */ { [] }
   | formal_list   { $1 }
 
-/* doesnt have a type yet*/ 
+/* doesnt have a type yet */ 
 constructor: 
-  | IDENTIFIER PAREN_L formals_opt PAREN_R BRACE_L var_decls stmts BRACE_R { {
+  IDENTIFIER PAREN_L formals_opt PAREN_R BRACE_L var_decls stmts BRACE_R { {
       fname = $1;
       formals = List.rev $3;
       locals = List.rev $6;
