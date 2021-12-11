@@ -25,7 +25,7 @@ kazm.native :
 .PHONY : clean
 clean :
 	ocamlbuild -clean
-	rm -rf testall.log ocamlllvm *.diff test* fail*  
+	rm -rf testall.log ocamlllvm *.diff test-* fail-*  
 
 # Can use this to test utils.c later
 
