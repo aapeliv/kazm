@@ -89,6 +89,7 @@ typ:
   | INT { Int }
   | DOUBLE { Double }
   | STRING { String }
+  | IDENTIFIER { ClassT($1) }
 
 var_decls:
     { [] }

@@ -23,6 +23,32 @@ let gen (bind_list, sfunction_decls, sclass_decls) =
   let void_t = L.void_type context in
   let char_ptr_t = L.pointer_type char_t in
 
+  (* Map our AST type to LLVM type *)
+  let typ_to_t_TODO_WITHOUT_CLASSES = function
+      A.Void -> void_t
+    | A.Bool -> i1_t
+    | A.Int -> i32_t
+    | A.Double -> double_t
+  in
+
+  let codegen_class_decl map cls =
+    let arg_ts = List.map (fun v -> typ_to_t_TODO_WITHOUT_CLASSES (fst v)) cls.scvars in
+    let cls_t = L.struct_type context (Array.of_list arg_ts) in
+    (* ignore (L.set_value_name cls.scname cls_t); *)
+    SMap.add cls.scname cls_t map
+  in
+
+  let all_classes = List.fold_left codegen_class_decl SMap.empty sclass_decls in
+
+  (* TODO TODO TODO *)
+  let typ_to_t = function
+      A.Void -> void_t
+    | A.Bool -> i1_t
+    | A.Int -> i32_t
+    | A.Double -> double_t
+    | A.ClassT(name) -> SMap.find name all_classes
+  in
+
   let codegen_func_decl name ret_t arg_ts =
     let func_t = L.function_type ret_t (Array.of_list arg_ts) in
       L.declare_function name func_t m
@@ -39,21 +65,6 @@ let gen (bind_list, sfunction_decls, sclass_decls) =
 
   let add_func_def map name ret_t arg_ts =
     SMap.add name (codegen_func_def name ret_t arg_ts) map
-  in
-
-  (* Map our AST type to LLVM type *)
-  let typ_to_t = function
-      A.Void -> void_t
-    | A.Bool -> i1_t
-    | A.Int -> i32_t
-    | A.Double -> double_t
-  in
-
-  let codegen_class_decl cls =
-    let arg_ts = List.map (fun v -> typ_to_t (fst v)) cls.scvars in
-    let cls_t = L.struct_type context (Array.of_list arg_ts) in
-    (* ignore (L.set_value_name cls.scname cls_t); *)
-    cls_t
   in
 
   (* Given a builder and our type, build a dummy return (e.g. if there's a missing return) *)
@@ -279,6 +290,5 @@ let gen (bind_list, sfunction_decls, sclass_decls) =
     ignore (add_terminator ctx' (build_default_return typ))
   in
 
-  ignore (List.map codegen_class_decl sclass_decls);
   ignore (List.map gen_func sfunction_decls);
   m

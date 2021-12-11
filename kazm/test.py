@@ -80,7 +80,10 @@ if args.last_failed:
         print(red("Tried to run last failed tests only, but no last failed tests file found"))
     else:
         lf_test_names = lf_file.read_text().splitlines()
-        tests = [test for test in tests if test[1] in lf_test_names]
+        if not lf_test_names:
+            print(red("No failed tests found"))
+        else:
+            tests = [test for test in tests if test[1] in lf_test_names]
 
 print(f"Picked up {len(tests)} tests.")
 
