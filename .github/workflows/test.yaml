@@ -1,0 +1,8 @@
+name: Test Kazm
+on: [push]
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    container: aapeliv/plt
+    steps:
+    - run: cd kazm/ && ./test.py
