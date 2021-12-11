@@ -169,10 +169,8 @@ let gen (bind_list, sfunction_decls, sclass_decls) =
       let mems = List.mapi (fun ix v -> (ix, snd v)) cls.scvars in
       (* Filter out the members that have the same name as the sought after member (there should only be 1) *)
       let (mem_pos_in_class, _) = List.hd (List.filter (fun (ix, v) -> (tl = v)) mems) in
-      (* let mem_pos_in_class = List.hd (Future.filteri (fun i v -> (tl = (snd v))) cls.scvars) in *)
-      (* let ::[] = all_matching_mems in *)
-      let v = (L.build_struct_gep cval mem_pos_in_class tl builder) in
-      (ctx, v)
+      let v = (L.build_struct_gep cval mem_pos_in_class (tl ^ "_ptr") builder) in
+      (ctx, L.build_load v (tl ^ "_copy") builder)
       (* | _ -> raise (Failure ("sast cannot be matched")) *)
   in
 

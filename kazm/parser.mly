@@ -158,7 +158,7 @@ expr:
   | PAREN_L expr PAREN_R { $2 }
   | IDENTIFIER ASSIGN expr { Assign($1, $3) }
   | IDENTIFIER PAREN_L args_opt PAREN_R { Call($1, $3) }
-  | fq_identifier      { Id(List.rev $1) }
+  | fq_identifier      { Id($1) }
 
 fq_identifier:
     IDENTIFIER { [$1] }
