@@ -15,7 +15,7 @@ open Ast
 %token CLASS
 %token TRUE FALSE
 
-%token<string> IDENTIFIER
+%token<string> IDENTIFIER CLASS_IDENTIFIER
 %token<string> CLASS_NAME
 %token<string> STRING_LITERAL
 %token<float> DOUBLE_LITERAL
@@ -70,7 +70,7 @@ fdecl:
          body = List.rev $8 } }
 
 cdecl:
-    CLASS IDENTIFIER BRACE_L class_body BRACE_R SEMI { { cname = $2; cvars = $4 } }
+    CLASS CLASS_IDENTIFIER BRACE_L class_body BRACE_R SEMI { { cname = $2; cvars = $4 } }
 
 class_body:
     var_decls { $1 }
@@ -79,12 +79,18 @@ formals_opt:
     /* nothing */ { [] }
   | formal_list   { $1 }
 
+/* doesnt have a type yet */
+// constructor:
+//   CLASS_IDENTIFIER PAREN_L formals_opt PAREN_R BRACE_L var_decls stmts BRACE_R { {
+//       fname = $1;
+//       formals = List.rev $3;
+//       locals = List.rev $6;
+//       body = List.rev $7 } }
+
+
 formal_list:
     typ IDENTIFIER { [($1,$2)] }
   | formal_list COMMA typ IDENTIFIER { ($3,$4) :: $1 }
-
-class_type:
-    CLASS IDENTIFIER { ClassT($2) }
 
 typ:
     VOID { Void }
@@ -93,7 +99,7 @@ typ:
   | INT { Int }
   | DOUBLE { Double }
   | STRING { String }
-  | class_type { $1 }
+  | CLASS_IDENTIFIER { ClassT($1) }
 
 var_decls:
     { [] }
@@ -162,7 +168,7 @@ expr:
 
 fq_identifier:
     IDENTIFIER { [$1] }
-  | fq_identifier DOT IDENTIFIER { $1 @ [$3] }
+  | IDENTIFIER DOT IDENTIFIER { $1::$3::[] }
 
 args_opt:
     /* nothing */ { [] }

@@ -6,7 +6,7 @@ class TeamProject {
 
 int main() {
   double a;
-  class TeamProject project;
+  TeamProject project;
   // this will just be 0 for now
   int_println(project.num_members);
   //project.capacity = 0.;

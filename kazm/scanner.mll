@@ -63,7 +63,8 @@ rule tokenize = parse
 (* | "\"" ([^'\"']+ as str) "\"" { STRING_LITERAL(str) } *)
 | ['0'-'9']+ as int { INT_LITERAL(int_of_string int) }
 | double as doublelit {DOUBLE_LITERAL(float_of_string doublelit)}
-| ['A'-'Z''a'-'z''_''0'-'9']+ as str { IDENTIFIER(str) }
+| ['a'-'z''_']['A'-'Z''a'-'z''_''0'-'9']* as str { IDENTIFIER(str) }
+| ['A'-'Z']['a'-'z''A'-'Z''_''0'-'9']*  as classLit { CLASS_IDENTIFIER(classLit) }
 | '"'   { STRING_LITERAL(parse_string (Buffer.create 100) lexbuf) }
 | singquote print_char singquote as char   {CHAR_LITERAL(char.[1])}
 | eof { EOF }
