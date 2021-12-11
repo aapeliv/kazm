@@ -90,8 +90,13 @@ let gen (bind_list, sfunction_decls) =
 
   let add_var scope name l =
     let Scope(p, map) = scope in
-    let map' = SMap.add name l map in
-    Scope(p, map')
+    Scope(p, SMap.add name l map)
+  in
+
+  let initialize_var ctx vtyp name =
+    let Ctx(builder, scope) = ctx in
+    let var = L.build_alloca (typ_to_t vtyp) name builder in
+    Ctx(builder, add_var scope name var)
   in
 
   (* Codegen for an expression *)
@@ -160,7 +165,6 @@ let gen (bind_list, sfunction_decls) =
     let typ = func.styp in
     let name = func.sfname in
     let formals = func.sformals in
-    let locals = func.slocals in
     (* Defines the func *)
     let fn = SMap.find name all_funcs in
 
@@ -171,7 +175,7 @@ let gen (bind_list, sfunction_decls) =
       match stmt with
       (* For expressions we just codegen the expression *)
         SExpr(e) ->
-          let (ctx', ex) = codegen_expr ctx e in
+          let (ctx', _) = codegen_expr ctx e in
           ctx'
       | SEmptyReturn -> build_default_return typ ctx
       | SReturn(expr) ->
@@ -248,6 +252,16 @@ let gen (bind_list, sfunction_decls) =
         Ctx(end_builder, sp)
       (* For a block of statements, just fold *)
       | SBlock(stmts) -> List.fold_left codegen_stmt ctx stmts
+      | SInitialize((vtyp, name), None) ->
+        initialize_var ctx vtyp name
+      | SInitialize((vtyp, name), Some e) ->
+        (* Evaluate expression first *)
+        let (ctx', e') = codegen_expr ctx e in
+        (* Then initialize the var *)
+        let Ctx(builder, sp) = initialize_var ctx vtyp name in
+        (* Finally store *)
+        ignore (L.build_store e' (find_var sp name) builder);
+        Ctx(builder, sp)
     in
 
     let fn_builder = L.builder_at_end context (L.entry_block fn) in
@@ -261,12 +275,8 @@ let gen (bind_list, sfunction_decls) =
     in
     let vars = List.fold_left2 add_param vars formals (Array.to_list (L.params fn)) in
     let fn_scope = Scope(None, vars) in
-    let initialize_var scope (vtyp, name) =
-      let var = L.build_alloca (typ_to_t vtyp) name fn_builder in
-      add_var scope name var
-    in
-    let fn_scope' = List.fold_left initialize_var fn_scope locals in
-    let fn_ctx = Ctx(fn_builder, fn_scope') in
+    (* let fn_scope' = List.fold_left initialize_var fn_scope locals in *)
+    let fn_ctx = Ctx(fn_builder, fn_scope) in
     (* Build all statements *)
     let ctx' = codegen_stmt fn_ctx (SBlock body) in
     ignore (add_terminator ctx' (build_default_return typ))
