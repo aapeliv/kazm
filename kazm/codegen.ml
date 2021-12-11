@@ -32,10 +32,11 @@ let gen (bind_list, sfunction_decls, sclass_decls) =
   in
 
   let codegen_class_decl map cls =
+    let name = cls.scname in
     let arg_ts = List.map (fun v -> typ_to_t_TODO_WITHOUT_CLASSES (fst v)) cls.scvars in
-    let cls_t = L.struct_type context (Array.of_list arg_ts) in
-    (* ignore (L.set_value_name cls.scname cls_t); *)
-    SMap.add cls.scname cls_t map
+    let cls_t = L.named_struct_type context name in
+    ignore (L.struct_set_body cls_t (Array.of_list arg_ts) false);
+    SMap.add name cls_t map
   in
 
   let all_classes = List.fold_left codegen_class_decl SMap.empty sclass_decls in
