@@ -10,11 +10,21 @@ from glob import glob
 from pathlib import Path
 import shutil
 import subprocess
+import argparse
+
+parser = argparse.ArgumentParser(description="Kazm test runner")
+parser.add_argument("--last_failed", dest="last_failed", action="store_true")
+parser.set_defaults(last_failed=False)
+args = parser.parse_args()
 
 # clean test build dir
 tmp_dir = Path(".") / "_tests_build"
 shutil.rmtree(tmp_dir, ignore_errors=True)
 tmp_dir.mkdir()
+
+test_store_dir = Path(".") / "_tests_data"
+test_store_dir.mkdir(exist_ok=True)
+lf_file = test_store_dir / "_last_failed"
 
 def pipe_through(args, input_):
     out = subprocess.run(args, input=input_, capture_output=True)
@@ -59,15 +69,22 @@ for filename in sorted(glob("tests/*.kazm")):
     assert out_file.exists() or run_err_file.exists() or compile_err_file.exists(), f"Test '{name}' must pass, fail, or fail to compile"
     tests.append((filename, name, out_file, run_err_file, compile_err_file))
 
-print(f"Picked up {len(tests)} tests.")
-
-test_output = f"\n\n{'':*<33} Test results {'':*<33}\n\n"
-
 def green(msg):
     return "\033[32m" + msg + "\033[0m"
 
 def red(msg):
     return "\033[31m" + msg + "\033[0m"
+
+if args.last_failed:
+    if not lf_file.exists():
+        print(red("Tried to run last failed tests only, but no last failed tests file found"))
+    else:
+        lf_test_names = lf_file.read_text().splitlines()
+        tests = [test for test in tests if test[1] in lf_test_names]
+
+print(f"Picked up {len(tests)} tests.")
+
+test_output = f"\n\n{'':*<33} Test results {'':*<33}\n\n"
 
 def gen_diff(output, expected):
     return "\n".join(
@@ -79,8 +96,8 @@ def gen_diff(output, expected):
                 )
             )
 
-failed = 0
-passed = 0
+failed = []
+passed = []
 flog = open("loggy.txt", "w")
 flog.write("Kazm's Test Suite Log\n\n")
 count = 0
@@ -147,11 +164,11 @@ for filename, name, out_file, run_err_file, compile_err_file in tests:
         raise TestPassed()
     except TestPassed:
         status = "pass"
-        passed += 1
+        passed.append(name)
         flog.write("PASS\n")
     except TestFailed as e:
         status = "fail"
-        failed += 1
+        failed.append(name)
         description = str(e)
         flog.write("FAIL\n")
 
@@ -166,13 +183,16 @@ for filename, name, out_file, run_err_file, compile_err_file in tests:
 
 
 total_tests = len(tests)
-assert passed + failed == total_tests
+assert len(passed) + len(failed) == total_tests
 test_output += "\n\n\n"
-if failed > 0:
-    test_output += red(f"Fail{failed:.>21} tests") + "\n"
-test_output += green(f"Pass{passed:.>21} tests") + "\n"
+if failed:
+    test_output += red(f"Fail{len(failed):.>21} tests") + "\n"
+test_output += green(f"Pass{len(passed):.>21} tests") + "\n"
 test_output += f"Total{total_tests:.>20} tests\n"
+
+with open(lf_file, "w") as f:
+    f.write("\n".join(failed))
 
 print(test_output)
 
-exit(failed)
+exit(len(failed))

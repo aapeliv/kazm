@@ -1,5 +1,6 @@
 _build/
 _tests_build/
+_tests_data/
 *.native
 parser.output
 

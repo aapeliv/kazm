@@ -1,7 +1,9 @@
 class TeamProject {
-    int num_members;
-    double capacity;
-    //String name;
+  int num_members;
+  double capacity;
+  //String name;
 };
 
-int main() {}
+int main() {
+  TeamProject project;
+}
