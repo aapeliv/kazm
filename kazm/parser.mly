@@ -70,7 +70,7 @@ fdecl:
          body = List.rev $8 } }
 
 cdecl:
-    CLASS CLASS_NAME BRACE_L class_body BRACE_R SEMI { { cname = $2; cvars = $4 } }
+    CLASS IDENTIFIER BRACE_L class_body BRACE_R SEMI { { cname = $2; cvars = $4 } }
 
 class_body:
     var_decls { $1 }
@@ -90,7 +90,7 @@ typ:
   | INT { Int }
   | DOUBLE { Double }
   | STRING { String }
-  | CLASS_NAME { ClassT($1) }
+  | CLASS IDENTIFIER { ClassT($2) }
 
 var_decls:
     { [] }
