@@ -6,4 +6,4 @@ jobs:
     container: aapeliv/plt
     steps:
     - uses: actions/checkout@v2
-    - run: cd kazm/ && ./test.py
+    - run: cd kazm/ && opam init -a && ./test.py
