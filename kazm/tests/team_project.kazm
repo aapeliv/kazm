@@ -6,4 +6,6 @@ class TeamProject {
 
 int main() {
   class TeamProject project;
+  project.num_members;
+  //project.capacity = 0.;
 }

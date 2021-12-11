@@ -83,6 +83,9 @@ formal_list:
     typ IDENTIFIER { [($1,$2)] }
   | formal_list COMMA typ IDENTIFIER { ($3,$4) :: $1 }
 
+class_type:
+    CLASS IDENTIFIER { ClassT($2) }
+
 typ:
     VOID { Void }
   | BOOL { Bool }
@@ -90,14 +93,14 @@ typ:
   | INT { Int }
   | DOUBLE { Double }
   | STRING { String }
-  | CLASS IDENTIFIER { ClassT($2) }
+  | class_type { $1 }
 
 var_decls:
     { [] }
   | var_decls var_decl { $2 :: $1 }
 
 var_decl:
-   typ IDENTIFIER SEMI { ($1, $2) }
+    typ IDENTIFIER SEMI { ($1, $2) }
 
 stmts:
     { [] }
@@ -155,7 +158,11 @@ expr:
   | PAREN_L expr PAREN_R { $2 }
   | IDENTIFIER ASSIGN expr { Assign($1, $3) }
   | IDENTIFIER PAREN_L args_opt PAREN_R { Call($1, $3) }
-  | IDENTIFIER          { Id($1) }
+  | fq_identifier      { Id(List.rev $1) }
+
+fq_identifier:
+    IDENTIFIER { [$1] }
+  | fq_identifier DOT IDENTIFIER { $1 @ [$3] }
 
 args_opt:
     /* nothing */ { [] }

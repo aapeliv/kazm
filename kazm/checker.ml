@@ -107,7 +107,10 @@ let check (globals, functions, classes) =
       | CharLit c -> (Char, SCharLit c)
       | StringLit s -> (String, SStringLit s)
       | Noexpr     -> (Void, SNoexpr)
-      | Id s       -> (type_of_identifier s, SId s)
+      | Id (hd::[]) -> (type_of_identifier hd, SId([hd]))
+      (* TODO *)
+      (* Check all types, check value of last thing? *)
+      | Id (lst) -> (Int, SId(lst))
       | Assign(var, e) as ex ->
           let lt = type_of_identifier var
           and (rt, e') = expr e in

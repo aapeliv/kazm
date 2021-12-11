@@ -13,7 +13,7 @@ type expr =
   | BoolLit of bool
   | StringLit of string
   | CharLit of string
-  | Id of string
+  | Id of string list
   | Binop of expr * op * expr
   | Unop of uop * expr
   | Assign of string * expr
@@ -72,7 +72,7 @@ let rec string_of_expr = function
   | BoolLit(false) -> "false"
   | StringLit(s) -> "\"" ^ s ^ "\""
   | CharLit(c) -> "\'" ^ c ^ "\'"
-  | Id(s) -> s
+  | Id(s) -> String.concat ", " s
   | Binop(e1, o, e2) ->
       string_of_expr e1 ^ " " ^ string_of_op o ^ " " ^ string_of_expr e2
   | Unop(o, e) -> string_of_uop o ^ string_of_expr e

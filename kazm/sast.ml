@@ -9,7 +9,7 @@ and sx =
   | SBoolLit of bool
   | SCharLit of string
   | SStringLit of string
-  | SId of string
+  | SId of string list
   | SBinop of sexpr * op * sexpr
   | SUnop of uop * sexpr
   | SAssign of string * sexpr
@@ -39,8 +39,6 @@ type sclass_decl = {
     scvars : bind list;
 }
 
-type sprogram = bind list * sfunc_decl list
-
 (* Pretty-printing functions *)
 
 let rec string_of_sexpr (t, e) =
@@ -51,7 +49,7 @@ let rec string_of_sexpr (t, e) =
   | SCharLit c -> "\'" ^ c ^ "\'"
   | SStringLit s -> "\"" ^ s ^ "\""
   | SDliteral(l) -> l
-  | SId(s) -> s
+  | SId(s) -> String.concat ", " s
   | SBinop(e1, o, e2) ->
       string_of_sexpr e1 ^ " " ^ string_of_op o ^ " " ^ string_of_sexpr e2
   | SUnop(o, e) -> string_of_uop o ^ string_of_sexpr e
