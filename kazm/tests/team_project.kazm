@@ -1,0 +1,7 @@
+class TeamProject {
+    int num_members;
+    double capacity;
+    String name;
+    
+}
+    
