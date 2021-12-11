@@ -81,8 +81,10 @@ def gen_diff(output, expected):
 
 failed = 0
 passed = 0
-
+flog = open("loggy.txt", "w")
+flog.write("Kazm's Test Suite Log\n\n")
 for filename, name, out_file, run_err_file, compile_err_file in tests:
+    flog.write("File: " + filename[6:] + ".............")
     description = None
     output = None
     try:
@@ -144,10 +146,12 @@ for filename, name, out_file, run_err_file, compile_err_file in tests:
     except TestPassed:
         status = "pass"
         passed += 1
+        flog.write("PASS\n")
     except TestFailed as e:
         status = "fail"
         failed += 1
         description = str(e)
+        flog.write("FAIL\n")
 
     # print nice output
     color = green if status == "pass" else red
