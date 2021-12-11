@@ -67,7 +67,8 @@ let gen (bind_list, sfunction_decls) =
   let codegen_func_sig all_funcs func =
     (* let A.Func(bind, _) = func in *)
     (* let A.Bind(typ, name) = bind in *)
-    add_func_def all_funcs func.sfname (typ_to_t func.styp) []
+    let arg_types = List.map (fun sformal -> typ_to_t (fst sformal)) func.sformals in
+    add_func_def all_funcs func.sfname (typ_to_t func.styp) arg_types
   in
 
   (* let A.PFuncs(funcs) = prog in *)
@@ -124,10 +125,11 @@ let gen (bind_list, sfunction_decls) =
   (* Codegen for function body *)
   let gen_func func =
     (* let A.Func(bind, body) = func in *)
-    (* let A.Bind(typ, name) = bind in *) 
+    (* let A.Bind(typ, name) = bind in *)
     let body =  func.sbody in
-    let typ = func.styp in 
-    let name = func.sfname in 
+    let typ = func.styp in
+    let name = func.sfname in
+    let formals = func.sformals in
     (* Defines the func *)
     let fn = SMap.find name all_funcs in
 
@@ -203,8 +205,17 @@ let gen (bind_list, sfunction_decls) =
         end_builder
     in
 
-    (* Build all statements *)
     let fn_builder = L.builder_at_end context (L.entry_block fn) in
+    let vars = SMap.empty in
+    let add_param map (ptyp, name) param =
+      L.set_value_name name param;
+      let local_copy = L.build_alloca (typ_to_t ptyp) name fn_builder in
+      ignore (L.set_value_name (name ^ "_local") local_copy);
+      ignore (L.build_store param local_copy fn_builder);
+      SMap.add name local_copy map
+    in
+    let vars = List.fold_left2 add_param vars formals (Array.to_list (L.params fn)) in
+    (* Build all statements *)
     let builder_done = codegen_stmt fn_builder (SBlock body) in
     ignore (add_terminator builder_done (build_default_return typ))
   in

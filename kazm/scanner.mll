@@ -65,7 +65,7 @@ rule tokenize = parse
 | double as doublelit {DOUBLE_LITERAL(float_of_string doublelit)}
 | ['A'-'Z''a'-'z''_''0'-'9']+ as str { IDENTIFIER(str) }
 | '"'   { STRING_LITERAL(parse_string (Buffer.create 100) lexbuf) }
-| singquote print_char singquote as char   {CHAR_LITERAL(char.[1])} 
+| singquote print_char singquote as char   {CHAR_LITERAL(char.[1])}
 | eof { EOF }
 | _ as char     { raise (Failure("Undefined character: " ^ Char.escaped char)) }
 
@@ -73,7 +73,7 @@ and parse_string buffer = parse
   '"'                 { Buffer.contents buffer }
 | newline             { Buffer.add_string buffer (Lexing.lexeme lexbuf); parse_string buffer lexbuf }
 | [^ '"'  '\n' '\r']+ { Buffer.add_string buffer (Lexing.lexeme lexbuf); parse_string buffer lexbuf }
-| eof                 { raise (Failure("Non-terminated double quotes")) } 
+| eof                 { raise (Failure("Non-terminated double quotes")) }
 
 and multicomment = parse
 "*/" { tokenize lexbuf }

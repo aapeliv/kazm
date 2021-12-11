@@ -46,9 +46,9 @@ program:
   decls EOF { $1 }
 
 decls:
-   /* nothing */ { ([], [])               }
- | decls vdecl { (($2 :: fst $1), snd $1) }
- | decls fdecl { (fst $1, ($2 :: snd $1)) }
+   /* nothing */ { ([], []) }
+ | decls vdecl { ((fst $1 @ [$2]), snd $1) }
+ | decls fdecl { (fst $1, (snd $1 @ [$2])) }
 
 fdecl:
    typ IDENTIFIER PAREN_L formals_opt PAREN_R BRACE_L vdecl_list stmts BRACE_R
