@@ -26,9 +26,10 @@ def run(args):
 
 print(f"Building kazm...")
 print(f" Compiling kazm.native")
-code, stdout, _ = run(["opam", "config", "exec", "--", "ocamlbuild", "-use-ocamlfind", "kazm.native"])
+code, stdout, stderr = run(["opam", "config", "exec", "--", "ocamlbuild", "-use-ocamlfind", "kazm.native"])
 if code != 0:
     print("Failed to compile kazm.native")
+    print(stderr)
     print(stdout)
     exit(1)
 print(f" Compiling builtins")
