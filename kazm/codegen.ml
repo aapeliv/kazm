@@ -81,6 +81,34 @@ let gen (bind_list, sfunction_decls) =
   (* let all_funcs = List.fold_left codegen_func_sig all_funcs funcs in *)
   let all_funcs = List.fold_left codegen_func_sig all_funcs sfunction_decls in
 
+  let new_scope ctx =
+    let Ctx(_, parent_scope) = ctx in
+    Scope(Some parent_scope, SMap.empty)
+  in
+
+  let rec find_var scope name =
+    match scope with
+      Scope(None, map) -> SMap.find name map
+    | Scope(Some parent, map) -> if SMap.mem name map then SMap.find name map else find_var parent name
+  in
+
+  let find_var_in_ctx ctx name =
+    let Ctx(_, sp) = ctx in
+    find_var sp name
+  in
+
+  let add_var scope name l =
+    let Scope(p, map) = scope in
+    let map' = SMap.add name l map in
+    Scope(p, map')
+  in
+
+  let add_var_to_ctx ctx name l =
+    let Ctx(b, sp) = ctx in
+    let sp' = add_var sp name l in
+    Ctx(b, sp)
+  in
+
   (* Codegen for an expression *)
   let rec codegen_expr ctx ((typ, e) : sexpr) =
     let Ctx(builder, sp) = ctx in
@@ -98,10 +126,11 @@ let gen (bind_list, sfunction_decls) =
     (* New string literal (just make a new global string) *)
     | SStringLit(value) -> (ctx, L.build_global_stringptr value "globalstring" builder)
     (* Assign expression e to a new bind(type, name) *)
-    | SAssign(s, value) -> let (ctx', e') = codegen_expr ctx value in
-                           let lh = L.build_alloca (typ_to_t typ) s builder in
-                           (* TODO *)
-                           ignore (L.build_store e' lh builder); (ctx, e')
+    | SAssign(s, value) ->
+      let (ctx', e') = codegen_expr ctx value in
+      let var = find_var sp s in
+      ignore (L.build_store e' var builder);
+      (ctx, e')
     | SBinop(e1, op, e2) ->
       (* Lookup right thing to build in llvm *)
       let lbuild = match op with
@@ -122,7 +151,10 @@ let gen (bind_list, sfunction_decls) =
       let Ctx(builder, sp) = ctx2 in
       let new_expr = lbuild first second "im" builder in
       (ctx2, new_expr)
-    | _ -> raise (Failure ("sast cannot be matched"))
+    | SId(name) ->
+      let var = find_var sp name in
+      (ctx, L.build_load var name builder)
+    (* | _ -> raise (Failure ("sast cannot be matched")) *)
   in
 
   (* Add terminator to end of a basic block *)
@@ -135,11 +167,6 @@ let gen (bind_list, sfunction_decls) =
     | None -> ignore (build_terminator ctx)
   in
 
-  let new_scope ctx =
-    let Ctx(builder, parent_scope) = ctx in
-    Scope(Some parent_scope, SMap.empty)
-  in
-
   (* Codegen for function body *)
   let gen_func func =
     (* let A.Func(bind, body) = func in *)
@@ -148,6 +175,7 @@ let gen (bind_list, sfunction_decls) =
     let typ = func.styp in
     let name = func.sfname in
     let formals = func.sformals in
+    let locals = func.slocals in
     (* Defines the func *)
     let fn = SMap.find name all_funcs in
 
@@ -247,7 +275,13 @@ let gen (bind_list, sfunction_decls) =
       SMap.add name local_copy map
     in
     let vars = List.fold_left2 add_param vars formals (Array.to_list (L.params fn)) in
-    let fn_ctx = Ctx(fn_builder, Scope(None, vars)) in
+    let fn_scope = Scope(None, vars) in
+    let initialize_var scope (vtyp, name) =
+      let var = L.build_alloca (typ_to_t vtyp) name fn_builder in
+      add_var scope name var
+    in
+    let fn_scope' = List.fold_left initialize_var fn_scope locals in
+    let fn_ctx = Ctx(fn_builder, fn_scope') in
     (* Build all statements *)
     let ctx' = codegen_stmt fn_ctx (SBlock body) in
     ignore (add_terminator ctx' (build_default_return typ))
