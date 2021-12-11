@@ -222,7 +222,8 @@ let gen (bind_list, sfunction_decls) =
         let end_builder = L.builder_at_end context end_blk in
 
         (* Codegen the condition evaluation *)
-        let (_, gcond) = codegen_expr ctx cond in
+
+        let (_, gcond) = codegen_expr (start_builder, sp) cond in
         (* Build the branch instr *)
         ignore (L.build_cond_br gcond loop_blk end_blk start_builder);
 
