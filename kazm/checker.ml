@@ -165,7 +165,7 @@ let check (globals, functions) =
       | For(e1, e2, e3, st) ->
       SFor(expr e1, check_bool_expr e2, expr e3, check_stmt st)
       | While(p, s) -> SWhile(check_bool_expr p, check_stmt s)
-      | ReturnVoid -> SReturnVoid
+      | EmptyReturn -> SEmptyReturn
       | Break -> SBreak
       | Return e -> let (t, e') = expr e in
         if t = func.typ then SReturn (t, e')

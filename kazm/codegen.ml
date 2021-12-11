@@ -138,7 +138,7 @@ let gen (bind_list, sfunction_decls) =
         SExpr(e) -> codegen_expr builder e; builder
       (* For a block of statements, just fold *)
       | SBlock(es) -> List.fold_left codegen_stmt builder es
-      | SReturnVoid -> ignore (L.build_ret_void builder); builder
+      | SEmptyReturn -> build_default_return typ builder
       | SReturn(expr) -> ignore (L.build_ret (codegen_expr builder expr) builder); builder
       (* If-statements *)
       | SIf(cond, true_stmts, false_stmts) ->

@@ -27,7 +27,7 @@ type stmt =
   | For of expr * expr * expr * stmt
   | While of expr * stmt
   | Break
-  | ReturnVoid
+  | EmptyReturn
 
 type func_decl = {
     typ : typ;
@@ -80,7 +80,7 @@ let rec string_of_stmt = function
       "{\n" ^ String.concat "" (List.map string_of_stmt stmts) ^ "}\n"
   | Expr(expr) -> string_of_expr expr ^ ";\n";
   | Return(expr) -> "return " ^ string_of_expr expr ^ ";\n";
-  | ReturnVoid -> "return void;\n";
+  | EmptyReturn -> "return;\n";
   | If(e, s, Block([])) -> "if (" ^ string_of_expr e ^ ")\n" ^ string_of_stmt s
   | If(e, s1, s2) ->  "if (" ^ string_of_expr e ^ ")\n" ^
       string_of_stmt s1 ^ "else\n" ^ string_of_stmt s2

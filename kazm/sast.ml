@@ -24,7 +24,7 @@ type sstmt =
   | SFor of sexpr * sexpr * sexpr * sstmt
   | SWhile of sexpr * sstmt
   | SBreak
-  | SReturnVoid
+  | SEmptyReturn
 
 type sfunc_decl = {
     styp : typ;
@@ -70,7 +70,7 @@ let rec string_of_sstmt = function
       string_of_sexpr e3  ^ ") " ^ string_of_sstmt s
   | SWhile(e, s) -> "while (" ^ string_of_sexpr e ^ ") " ^ string_of_sstmt s
   | SBreak -> "break;"
-  | SReturnVoid -> "return void;"
+  | SEmptyReturn -> "return;"
 
 let string_of_sfdecl fdecl =
   string_of_typ fdecl.styp ^ " " ^

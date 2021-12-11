@@ -98,7 +98,7 @@ block_stmt:
 
 return_stmt:
     RETURN expr { Return $2 }
-  | RETURN { ReturnVoid }
+  | RETURN { EmptyReturn }
 
 break_stmt:
     BREAK { Break }
