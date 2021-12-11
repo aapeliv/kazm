@@ -4,6 +4,11 @@ open Sast
 
 module SMap = Map.Make(String)
 
+(* A variable scope, contains variables and a ref to the parent scope *)
+type vscope = Scope of (vscope option) * L.llvalue SMap.t
+(* A codegen context: builder and variable scope *)
+type ctx_t = Ctx of L.llbuilder * vscope
+
 let gen (bind_list, sfunction_decls) =
   (* Set up module & context *)
   let context = L.global_context () in
@@ -45,12 +50,13 @@ let gen (bind_list, sfunction_decls) =
   in
 
   (* Given a builder and our type, build a dummy return (e.g. if there's a missing return) *)
-  let build_default_return typ builder =
+  let build_default_return typ ctx =
+    let Ctx(builder, sp) = ctx in
     match typ with
-      A.Void -> ignore (L.build_ret_void builder); builder
-    | A.Bool -> ignore (L.build_ret (L.const_int i1_t 0) builder); builder
-    | A.Int -> ignore (L.build_ret (L.const_int i32_t 0) builder); builder
-    | A.Double -> ignore (L.build_ret (L.const_float double_t 0.) builder); builder
+      A.Void -> ignore (L.build_ret_void builder); ctx
+    | A.Bool -> ignore (L.build_ret (L.const_int i1_t 0) builder); ctx
+    | A.Int -> ignore (L.build_ret (L.const_int i32_t 0) builder); ctx
+    | A.Double -> ignore (L.build_ret (L.const_float double_t 0.) builder); ctx
   in
 
   let all_funcs = SMap.empty in
@@ -76,24 +82,26 @@ let gen (bind_list, sfunction_decls) =
   let all_funcs = List.fold_left codegen_func_sig all_funcs sfunction_decls in
 
   (* Codegen for an expression *)
-  let rec codegen_expr sp builder ((typ, e) : sexpr) = match e with
+  let rec codegen_expr ctx ((typ, e) : sexpr) =
+    let Ctx(builder, sp) = ctx in
+    match e with
     (* Function call *)
       SCall(cname, exprs) ->
-        (* let arg_str = L.build_global_stringptr carg "arg" builder in *)
-        let arg_array = Array.of_list (List.map (codegen_expr sp builder) exprs) in
-        (* todo: need to make sure these functions actually exist, etc *)
-        L.build_call (SMap.find cname all_funcs) arg_array "" builder
+        let (ctx', args) = Future.fold_left_map codegen_expr ctx exprs in
+        let ex = L.build_call (SMap.find cname all_funcs) (Array.of_list args) "" builder in
+        (ctx', ex)
     (* New bool literal *)
-    | SBoolLit(value) -> L.const_int i1_t (if value then 1 else 0)
+    | SBoolLit(value) -> (ctx, L.const_int i1_t (if value then 1 else 0))
     (* New 32-bit integer literal *)
-    | SLiteral(value) -> L.const_int i32_t value
-    | SDliteral(value) -> L.const_float double_t (float_of_string value)
+    | SLiteral(value) -> (ctx, L.const_int i32_t value)
+    | SDliteral(value) -> (ctx, L.const_float double_t (float_of_string value))
     (* New string literal (just make a new global string) *)
-    | SStringLit(value) -> L.build_global_stringptr value "globalstring" builder
+    | SStringLit(value) -> (ctx, L.build_global_stringptr value "globalstring" builder)
     (* Assign expression e to a new bind(type, name) *)
-    | SAssign(s, value) -> let e' = codegen_expr sp builder value in
+    | SAssign(s, value) -> let (ctx', e') = codegen_expr ctx value in
                            let lh = L.build_alloca (typ_to_t typ) s builder in
-                           ignore (L.build_store e' lh builder); e'
+                           (* TODO *)
+                           ignore (L.build_store e' lh builder); (ctx, e')
     | SBinop(e1, op, e2) ->
       (* Lookup right thing to build in llvm *)
       let lbuild = match op with
@@ -109,17 +117,27 @@ let gen (bind_list, sfunction_decls) =
         | A.Greater -> L.build_icmp L.Icmp.Sgt
         | A.Geq -> L.build_icmp L.Icmp.Sge
       in
-      lbuild (codegen_expr sp builder e1) (codegen_expr sp builder e2) "im" builder
+      let (ctx1, first) = codegen_expr ctx e1 in
+      let (ctx2, second) = (codegen_expr ctx1 e2) in
+      let Ctx(builder, sp) = ctx2 in
+      let new_expr = lbuild first second "im" builder in
+      (ctx2, new_expr)
     | _ -> raise (Failure ("sast cannot be matched"))
   in
 
   (* Add terminator to end of a basic block *)
-  let add_terminator builder build_terminator =
+  let add_terminator ctx build_terminator =
+    let Ctx(builder, _) = ctx in
     (* llvm.moe: block_terminator returns the terminator of the BB,
       insertion_block returns the current block we're inserting into with builder *)
     match L.block_terminator (L.insertion_block builder) with
       Some _ -> ()
-    | None -> ignore (build_terminator builder)
+    | None -> ignore (build_terminator ctx)
+  in
+
+  let new_scope ctx =
+    let Ctx(builder, parent_scope) = ctx in
+    Scope(Some parent_scope, SMap.empty)
   in
 
   (* Codegen for function body *)
@@ -134,18 +152,22 @@ let gen (bind_list, sfunction_decls) =
     let fn = SMap.find name all_funcs in
 
     (* Codegen for a statement *)
-    (* Takes builder and statement and returns a builder *)
-    let rec codegen_stmt sp builder = function
+    (* Takes ctx and statement and returns a ctx *)
+    let rec codegen_stmt ctx stmt =
+      let Ctx(builder, sp) = ctx in
+      match stmt with
       (* For expressions we just codegen the expression *)
-        SExpr(e) -> ignore (codegen_expr sp builder e); builder
-      (* For a block of statements, just fold *)
-      | SBlock(es) -> List.fold_left (codegen_stmt sp) builder es
-      | SEmptyReturn -> build_default_return typ builder
-      | SReturn(expr) -> ignore (L.build_ret (codegen_expr sp builder expr) builder); builder
+        SExpr(e) ->
+          let (ctx', ex) = codegen_expr ctx e in
+          ctx'
+      | SEmptyReturn -> build_default_return typ ctx
+      | SReturn(expr) ->
+        let (ctx', gexpr) = codegen_expr ctx expr in
+        ignore (L.build_ret gexpr builder); ctx'
       (* If-statements *)
       | SIf(cond, true_stmts, false_stmts) ->
         (* Codegen the condition evaluation *)
-        let gcond = codegen_expr sp builder cond in
+        let (ctx', gcond) = codegen_expr ctx cond in
 
         (* Add the block we go to if we take this branch (cond is true) *)
         let true_blk = L.append_block context "take" fn in
@@ -158,25 +180,29 @@ let gen (bind_list, sfunction_decls) =
 
         (* This function takes a builder and builds a `br` instruction, which
           (br)anches back to the start of the join_blk block made above *)
-        let build_join = L.build_br join_blk in
+        let build_join ctx =
+          let Ctx(bldr, _) = ctx in
+          L.build_br join_blk bldr
+        in
 
         (* True branch building *)
-        let true_builder = L.builder_at_end context true_blk in
+        let true_ctx = Ctx(L.builder_at_end context true_blk, new_scope ctx') in
         (* Build this branch's statements into this block *)
-        let true_builder_done = codegen_stmt sp true_builder true_stmts in
-        add_terminator true_builder_done build_join;
+        let true_ctx' = codegen_stmt true_ctx true_stmts in
+        add_terminator true_ctx' build_join;
 
         (* False branch building *)
-        let false_builder = L.builder_at_end context false_blk in
-        let false_builder_done = codegen_stmt sp false_builder false_stmts in
-        add_terminator false_builder_done build_join;
+        let false_ctx = Ctx(L.builder_at_end context false_blk, new_scope ctx') in
+        let false_ctx' = codegen_stmt false_ctx false_stmts in
+        add_terminator false_ctx' build_join;
 
         (* Build the actual conditional branch *)
         ignore (L.build_cond_br gcond true_blk false_blk builder);
         (* Finally return the new builder at end of merge *)
-        join_builder
+        let Ctx(_, sp) = ctx' in
+        Ctx(join_builder, sp)
       (* While-statements *)
-      | SWhile(cond, stmts) ->
+      | SWhile(cond, stmt) ->
         (* Start at the start block and its builder *)
         let start_blk = L.append_block context "start" fn in
         let start_builder = L.builder_at_end context start_blk in
@@ -185,7 +211,8 @@ let gen (bind_list, sfunction_decls) =
         let loop_blk = L.append_block context "loop" fn in
         let loop_builder = L.builder_at_end context loop_blk in
         (* Loop body (an iteration) *)
-        ignore (codegen_stmt sp loop_builder stmts);
+        let while_ctx = Ctx(loop_builder, new_scope ctx) in
+        ignore (codegen_stmt while_ctx stmt);
         (* Back to start after a loop iteration *)
         ignore (L.build_br start_blk loop_builder);
 
@@ -194,7 +221,9 @@ let gen (bind_list, sfunction_decls) =
         let end_builder = L.builder_at_end context end_blk in
 
         (* Codegen the condition evaluation *)
-        let gcond = codegen_expr sp start_builder cond in
+
+        let start_ctx = Ctx(start_builder, sp) in
+        let (_, gcond) = codegen_expr start_ctx cond in
         (* Build the branch instr *)
         ignore (L.build_cond_br gcond loop_blk end_blk start_builder);
 
@@ -202,7 +231,10 @@ let gen (bind_list, sfunction_decls) =
         ignore (L.build_br start_blk builder);
 
         (* Continue building after the end of the loop *)
-        end_builder
+        let Ctx(_, sp) = ctx in
+        Ctx(end_builder, sp)
+      (* For a block of statements, just fold *)
+      | SBlock(stmts) -> List.fold_left codegen_stmt ctx stmts
     in
 
     let fn_builder = L.builder_at_end context (L.entry_block fn) in
@@ -215,10 +247,10 @@ let gen (bind_list, sfunction_decls) =
       SMap.add name local_copy map
     in
     let vars = List.fold_left2 add_param vars formals (Array.to_list (L.params fn)) in
-    let fn_scope = (None, vars) in
+    let fn_ctx = Ctx(fn_builder, Scope(None, vars)) in
     (* Build all statements *)
-    let builder_done = codegen_stmt fn_scope fn_builder (SBlock body) in
-    ignore (add_terminator builder_done (build_default_return typ))
+    let ctx' = codegen_stmt fn_ctx (SBlock body) in
+    ignore (add_terminator ctx' (build_default_return typ))
   in
 
   let funcs = sfunction_decls in

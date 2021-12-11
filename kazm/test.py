@@ -168,7 +168,8 @@ for filename, name, out_file, run_err_file, compile_err_file in tests:
 total_tests = len(tests)
 assert passed + failed == total_tests
 test_output += "\n\n\n"
-test_output += red(f"Fail{failed:.>21} tests") + "\n"
+if failed > 0:
+    test_output += red(f"Fail{failed:.>21} tests") + "\n"
 test_output += green(f"Pass{passed:.>21} tests") + "\n"
 test_output += f"Total{total_tests:.>20} tests\n"
 
