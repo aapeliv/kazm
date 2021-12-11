@@ -83,8 +83,10 @@ failed = 0
 passed = 0
 flog = open("loggy.txt", "w")
 flog.write("Kazm's Test Suite Log\n\n")
+count = 0
 for filename, name, out_file, run_err_file, compile_err_file in tests:
-    flog.write("File: " + filename[6:] + ".............")
+    count +=1
+    flog.write("File " +str(count) + ": " + filename[6:] + ".............")
     description = None
     output = None
     try:
