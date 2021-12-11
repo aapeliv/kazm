@@ -205,8 +205,8 @@ let gen (bind_list, sfunction_decls) =
 
     (* Build all statements *)
     let fn_builder = L.builder_at_end context (L.entry_block fn) in
-    let end_builder = codegen_stmt fn_builder (SBlock body) in
-    ignore (add_terminator end_builder (build_default_return typ))
+    let builder_done = codegen_stmt fn_builder (SBlock body) in
+    ignore (add_terminator builder_done (build_default_return typ))
   in
 
   let funcs = sfunction_decls in
