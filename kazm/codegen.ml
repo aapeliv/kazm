@@ -4,7 +4,9 @@ open Sast
 
 module SMap = Map.Make(String)
 
+(* A variable scope, contains variables and a ref to the parent scope *)
 type vscope = Scope of (vscope option) * L.llvalue SMap.t
+(* A codegen context: builder and variable scope *)
 type ctx_t = Ctx of L.llbuilder * vscope
 
 let gen (bind_list, sfunction_decls) =
