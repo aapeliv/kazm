@@ -2,7 +2,7 @@ void func(int val) {
   int_println(val);
 }
 
-void main() {
+int main() {
   println("About to call func(5)");
   func(5);
   println("Done.");
