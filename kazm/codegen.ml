@@ -49,7 +49,7 @@ let gen (bind_list, sfunction_decls, sclass_decls) =
     | A.Bool -> i1_t
     | A.Int -> i32_t
     | A.Double -> double_t
-    | A.ClassT(name) -> snd (SMap.find name all_classes)
+    | A.ClassT(name) -> L.pointer_type (snd (SMap.find name all_classes))
   in
 
   let codegen_func_decl name ret_t arg_ts =

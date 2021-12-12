@@ -105,6 +105,7 @@ let string_of_typ = function
   | Void -> "void"
   | String -> "string"
   | Char -> "char"
+  | ClassT(name) -> "class " ^ name
 
 let string_of_vdecl (t, id) = string_of_typ t ^ " " ^ id ^ ";\n"
 
