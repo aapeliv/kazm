@@ -113,6 +113,22 @@ let gen (bind_list, sfunction_decls, sclass_decls) =
     Scope(p, map')
   in
 
+  let find_fq_var builder scope = function
+    (* Unqualified access *)
+      ref::[] -> fst (find_var scope (snd ref))
+    (* Qualified access *)
+    | hd::tl::[] ->
+      (* Get info about the variable *)
+      let (cval, ClassT(cname)) = find_var scope (snd hd) in
+      (* Get info about the class *)
+      let (cls, cls_t) = SMap.find cname all_classes in
+      (* Members names with indexes *)
+      let mems = List.mapi (fun ix v -> (ix, snd v)) cls.scvars in
+      (* Filter out the members that have the same name as the sought after member (there should only be 1) *)
+      let (mem_pos_in_class, _) = List.hd (List.filter (fun (ix, v) -> ((snd tl) = v)) mems) in
+      L.build_struct_gep cval mem_pos_in_class ((snd tl) ^ "_ptr") builder
+  in
+
   (* Codegen for an expression *)
   let rec codegen_expr ctx ((typ, e) : sexpr) =
     let Ctx(builder, sp) = ctx in
@@ -129,12 +145,6 @@ let gen (bind_list, sfunction_decls, sclass_decls) =
     | SDliteral(value) -> (ctx, L.const_float double_t (float_of_string value))
     (* New string literal (just make a new global string) *)
     | SStringLit(value) -> (ctx, L.build_global_stringptr value "globalstring" builder)
-    (* Assign expression e to a new bind(type, name) *)
-    | SAssign(s, value) ->
-      let (ctx', e') = codegen_expr ctx value in
-      let (var, _) = find_var sp s in
-      ignore (L.build_store e' var builder);
-      (ctx, e')
     | SBinop(e1, op, e2) ->
       (* Lookup right thing to build in llvm *)
       let lbuild = match op with
@@ -155,23 +165,15 @@ let gen (bind_list, sfunction_decls, sclass_decls) =
       let Ctx(builder, sp) = ctx2 in
       let new_expr = lbuild first second "im" builder in
       (ctx2, new_expr)
-    (* Unqualified access *)
-    | SId(name::[]) ->
-      let var = fst (find_var sp name) in
-      (ctx, L.build_load var name builder)
-    (* Qualified access *)
-    | SId(hd::tl::[]) ->
-      (* Get info about the variable *)
-      let (cval, ClassT(cname)) = find_var sp hd in
-      (* Get info about the class *)
-      let (cls, cls_t) = SMap.find cname all_classes in
-      (* Members names with indexes *)
-      let mems = List.mapi (fun ix v -> (ix, snd v)) cls.scvars in
-      (* Filter out the members that have the same name as the sought after member (there should only be 1) *)
-      let (mem_pos_in_class, _) = List.hd (List.filter (fun (ix, v) -> (tl = v)) mems) in
-      let v = (L.build_struct_gep cval mem_pos_in_class (tl ^ "_ptr") builder) in
-      (ctx, L.build_load v (tl ^ "_copy") builder)
-      (* | _ -> raise (Failure ("sast cannot be matched")) *)
+    | SId(fqn) ->
+      let var = find_fq_var builder sp fqn in
+      (ctx, L.build_load var "id" builder)
+    (* Assign expression e to a new bind(type, name) *)
+    | SAssign(fqn, value) ->
+      let (ctx', e') = codegen_expr ctx value in
+      let var = find_fq_var builder sp fqn in
+      ignore (L.build_store e' var builder);
+      (ctx, e')
   in
 
   (* Add terminator to end of a basic block *)

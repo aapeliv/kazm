@@ -162,7 +162,7 @@ expr:
   | expr OR     expr   { Binop($1, Or,    $3)   }
   | NOT expr           { Unop(Not, $2) }
   | PAREN_L expr PAREN_R { $2 }
-  | IDENTIFIER ASSIGN expr { Assign($1, $3) }
+  | fq_identifier ASSIGN expr { Assign($1, $3) }
   | IDENTIFIER PAREN_L args_opt PAREN_R { Call($1, $3) }
   | fq_identifier      { Id($1) }
 

@@ -107,16 +107,20 @@ let check (globals, functions, classes) =
       | CharLit c -> (Char, SCharLit c)
       | StringLit s -> (String, SStringLit s)
       | Noexpr     -> (Void, SNoexpr)
-      | Id (hd::[]) -> (type_of_identifier hd, SId([hd]))
+      | Id (hd::[]) -> let t = type_of_identifier hd in (t, SId([(t, hd)]))
       (* TODO *)
       (* Check all types, check value of last thing? *)
-      | Id (lst) -> (Int, SId(lst))
-      | Assign(var, e) as ex ->
-          let lt = type_of_identifier var
-          and (rt, e') = expr e in
-          let err = "illegal assignment " ^ string_of_typ lt ^ " = " ^
-            string_of_typ rt ^ " in " ^ string_of_expr ex
-          in (check_assign lt rt err, SAssign(var, (rt, e')))
+      | Id (lst) -> (Int, SId(List.map (fun y -> (Int, y)) lst))
+      | Assign(lst, e) as ex ->
+        (* TODO *)
+        let (rt, e') = expr e in
+        (rt, SAssign(List.map (fun y -> (Int, y)) lst, (rt, e')))
+        (* TODO *)
+        (* let lt = type_of_identifier var
+        and (rt, e') = expr e in
+        let err = "illegal assignment " ^ string_of_typ lt ^ " = " ^
+          string_of_typ rt ^ " in " ^ string_of_expr ex
+        in (check_assign lt rt err, SAssign(var, (rt, e'))) *)
       | Unop(op, e) as ex ->
           let (t, e') = expr e in
           let ty = match op with
