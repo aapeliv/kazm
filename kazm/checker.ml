@@ -34,12 +34,12 @@ let check (globals, functions) =
       typ = Void;
       fname = name;
       formals = [(ty, "x")];
-      locals = []; body = [] } map
+      body = [] } map
     in let smap =  StringMap.add "next_int" {
       typ = Int;
       fname = "next_int";
       formals = [];
-      locals = []; body = [] } StringMap.empty 
+      body = [] } StringMap.empty 
     in List.fold_left add_bind smap [ ("print", String);
                                ("println", String);
                                ("int_print", Int);
@@ -75,7 +75,7 @@ let check (globals, functions) =
   let check_function func =
     (* Make sure no formals or locals are void or duplicates *)
     check_binds "formal" func.formals;
-    check_binds "local" func.locals;
+    (* check_binds "local" func.locals; *)
 
     (* Raise an exception if the given rvalue type cannot be assigned to
        the given lvalue type *)
@@ -85,7 +85,7 @@ let check (globals, functions) =
 
     (* Build local symbol table of variables for this function *)
     let symbols = List.fold_left (fun m (ty, name) -> StringMap.add name ty m)
-                    StringMap.empty (globals @ func.formals @ func.locals )
+                    StringMap.empty (globals @ func.formals (* @ func.locals *) )
     in
 
     (* Return a variable from our local symbol table *)
@@ -161,6 +161,8 @@ let check (globals, functions) =
     (* Return a semantically-checked statement i.e. containing sexprs *)
     let rec check_stmt = function
         Expr e -> SExpr (expr e)
+      | Initialize (bd, None) -> SInitialize(bd, None)
+      | Initialize (bd, Some e) -> SInitialize(bd, Some (expr e))
       | If(p, b1, b2) -> SIf(check_bool_expr p, check_stmt b1, check_stmt b2)
       | For(e1, e2, e3, st) ->
       SFor(expr e1, check_bool_expr e2, expr e3, check_stmt st)
@@ -188,7 +190,6 @@ let check (globals, functions) =
     { styp = func.typ;
       sfname = func.fname;
       sformals = func.formals;
-      slocals  = func.locals;
       sbody = match check_stmt (Block func.body) with
     SBlock(sl) -> sl
       | _ -> raise (Failure ("internal error: block didn't become a block?"))

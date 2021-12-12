@@ -47,16 +47,14 @@ program:
 
 decls:
    /* nothing */ { ([], []) }
- | decls var_decl { ((fst $1 @ [$2]), snd $1) }
  | decls fdecl { (fst $1, (snd $1 @ [$2])) }
 
 fdecl:
-   typ IDENTIFIER PAREN_L formals_opt PAREN_R BRACE_L var_decls stmts BRACE_R
+   typ IDENTIFIER PAREN_L formals_opt PAREN_R BRACE_L stmts BRACE_R
      { { typ = $1;
          fname = $2;
          formals = List.rev $4;
-         locals = List.rev $7;
-         body = List.rev $8 } }
+         body = List.rev $7 } }
 
 formals_opt:
     /* nothing */ { [] }
@@ -74,13 +72,6 @@ typ:
   | DOUBLE { Double }
   | STRING { String }
 
-var_decls:
-    { [] }
-  | var_decls var_decl { $2 :: $1 }
-
-var_decl:
-   typ IDENTIFIER SEMI { ($1, $2) }
-
 stmts:
     { [] }
   | stmts stmt { $2::$1 }
@@ -89,6 +80,7 @@ stmt:
     expr SEMI { Expr $1 }
   | return_stmt SEMI { $1 }
   | break_stmt SEMI { $1 }
+  | var_decl SEMI { $1 }
   | if_stmt { $1 }
   | while_stmt { $1 }
   | for_stmt { $1 }
@@ -112,6 +104,10 @@ while_stmt:
 
 for_stmt:
     FOR PAREN_L expr SEMI expr SEMI expr PAREN_R BRACE_L stmts BRACE_R { For($3, $5, $7, Block(List.rev $10)) }
+
+var_decl:
+    typ IDENTIFIER { Initialize(($1, $2), None) }
+  | typ IDENTIFIER ASSIGN expr { Initialize(($1, $2), Some $4) }
 
 expr:
     INT_LITERAL        { Literal($1) }
