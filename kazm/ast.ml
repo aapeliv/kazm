@@ -3,8 +3,11 @@ type op = Add | Sub | Mult | Div | Equal | Neq | Less | Leq | Greater | Geq |
 
 type uop = Neg | Not
 
-type typ = Int | Bool | Double | Void | String | Char | Float
+type class_t = string
+type typ = Int | Bool | Double | Void | String | Char | Float | ClassT of class_t
 type bind = typ * string
+
+type ref = string list
 
 type expr =
     Literal of int
@@ -12,10 +15,10 @@ type expr =
   | BoolLit of bool
   | StringLit of string
   | CharLit of string
-  | Id of string
+  | Id of ref
   | Binop of expr * op * expr
   | Unop of uop * expr
-  | Assign of string * expr
+  | Assign of ref * expr
   | Call of string * expr list
   | Noexpr
 
@@ -37,7 +40,12 @@ type func_decl = {
     body : stmt list;
 }
 
-type program = bind list * func_decl list
+type class_decl = {
+    cname : class_t;
+    cvars : bind list;
+}
+
+type program = bind list * func_decl list * class_decl list
 
 let string_of_op = function
     Add -> "+"
@@ -66,11 +74,11 @@ let rec string_of_expr = function
   | BoolLit(false) -> "false"
   | StringLit(s) -> "\"" ^ s ^ "\""
   | CharLit(c) -> "\'" ^ c ^ "\'"
-  | Id(s) -> s
+  | Id(s) -> String.concat ", " s
   | Binop(e1, o, e2) ->
       string_of_expr e1 ^ " " ^ string_of_op o ^ " " ^ string_of_expr e2
   | Unop(o, e) -> string_of_uop o ^ string_of_expr e
-  | Assign(v, e) -> v ^ " = " ^ string_of_expr e
+  (* | Assign(v, e) -> v ^ " = " ^ string_of_expr e *)
   | Call(f, el) ->
       f ^ "(" ^ String.concat ", " (List.map string_of_expr el) ^ ")"
   | Noexpr -> ""

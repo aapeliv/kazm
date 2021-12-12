@@ -2,6 +2,8 @@
 
 open Ast
 
+type sref = (typ * string) list
+
 type sexpr = typ * sx
 and sx =
     SLiteral of int
@@ -9,10 +11,10 @@ and sx =
   | SBoolLit of bool
   | SCharLit of string
   | SStringLit of string
-  | SId of string
+  | SId of sref
   | SBinop of sexpr * op * sexpr
   | SUnop of uop * sexpr
-  | SAssign of string * sexpr
+  | SAssign of sref * sexpr
   | SCall of string * sexpr list
   | SNoexpr
 
@@ -32,9 +34,12 @@ type sfunc_decl = {
     sformals : bind list;
     slocals : bind list;
     sbody : sstmt list;
-  }
+}
 
-type sprogram = bind list * sfunc_decl list
+type sclass_decl = {
+    scname : class_t;
+    scvars : bind list;
+}
 
 (* Pretty-printing functions *)
 
@@ -46,11 +51,11 @@ let rec string_of_sexpr (t, e) =
   | SCharLit c -> "\'" ^ c ^ "\'"
   | SStringLit s -> "\"" ^ s ^ "\""
   | SDliteral(l) -> l
-  | SId(s) -> s
+  (* | SId(s) -> String.concat ", " s *)
   | SBinop(e1, o, e2) ->
       string_of_sexpr e1 ^ " " ^ string_of_op o ^ " " ^ string_of_sexpr e2
   | SUnop(o, e) -> string_of_uop o ^ string_of_sexpr e
-  | SAssign(v, e) -> v ^ " = " ^ string_of_sexpr e
+  (* | SAssign(v, e) -> v ^ " = " ^ string_of_sexpr e *)
   | SCall(f, el) ->
       f ^ "(" ^ String.concat ", " (List.map string_of_sexpr el) ^ ")"
   | SNoexpr -> ""

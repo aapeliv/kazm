@@ -7,7 +7,7 @@ module StringMap = Map.Make(String)
    throws an exception if something is wrong.
    Check each global variable, then check each function *)
 
-let check (globals, functions) =
+let check (globals, functions, classes) =
 
   (* Verify a list of bindings has no void types or duplicate names *)
   let check_binds (kind : string) (binds : bind list) =
@@ -72,6 +72,11 @@ let check (globals, functions) =
 
   let _ = find_func "main" in (* Ensure "main" is defined *)
 
+  let check_class cls =
+    {  scname = cls.cname;
+      scvars = cls.cvars; }
+  in
+
   let check_function func =
     (* Make sure no formals or locals are void or duplicates *)
     check_binds "formal" func.formals;
@@ -102,13 +107,20 @@ let check (globals, functions) =
       | CharLit c -> (Char, SCharLit c)
       | StringLit s -> (String, SStringLit s)
       | Noexpr     -> (Void, SNoexpr)
-      | Id s       -> (type_of_identifier s, SId s)
-      | Assign(var, e) as ex ->
-          let lt = type_of_identifier var
-          and (rt, e') = expr e in
-          let err = "illegal assignment " ^ string_of_typ lt ^ " = " ^
-            string_of_typ rt ^ " in " ^ string_of_expr ex
-          in (check_assign lt rt err, SAssign(var, (rt, e')))
+      | Id (hd::[]) -> let t = type_of_identifier hd in (t, SId([(t, hd)]))
+      (* TODO *)
+      (* Check all types, check value of last thing? *)
+      | Id (lst) -> (Int, SId(List.map (fun y -> (Int, y)) lst))
+      | Assign(lst, e) as ex ->
+        (* TODO *)
+        let (rt, e') = expr e in
+        (rt, SAssign(List.map (fun y -> (Int, y)) lst, (rt, e')))
+        (* TODO *)
+        (* let lt = type_of_identifier var
+        and (rt, e') = expr e in
+        let err = "illegal assignment " ^ string_of_typ lt ^ " = " ^
+          string_of_typ rt ^ " in " ^ string_of_expr ex
+        in (check_assign lt rt err, SAssign(var, (rt, e'))) *)
       | Unop(op, e) as ex ->
           let (t, e') = expr e in
           let ty = match op with
@@ -193,4 +205,4 @@ let check (globals, functions) =
     SBlock(sl) -> sl
       | _ -> raise (Failure ("internal error: block didn't become a block?"))
     }
-  in (globals, List.map check_function functions)
+  in (globals, List.map check_function functions, List.map check_class classes)

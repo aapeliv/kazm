@@ -15,7 +15,8 @@ open Ast
 %token CLASS
 %token TRUE FALSE
 
-%token<string> IDENTIFIER
+%token<string> IDENTIFIER CLASS_IDENTIFIER
+%token<string> CLASS_NAME
 %token<string> STRING_LITERAL
 %token<float> DOUBLE_LITERAL
 %token<char> CHAR_LITERAL
@@ -46,9 +47,19 @@ program:
   decls EOF { $1 }
 
 decls:
-   /* nothing */ { ([], []) }
- | decls var_decl { ((fst $1 @ [$2]), snd $1) }
- | decls fdecl { (fst $1, (snd $1 @ [$2])) }
+   /* nothing */ { ([], [], []) }
+ | decls var_decl {
+   let (f, s, t) = $1 in
+   (f @ [$2], s, t)
+  }
+ | decls fdecl {
+   let (f, s, t) = $1 in
+   (f, s @ [$2], t)
+  }
+ | decls cdecl {
+   let (f, s, t) = $1 in
+   (f, s, t @ [$2])
+ }
 
 fdecl:
    typ IDENTIFIER PAREN_L formals_opt PAREN_R BRACE_L var_decls stmts BRACE_R
@@ -58,9 +69,24 @@ fdecl:
          locals = List.rev $7;
          body = List.rev $8 } }
 
+cdecl:
+    CLASS CLASS_IDENTIFIER BRACE_L class_body BRACE_R SEMI { { cname = $2; cvars = $4 } }
+
+class_body:
+    var_decls { $1 }
+
 formals_opt:
     /* nothing */ { [] }
   | formal_list   { $1 }
+
+/* doesnt have a type yet */
+// constructor:
+//   CLASS_IDENTIFIER PAREN_L formals_opt PAREN_R BRACE_L var_decls stmts BRACE_R { {
+//       fname = $1;
+//       formals = List.rev $3;
+//       locals = List.rev $6;
+//       body = List.rev $7 } }
+
 
 formal_list:
     typ IDENTIFIER { [($1,$2)] }
@@ -73,13 +99,14 @@ typ:
   | INT { Int }
   | DOUBLE { Double }
   | STRING { String }
+  | CLASS_IDENTIFIER { ClassT($1) }
 
 var_decls:
     { [] }
   | var_decls var_decl { $2 :: $1 }
 
 var_decl:
-   typ IDENTIFIER SEMI { ($1, $2) }
+    typ IDENTIFIER SEMI { ($1, $2) }
 
 stmts:
     { [] }
@@ -135,9 +162,13 @@ expr:
   | expr OR     expr   { Binop($1, Or,    $3)   }
   | NOT expr           { Unop(Not, $2) }
   | PAREN_L expr PAREN_R { $2 }
-  | IDENTIFIER ASSIGN expr { Assign($1, $3) }
+  | fq_identifier ASSIGN expr { Assign($1, $3) }
   | IDENTIFIER PAREN_L args_opt PAREN_R { Call($1, $3) }
-  | IDENTIFIER          { Id($1) }
+  | fq_identifier      { Id($1) }
+
+fq_identifier:
+    IDENTIFIER { [$1] }
+  | IDENTIFIER DOT IDENTIFIER { $1::$3::[] }
 
 args_opt:
     /* nothing */ { [] }
