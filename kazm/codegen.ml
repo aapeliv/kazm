@@ -18,10 +18,12 @@ let gen (bind_list, sfunction_decls, sclass_decls) =
   let i1_t = L.i1_type context in
   let i8_t = L.i8_type context in
   let i32_t = L.i32_type context in
+  let i64_t = L.i64_type context in
   let double_t = L.double_type context in
   let char_t = i8_t in
   let void_t = L.void_type context in
   let char_ptr_t = L.pointer_type char_t in
+  let void_ptr_t = L.pointer_type i8_t in
 
   (* Map our AST type to LLVM type *)
   let typ_to_t_TODO_WITHOUT_CLASSES = function
@@ -87,6 +89,8 @@ let gen (bind_list, sfunction_decls, sclass_decls) =
   let all_funcs = add_func_decl all_funcs "double_print" void_t [double_t] in
   let all_funcs = add_func_decl all_funcs "double_println" void_t [double_t] in
   let all_funcs = add_func_decl all_funcs "next_int" i32_t [] in
+  let all_funcs = add_func_decl all_funcs "_kazm_malloc" void_ptr_t [i64_t] in
+  let all_funcs = add_func_decl all_funcs "_kazm_free" void_t [void_ptr_t] in
 
   (* Codegen function definitions *)
   let codegen_func_sig all_funcs func =
@@ -126,7 +130,9 @@ let gen (bind_list, sfunction_decls, sclass_decls) =
       let mems = List.mapi (fun ix v -> (ix, snd v)) cls.scvars in
       (* Filter out the members that have the same name as the sought after member (there should only be 1) *)
       let (mem_pos_in_class, _) = List.hd (List.filter (fun (ix, v) -> ((snd tl) = v)) mems) in
-      L.build_struct_gep cval mem_pos_in_class ((snd tl) ^ "_ptr") builder
+      (* Load address of the struct *)
+      let load = L.build_load cval ("_struct_" ^ (snd hd)) builder in
+      L.build_struct_gep load mem_pos_in_class ((snd tl) ^ "_ptr") builder
   in
 
   (* Codegen for an expression *)
@@ -285,7 +291,6 @@ let gen (bind_list, sfunction_decls, sclass_decls) =
     in
 
     let fn_builder = L.builder_at_end context (L.entry_block fn) in
-    let vars = SMap.empty in
     let add_param map (ptyp, name) param =
       L.set_value_name name param;
       let local_copy = L.build_alloca (typ_to_t ptyp) name fn_builder in
@@ -293,11 +298,26 @@ let gen (bind_list, sfunction_decls, sclass_decls) =
       ignore (L.build_store param local_copy fn_builder);
       SMap.add name (local_copy, ptyp) map
     in
-    let vars = List.fold_left2 add_param vars formals (Array.to_list (L.params fn)) in
+    let vars = List.fold_left2 add_param SMap.empty formals (Array.to_list (L.params fn)) in
     let fn_scope = Scope(None, vars) in
     let initialize_var scope (vtyp, name) =
-      let var = L.build_alloca (typ_to_t vtyp) name fn_builder in
-      add_var scope name var vtyp
+      match vtyp with
+        A.ClassT(cname) ->
+        (* Class info *)
+        let (cls, cls_t) = SMap.find cname all_classes in
+        (* A pointer to the right struct *)
+        let ptr_var = L.build_alloca (L.pointer_type cls_t) name fn_builder in
+        (* Variable to store size in *)
+        (* let size_var = L.build_alloca i64_t "sz" fn_builder in
+        ignore (L.build_store (L.size_of cls_t) size_var fn_builder); *)
+        (* Malloc the memory *)
+        let mallocd = L.build_call (SMap.find "_kazm_malloc" all_funcs) [| L.size_of cls_t |] ("_malloc_" ^ name) fn_builder in
+        let castd = L.build_bitcast mallocd (L.pointer_type cls_t) ("_cast_" ^ name) fn_builder in
+        ignore (L.build_store castd ptr_var fn_builder);
+        add_var scope name ptr_var vtyp
+      | _ ->
+        let var = L.build_alloca (typ_to_t vtyp) name fn_builder in
+        add_var scope name var vtyp
     in
     let fn_scope' = List.fold_left initialize_var fn_scope locals in
     let fn_ctx = Ctx(fn_builder, fn_scope') in
