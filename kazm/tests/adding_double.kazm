@@ -1,5 +1,7 @@
 int main (){
-    double a = 3.14;
-    double b = 3.14;
+    double a; 
+    double b;
+    a = 3.14;
+    b = a;
     println(a+b);
 }
