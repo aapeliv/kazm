@@ -64,6 +64,9 @@ let check (globals, functions, classes) =
   let function_decls = List.fold_left add_func built_in_decls functions
   in
 
+  let find_method clsname methodname =
+    try 
+
   (* Return a function from our symbol table *)
   let find_func s =
     try StringMap.find s function_decls
@@ -71,11 +74,6 @@ let check (globals, functions, classes) =
   in
 
   let _ = find_func "main" in (* Ensure "main" is defined *)
-
-  let check_class cls =
-    {  scname = cls.cname;
-      scvars = cls.cvars; }
-  in
 
   let check_function func =
     (* Make sure no formals or locals are void or duplicates *)
@@ -148,20 +146,38 @@ let check (globals, functions, classes) =
                        string_of_typ t1 ^ " " ^ string_of_op op ^ " " ^
                        string_of_typ t2 ^ " in " ^ string_of_expr e))
           in (ty, SBinop((t1, e1'), op, (t2, e2')))
-      | Call(fname, args) as call ->
-          let fd = find_func fname in
-          let param_length = List.length fd.formals in
-          if List.length args != param_length then
-            raise (Failure ("expecting " ^ string_of_int param_length ^
-                            " arguments in " ^ string_of_expr call))
-          else let check_call (ft, _) e =
-            let (et, e') = expr e in
-            let err = "illegal argument found " ^ string_of_typ et ^
-              " expected " ^ string_of_typ ft ^ " in " ^ string_of_expr e
-            in (check_assign ft et err, e')
-          in
-          let args' = List.map2 check_call fd.formals args
-          in (fd.typ, SCall(fname, args'))
+      | Call(ref, args) as call ->
+          match ref with
+            fname::[] ->
+              let fd = find_func fname in
+              let param_length = List.length fd.formals in
+              if List.length args != param_length then
+                raise (Failure ("expecting " ^ string_of_int param_length ^
+                                " arguments in " ^ string_of_expr call))
+              else let check_call (ft, _) e =
+                let (et, e') = expr e in
+                let err = "illegal argument found " ^ string_of_typ et ^
+                  " expected " ^ string_of_typ ft ^ " in " ^ string_of_expr e
+                in (check_assign ft et err, e')
+              in
+              let args' = List.map2 check_call fd.formals args
+              in (fd.typ, SCall(fname, args'))
+          | clsname::methodname::[] ->
+            (* TODO: trace all refs to figure out types and function *)
+
+              let fd = find_func fname in
+              let param_length = List.length fd.formals in
+              if List.length args != param_length then
+                raise (Failure ("expecting " ^ string_of_int param_length ^
+                                " arguments in " ^ string_of_expr call))
+              else let check_call (ft, _) e =
+                let (et, e') = expr e in
+                let err = "illegal argument found " ^ string_of_typ et ^
+                  " expected " ^ string_of_typ ft ^ " in " ^ string_of_expr e
+                in (check_assign ft et err, e')
+              in
+              let args' = List.map2 check_call fd.formals args
+              in (fd.typ, SCall(SId(List.map (fun y -> (Int, y)) ref), args'))
     in
 
     let check_bool_expr e =
@@ -205,4 +221,12 @@ let check (globals, functions, classes) =
     SBlock(sl) -> sl
       | _ -> raise (Failure ("internal error: block didn't become a block?"))
     }
-  in (globals, List.map check_function functions, List.map check_class classes)
+  in
+
+  let check_class cls =
+    { scname = cls.cname;
+      scvars = cls.cvars;
+      scmethods = List.map check_function cls.cmethods; }
+  in
+
+  (globals, List.map check_function functions, List.map check_class classes)

@@ -1,0 +1,24 @@
+class StructWithMethods {
+  int x;
+  int y;
+
+  int Get5() {
+    return 5;
+  }
+
+  /*int GetX() {
+    return 4;
+  }*/
+
+  void Print6() {
+    int_println(6);
+  }
+};
+
+int main() {
+  StructWithMethods s;
+  s.x = 5;
+  s.y = 6;
+  int_println(s.GetX());
+  s.Print6();
+}

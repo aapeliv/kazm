@@ -70,10 +70,28 @@ fdecl:
          body = List.rev $8 } }
 
 cdecl:
-    CLASS CLASS_IDENTIFIER BRACE_L class_body BRACE_R SEMI { { cname = $2; cvars = $4 } }
+    CLASS CLASS_IDENTIFIER BRACE_L class_body BRACE_R SEMI {
+      { cname = $2; cvars = fst $4; cmethods = snd $4 }
+    }
 
 class_body:
-    var_decls { $1 }
+    { ([], []) }
+  | class_body var_decl {
+   let (f, s) = $1 in
+   (f @ [$2], s)
+  }
+  | class_body mdecl {
+   let (f, s) = $1 in
+   (f, s @ [$2])
+  }
+
+mdecl:
+   typ IDENTIFIER PAREN_L formals_opt PAREN_R BRACE_L var_decls stmts BRACE_R
+     { { typ = $1;
+         fname = $2;
+         formals = List.rev $4;
+         locals = List.rev $7;
+         body = List.rev $8 } }
 
 formals_opt:
     /* nothing */ { [] }
@@ -163,7 +181,7 @@ expr:
   | NOT expr           { Unop(Not, $2) }
   | PAREN_L expr PAREN_R { $2 }
   | fq_identifier ASSIGN expr { Assign($1, $3) }
-  | IDENTIFIER PAREN_L args_opt PAREN_R { Call($1, $3) }
+  | fq_identifier PAREN_L args_opt PAREN_R { Call($1, $3) }
   | fq_identifier      { Id($1) }
 
 fq_identifier:

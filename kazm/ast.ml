@@ -19,7 +19,7 @@ type expr =
   | Binop of expr * op * expr
   | Unop of uop * expr
   | Assign of ref * expr
-  | Call of string * expr list
+  | Call of ref * expr list
   | Noexpr
 
 type stmt =
@@ -43,6 +43,7 @@ type func_decl = {
 type class_decl = {
     cname : class_t;
     cvars : bind list;
+    cmethods : func_decl list;
 }
 
 type program = bind list * func_decl list * class_decl list
@@ -79,8 +80,8 @@ let rec string_of_expr = function
       string_of_expr e1 ^ " " ^ string_of_op o ^ " " ^ string_of_expr e2
   | Unop(o, e) -> string_of_uop o ^ string_of_expr e
   (* | Assign(v, e) -> v ^ " = " ^ string_of_expr e *)
-  | Call(f, el) ->
-      f ^ "(" ^ String.concat ", " (List.map string_of_expr el) ^ ")"
+  (* | Call(f, el) ->
+      f ^ "(" ^ String.concat ", " (List.map string_of_expr el) ^ ")" *)
   | Noexpr -> ""
 
 let rec string_of_stmt = function

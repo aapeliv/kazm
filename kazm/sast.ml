@@ -15,7 +15,7 @@ and sx =
   | SBinop of sexpr * op * sexpr
   | SUnop of uop * sexpr
   | SAssign of sref * sexpr
-  | SCall of string * sexpr list
+  | SCall of sref * sexpr list
   | SNoexpr
 
 type sstmt =
@@ -39,6 +39,7 @@ type sfunc_decl = {
 type sclass_decl = {
     scname : class_t;
     scvars : bind list;
+    scmethods : sfunc_decl list;
 }
 
 (* Pretty-printing functions *)
@@ -56,8 +57,8 @@ let rec string_of_sexpr (t, e) =
       string_of_sexpr e1 ^ " " ^ string_of_op o ^ " " ^ string_of_sexpr e2
   | SUnop(o, e) -> string_of_uop o ^ string_of_sexpr e
   (* | SAssign(v, e) -> v ^ " = " ^ string_of_sexpr e *)
-  | SCall(f, el) ->
-      f ^ "(" ^ String.concat ", " (List.map string_of_sexpr el) ^ ")"
+  (* | SCall(f, el) ->
+      f ^ "(" ^ String.concat ", " (List.map string_of_sexpr el) ^ ")" *)
   | SNoexpr -> ""
                   ) ^ ")"
 
