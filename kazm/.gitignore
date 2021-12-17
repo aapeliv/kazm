@@ -1,6 +1,21 @@
 _build/
-kazm.native
+_tests_build/
+_tests_data/
+*.native
 parser.output
 
+*.ll
+*.s
+*.o
 parser.ml
 parser.mli
+hello_world
+*.log
+
+loggy.txt
+
+sast_printer
+kazm
+sast_test
+
+experiments/

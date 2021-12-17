@@ -1,0 +1,4 @@
+int main() {
+  println("About to intialize a double");
+  double a = 2.71;
+}
