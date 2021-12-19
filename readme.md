@@ -23,7 +23,7 @@ In the OCaml/LLVM docker container:
 
 ```sh
 cd kazm
-docker run --rm -it -v $(pwd):/home/kazm -w=/home/kazm columbiasedwards/plt
+docker run --rm -it -v $(pwd):/home/kazm -w=/home/kazm aapeliv/plt
 # now inside the container
 opam config exec -- ocamlbuild -use-ocamlfind kazm.native
 # run the kazm compiler to output LLVM IR
