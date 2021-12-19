@@ -89,28 +89,32 @@ let check (globals, functions) =
     in
 
     (* Return a variable from our local symbol table *)
-    let type_of_identifier s =
-      try StringMap.find s symbols
-      with Not_found -> raise (Failure ("undeclared identifier " ^ s))
+    let rec type_of_identifier s locals =
+      match locals with
+      | (typ, name) :: locals_tail ->  if s = name then typ else type_of_identifier s locals_tail
+      | [] -> try StringMap.find s symbols
+               with Not_found -> raise (Failure ("undeclared identifier " ^ s))
+      
     in
 
     (* Return a semantically-checked expression, i.e., with a type *)
-    let rec expr = function
+    let rec expr e locals = 
+      match e with
         Literal  l -> (Int, SLiteral l)
       | Dliteral l -> (Double, SDliteral l)
       | BoolLit l  -> (Bool, SBoolLit l)
       | CharLit c -> (Char, SCharLit c)
       | StringLit s -> (String, SStringLit s)
       | Noexpr     -> (Void, SNoexpr)
-      | Id s       -> (type_of_identifier s, SId s)
+      | Id s       -> (type_of_identifier s locals, SId s)
       | Assign(var, e) as ex ->
-          let lt = type_of_identifier var
-          and (rt, e') = expr e in
+          let lt = type_of_identifier var locals
+          and (rt, e') = expr e locals in
           let err = "illegal assignment " ^ string_of_typ lt ^ " = " ^
             string_of_typ rt ^ " in " ^ string_of_expr ex
           in (check_assign lt rt err, SAssign(var, (rt, e')))
       | Unop(op, e) as ex ->
-          let (t, e') = expr e in
+          let (t, e') = expr e locals in
           let ty = match op with
             Neg when t = Int || t = Float -> t
           | Not when t = Bool -> Bool
@@ -119,8 +123,8 @@ let check (globals, functions) =
                                  " in " ^ string_of_expr ex))
           in (ty, SUnop(op, (t, e')))
       | Binop(e1, op, e2) as e ->
-          let (t1, e1') = expr e1
-          and (t2, e2') = expr e2 in
+          let (t1, e1') = expr e1 locals
+          and (t2, e2') = expr e2 locals in
           (* All binary operators require operands of the same type *)
           let same = t1 = t2 in
           (* Determine expression type based on operator and operand types *)
@@ -143,7 +147,7 @@ let check (globals, functions) =
             raise (Failure ("expecting " ^ string_of_int param_length ^
                             " arguments in " ^ string_of_expr call))
           else let check_call (ft, _) e =
-            let (et, e') = expr e in
+            let (et, e') = expr e locals in
             let err = "illegal argument found " ^ string_of_typ et ^
               " expected " ^ string_of_typ ft ^ " in " ^ string_of_expr e
             in (check_assign ft et err, e')
@@ -152,24 +156,31 @@ let check (globals, functions) =
           in (fd.typ, SCall(fname, args'))
     in
 
-    let check_bool_expr e =
-      let (t', e') = expr e
+    let check_bool_expr e locals =
+      let (t', e') = expr e locals
       and err = "expected Boolean expression in " ^ string_of_expr e
       in if t' != Bool then raise (Failure err) else (t', e')
     in
 
+    let rec find_locals x lst =
+                  match lst with
+                  | [] -> false
+                  | (xt, xs) :: t -> if xs = x then true else find_locals x t 
+    in
+
     (* Return a semantically-checked statement i.e. containing sexprs *)
-    let rec check_stmt = function
-        Expr e -> SExpr (expr e)
+    let rec check_stmt stmt locals =
+      match stmt with
+        Expr e -> SExpr (expr e locals)
       | Initialize (bd, None) -> SInitialize(bd, None)
-      | Initialize (bd, Some e) -> SInitialize(bd, Some (expr e))
-      | If(p, b1, b2) -> SIf(check_bool_expr p, check_stmt b1, check_stmt b2)
+      | Initialize (bd, Some e) -> SInitialize(bd, Some (expr e locals))
+      | If(p, b1, b2) -> SIf(check_bool_expr p locals, check_stmt b1 locals, check_stmt b2 locals)
       | For(e1, e2, e3, st) ->
-      SFor(expr e1, check_bool_expr e2, expr e3, check_stmt st)
-      | While(p, s) -> SWhile(check_bool_expr p, check_stmt s)
+      SFor(expr e1 locals, check_bool_expr e2 locals, expr e3 locals, check_stmt st locals)
+      | While(p, s) -> SWhile(check_bool_expr p locals, check_stmt s locals)
       | EmptyReturn -> SEmptyReturn
       | Break -> SBreak
-      | Return e -> let (t, e') = expr e in
+      | Return e -> let (t, e') = expr e locals in
         if t = func.typ then SReturn (t, e')
         else raise (
       Failure ("return gives " ^ string_of_typ t ^ " expected " ^
@@ -178,19 +189,31 @@ let check (globals, functions) =
         (* A block is correct if each statement is correct and nothing
            follows any Return statement.  Nested blocks are flattened. *)
       | Block sl ->
-          let rec check_stmt_list = function
-              [Return _ as s] -> [check_stmt s]
+          let rec check_stmt_list stmts locals = 
+            match stmts with
+              [Return _ as s] -> [check_stmt s locals]
+            | Initialize (bd, None) :: ss -> 
+                let (typ, name) = bd in
+                if find_locals name locals = true 
+                          then raise (Failure ("cannot initialize " ^ name ^ " twice"))
+                          else SInitialize(bd, None) :: check_stmt_list ss (locals @ [bd])
+            | Initialize (bd, Some e) :: ss -> 
+                let (typ, name) = bd in
+                let se = expr e locals in
+                if find_locals name locals = true 
+                          then raise (Failure ("cannot initialize " ^ name ^ " twice"))
+                          else SInitialize(bd, Some se) :: check_stmt_list ss (locals @ [bd])
             | Return _ :: _   -> raise (Failure "nothing may follow a return")
-            | Block sl :: ss  -> check_stmt_list (sl @ ss) (* Flatten blocks *)
-            | s :: ss         -> check_stmt s :: check_stmt_list ss
+            | Block sl :: ss  -> check_stmt_list (sl @ ss) locals (* Flatten blocks *)
+            | s :: ss         -> check_stmt s locals :: check_stmt_list ss locals
             | []              -> []
-          in SBlock(check_stmt_list sl)
+          in SBlock(check_stmt_list sl locals)
 
     in (* body of check_function *)
     { styp = func.typ;
       sfname = func.fname;
       sformals = func.formals;
-      sbody = match check_stmt (Block func.body) with
+      sbody = match check_stmt (Block func.body) [] with
     SBlock(sl) -> sl
       | _ -> raise (Failure ("internal error: block didn't become a block?"))
     }
