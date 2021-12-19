@@ -73,7 +73,7 @@ let check (globals, functions) =
   let _ = find_func "main" in (* Ensure "main" is defined *)
 
   let check_function func =
-    (* Make sure no formals or locals are void or duplicates *)
+    (* Make sure no formals are void or duplicates *)
     check_binds "formal" func.formals;
     (* check_binds "local" func.locals; *)
 
@@ -85,16 +85,14 @@ let check (globals, functions) =
 
     (* Build local symbol table of variables for this function *)
     let symbols = List.fold_left (fun m (ty, name) -> StringMap.add name ty m)
-                    StringMap.empty (globals @ func.formals (* @ func.locals *) )
+                    StringMap.empty (globals @ func.formals )
     in
 
     (* Return a variable from our local symbol table *)
     let rec type_of_identifier s locals =
-      match locals with
-      | (typ, name) :: locals_tail ->  if s = name then typ else type_of_identifier s locals_tail
-      | [] -> try StringMap.find s symbols
+      try StringMap.find s locals
+      with Not_found -> try StringMap.find s symbols
                with Not_found -> raise (Failure ("undeclared identifier " ^ s))
-      
     in
 
     (* Return a semantically-checked expression, i.e., with a type *)
@@ -162,12 +160,6 @@ let check (globals, functions) =
       in if t' != Bool then raise (Failure err) else (t', e')
     in
 
-    let rec find_locals x lst =
-                  match lst with
-                  | [] -> false
-                  | (xt, xs) :: t -> if xs = x then true else find_locals x t 
-    in
-
     (* Return a semantically-checked statement i.e. containing sexprs *)
     let rec check_stmt stmt locals =
       match stmt with
@@ -194,15 +186,15 @@ let check (globals, functions) =
               [Return _ as s] -> [check_stmt s locals]
             | Initialize (bd, None) :: ss -> 
                 let (typ, name) = bd in
-                if find_locals name locals = true 
+                if StringMap.mem name locals = true 
                           then raise (Failure ("cannot initialize " ^ name ^ " twice"))
-                          else SInitialize(bd, None) :: check_stmt_list ss (locals @ [bd])
+                          else SInitialize(bd, None) :: check_stmt_list ss (StringMap.add name typ locals)
             | Initialize (bd, Some e) :: ss -> 
                 let (typ, name) = bd in
                 let se = expr e locals in
-                if find_locals name locals = true 
+                if StringMap.mem name locals = true 
                           then raise (Failure ("cannot initialize " ^ name ^ " twice"))
-                          else SInitialize(bd, Some se) :: check_stmt_list ss (locals @ [bd])
+                          else SInitialize(bd, Some se) :: check_stmt_list ss (StringMap.add name typ locals)
             | Return _ :: _   -> raise (Failure "nothing may follow a return")
             | Block sl :: ss  -> check_stmt_list (sl @ ss) locals (* Flatten blocks *)
             | s :: ss         -> check_stmt s locals :: check_stmt_list ss locals
@@ -213,7 +205,7 @@ let check (globals, functions) =
     { styp = func.typ;
       sfname = func.fname;
       sformals = func.formals;
-      sbody = match check_stmt (Block func.body) [] with
+      sbody = match check_stmt (Block func.body) StringMap.empty with
     SBlock(sl) -> sl
       | _ -> raise (Failure ("internal error: block didn't become a block?"))
     }
