@@ -164,8 +164,8 @@ let check (globals, functions) =
     let rec check_stmt stmt locals =
       match stmt with
         Expr e -> SExpr (expr e locals)
-      | Initialize (bd, None) -> SInitialize(bd, None)
-      | Initialize (bd, Some e) -> SInitialize(bd, Some (expr e locals))
+      | Initialize (bd, None) -> raise (Failure ("Initialize stmts are inside Block."))
+      | Initialize (bd, Some e) -> raise (Failure ("Initialize stmts are inside Block."))
       | If(p, b1, b2) -> SIf(check_bool_expr p locals, check_stmt b1 locals, check_stmt b2 locals)
       | For(e1, e2, e3, st) ->
       SFor(expr e1 locals, check_bool_expr e2 locals, expr e3 locals, check_stmt st locals)
