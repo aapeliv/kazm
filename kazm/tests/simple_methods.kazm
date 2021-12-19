@@ -2,15 +2,15 @@ class StructWithMethods {
   int x;
   int y;
 
-  int Get5() {
+  int get5() {
     return 5;
   }
 
-  /*int GetX() {
+  int getX() {
     return 4;
-  }*/
+  }
 
-  void Print6() {
+  void print6() {
     int_println(6);
   }
 };
@@ -19,6 +19,6 @@ int main() {
   StructWithMethods s;
   s.x = 5;
   s.y = 6;
-  int_println(s.GetX());
-  s.Print6();
+  int_println(s.getX());
+  s.print6();
 }

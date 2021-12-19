@@ -119,20 +119,27 @@ let gen (bind_list, sfunction_decls, sclass_decls) =
 
   let find_fq_var builder scope = function
     (* Unqualified access *)
-      ref::[] -> fst (find_var scope (snd ref))
+      ref::[] -> fst (find_var scope ref)
     (* Qualified access *)
     | hd::tl::[] ->
       (* Get info about the variable *)
-      let (cval, ClassT(cname)) = find_var scope (snd hd) in
+      let (cval, ClassT(cname)) = find_var scope hd in
       (* Get info about the class *)
       let (cls, cls_t) = SMap.find cname all_classes in
       (* Members names with indexes *)
       let mems = List.mapi (fun ix v -> (ix, snd v)) cls.scvars in
       (* Filter out the members that have the same name as the sought after member (there should only be 1) *)
-      let (mem_pos_in_class, _) = List.hd (List.filter (fun (ix, v) -> ((snd tl) = v)) mems) in
+      let (mem_pos_in_class, _) = List.hd (List.filter (fun (ix, v) -> (tl = v)) mems) in
       (* Load address of the struct *)
-      let load = L.build_load cval ("_struct_" ^ (snd hd)) builder in
-      L.build_struct_gep load mem_pos_in_class ((snd tl) ^ "_ptr") builder
+      let load = L.build_load cval ("_struct_" ^ hd) builder in
+      L.build_struct_gep load mem_pos_in_class (tl ^ "_ptr") builder
+    | _ -> raise (Failure("find_fq_var: cannot be other patterns"))
+  in
+
+  let initialize_var_post_locals ctx vtyp name =
+    let Ctx(builder, scope) = ctx in
+    let var = L.build_alloca (typ_to_t vtyp) name builder in
+    Ctx(builder, add_var scope name var vtyp)
   in
 
   (* Codegen for an expression *)
@@ -140,10 +147,13 @@ let gen (bind_list, sfunction_decls, sclass_decls) =
     let Ctx(builder, sp) = ctx in
     match e with
     (* Function call *)
-      SCall(cname, exprs) ->
-        let (ctx', args) = Future.fold_left_map codegen_expr ctx exprs in
-        let ex = L.build_call (SMap.find cname all_funcs) (Array.of_list args) "" builder in
-        (ctx', ex)
+      SCall(ref, exprs) -> (match ref with 
+                            fname :: [] ->  
+                                let (ctx', args) = Future.fold_left_map codegen_expr ctx exprs in
+                                let ex = L.build_call (SMap.find fname all_funcs) (Array.of_list args) "" builder in
+                                (ctx', ex)
+                          | s :: methodname :: [] -> raise (Failure("TODO: SCall class methods"))
+                          | _ -> raise (Failure("codegen_expr SCall:cannot be other patterns")))
     (* New bool literal *)
     | SBoolLit(value) -> (ctx, L.const_int i1_t (if value then 1 else 0))
     (* New 32-bit integer literal *)
@@ -200,7 +210,6 @@ let gen (bind_list, sfunction_decls, sclass_decls) =
     let typ = func.styp in
     let name = func.sfname in
     let formals = func.sformals in
-    let locals = func.slocals in
     (* Defines the func *)
     let fn = SMap.find name all_funcs in
 
@@ -288,6 +297,9 @@ let gen (bind_list, sfunction_decls, sclass_decls) =
         Ctx(end_builder, sp)
       (* For a block of statements, just fold *)
       | SBlock(stmts) -> List.fold_left codegen_stmt ctx stmts
+      | SInitialize((vtyp, name), None) ->
+        initialize_var_post_locals ctx vtyp name
+      | SInitialize((vtyp, name), Some e) -> raise(Failure("SInitialize: TODO"))
     in
 
     let fn_builder = L.builder_at_end context (L.entry_block fn) in
@@ -319,7 +331,7 @@ let gen (bind_list, sfunction_decls, sclass_decls) =
         let var = L.build_alloca (typ_to_t vtyp) name fn_builder in
         add_var scope name var vtyp
     in
-    let fn_scope' = List.fold_left initialize_var fn_scope locals in
+    let fn_scope' = List.fold_left initialize_var fn_scope [] in
     let fn_ctx = Ctx(fn_builder, fn_scope') in
     (* Build all statements *)
     let ctx' = codegen_stmt fn_ctx (SBlock body) in

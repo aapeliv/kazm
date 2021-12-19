@@ -46,6 +46,7 @@ open Ast
 program:
   decls EOF { $1 }
 
+// TO THINK: Order matters?
 decls:
    /* nothing */ { ([], [], []) }
  | decls var_decl {
@@ -62,13 +63,13 @@ decls:
  }
 
 fdecl:
-   typ IDENTIFIER PAREN_L formals_opt PAREN_R BRACE_L var_decls stmts BRACE_R
+   typ IDENTIFIER PAREN_L formals_opt PAREN_R BRACE_L stmts BRACE_R
      { { typ = $1;
          fname = $2;
          formals = List.rev $4;
-         locals = List.rev $7;
-         body = List.rev $8 } }
+         body = List.rev $7 } }
 
+// TO THINK: Order matters?
 cdecl:
     CLASS CLASS_IDENTIFIER BRACE_L class_body BRACE_R SEMI {
       { cname = $2; cvars = fst $4; cmethods = snd $4 }
@@ -86,12 +87,11 @@ class_body:
   }
 
 mdecl:
-   typ IDENTIFIER PAREN_L formals_opt PAREN_R BRACE_L var_decls stmts BRACE_R
+   typ IDENTIFIER PAREN_L formals_opt PAREN_R BRACE_L stmts BRACE_R
      { { typ = $1;
          fname = $2;
          formals = List.rev $4;
-         locals = List.rev $7;
-         body = List.rev $8 } }
+         body = List.rev $7 } }
 
 formals_opt:
     /* nothing */ { [] }
@@ -137,6 +137,7 @@ stmt:
   | if_stmt { $1 }
   | while_stmt { $1 }
   | for_stmt { $1 }
+  | var_decl_stmt SEMI { $1 }
 
 block_stmt:
     BRACE_L stmts BRACE_R { Block(List.rev $2) }
@@ -157,6 +158,10 @@ while_stmt:
 
 for_stmt:
     FOR PAREN_L expr SEMI expr SEMI expr PAREN_R BRACE_L stmts BRACE_R { For($3, $5, $7, Block(List.rev $10)) }
+
+var_decl_stmt:
+    typ IDENTIFIER { Initialize(($1, $2), None) }
+  | typ IDENTIFIER ASSIGN expr { Initialize(($1, $2), Some $4) }
 
 expr:
     INT_LITERAL        { Literal($1) }
