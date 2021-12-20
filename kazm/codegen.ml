@@ -79,7 +79,7 @@ let gen (bind_list, sfunction_decls, sclass_decls) =
     | A.Int -> ignore (L.build_ret (L.const_int i32_t 0) builder); ctx
     | A.Double -> ignore (L.build_ret (L.const_float double_t 0.) builder); ctx
   in
-
+  
   let all_funcs = SMap.empty in
   (* Builtins... *)
   let all_funcs = add_func_decl all_funcs "print" void_t [char_ptr_t] in
@@ -99,6 +99,14 @@ let gen (bind_list, sfunction_decls, sclass_decls) =
   in
 
   let all_funcs = List.fold_left codegen_func_sig all_funcs sfunction_decls in
+
+  let codegen_class_method map cls = 
+    let name = cls.scname in
+    let methods_map = List.fold_left codegen_func_sig SMap.empty cls.scmethods in
+    SMap.add name methods_map map
+  in
+
+  let all_methods = List.fold_left codegen_class_method SMap.empty sclass_decls in
 
   let new_scope ctx =
     let Ctx(_, parent_scope) = ctx in
@@ -146,7 +154,16 @@ let gen (bind_list, sfunction_decls, sclass_decls) =
                                 let (ctx', args) = Future.fold_left_map codegen_expr ctx exprs in
                                 let ex = L.build_call (SMap.find fname all_funcs) (Array.of_list args) "" builder in
                                 (ctx', ex)
-                          | s :: methodname :: [] -> raise (Failure("TODO: SCall class methods"))
+                          | s :: methodname :: [] -> 
+                                let (ctx', args) = Future.fold_left_map codegen_expr ctx exprs in
+                                let (l, typ) = find_var sp s in
+                                let A.ClassT(cname) = typ in
+                                let methodmap = try SMap.find cname all_methods 
+                                                with Not_found -> raise(Failure("aaaaa"))in
+                                let themethod = try SMap.find methodname methodmap
+                                                with Not_found -> raise(Failure("bbbbb")) in 
+                                let ex = L.build_call themethod (Array.of_list args) "" builder in
+                                (ctx', ex)
                           | _ -> raise (Failure("codegen_expr SCall:cannot be other patterns")))
     (* New bool literal *)
     | SBoolLit(value) -> (ctx, L.const_int i1_t (if value then 1 else 0))
@@ -348,6 +365,8 @@ let gen (bind_list, sfunction_decls, sclass_decls) =
     let ctx' = codegen_stmt fn_ctx (SBlock body) in
     ignore (add_terminator ctx' (build_default_return typ))
   in
-
-  ignore (List.map gen_func sfunction_decls);
+  let all_funcs_methods = 
+      (List.fold_left (fun lst cls -> lst @ cls.scmethods ) sfunction_decls sclass_decls)
+  in
+  ignore (List.map gen_func all_funcs_methods);
   m
