@@ -158,11 +158,8 @@ let gen (bind_list, sfunction_decls, sclass_decls) =
                                 let (ctx', args) = Future.fold_left_map codegen_expr ctx exprs in
                                 let (l, typ) = find_var sp s in
                                 let A.ClassT(cname) = typ in
-                                let methodmap = try SMap.find cname all_methods 
-                                                with Not_found -> raise(Failure("aaaaa"))in
-                                let themethod = try SMap.find methodname methodmap
-                                                with Not_found -> raise(Failure("bbbbb")) in 
-                                let ex = L.build_call themethod (Array.of_list args) "" builder in
+                                let methodmap = SMap.find cname all_methods in
+                                let ex = L.build_call (SMap.find methodname methodmap) (Array.of_list args) "" builder in
                                 (ctx', ex)
                           | _ -> raise (Failure("codegen_expr SCall:cannot be other patterns")))
     (* New bool literal *)
@@ -222,7 +219,9 @@ let gen (bind_list, sfunction_decls, sclass_decls) =
     let name = func.sfname in
     let formals = func.sformals in
     (* Defines the func *)
-    let fn = SMap.find name all_funcs in
+    let fn = try SMap.find name all_funcs 
+             with Not_found -> let methodmap = SMap.find "StructWithMethods" all_methods in
+                                (SMap.find name methodmap)in
 
     (* Codegen for a statement *)
     (* Takes ctx and statement and returns a ctx *)
@@ -366,7 +365,7 @@ let gen (bind_list, sfunction_decls, sclass_decls) =
     ignore (add_terminator ctx' (build_default_return typ))
   in
   let all_funcs_methods = 
-      (List.fold_left (fun lst cls -> lst @ cls.scmethods ) sfunction_decls sclass_decls)
+      (List.fold_left (fun lst cls -> cls.scmethods @ sfunction_decls) sfunction_decls sclass_decls)
   in
   ignore (List.map gen_func all_funcs_methods);
   m
