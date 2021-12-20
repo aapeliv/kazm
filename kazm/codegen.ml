@@ -136,12 +136,6 @@ let gen (bind_list, sfunction_decls, sclass_decls) =
     | _ -> raise (Failure("find_fq_var: cannot be other patterns"))
   in
 
-  let initialize_var_post_locals ctx vtyp name =
-    let Ctx(builder, scope) = ctx in
-    let var = L.build_alloca (typ_to_t vtyp) name builder in
-    Ctx(builder, add_var scope name var vtyp)
-  in
-
   (* Codegen for an expression *)
   let rec codegen_expr ctx ((typ, e) : sexpr) =
     let Ctx(builder, sp) = ctx in
@@ -215,6 +209,7 @@ let gen (bind_list, sfunction_decls, sclass_decls) =
 
     (* Codegen for a statement *)
     (* Takes ctx and statement and returns a ctx *)
+    let fn_builder = L.builder_at_end context (L.entry_block fn) in
     let rec codegen_stmt ctx stmt =
       let Ctx(builder, sp) = ctx in
       match stmt with
@@ -298,11 +293,27 @@ let gen (bind_list, sfunction_decls, sclass_decls) =
       (* For a block of statements, just fold *)
       | SBlock(stmts) -> List.fold_left codegen_stmt ctx stmts
       | SInitialize((vtyp, name), None) ->
-        initialize_var_post_locals ctx vtyp name
+          (match vtyp with
+              A.ClassT(cname) ->
+              (* Class info *)
+              let (cls, cls_t) = SMap.find cname all_classes in
+              (* A pointer to the right struct *)
+              let ptr_var = L.build_alloca (L.pointer_type cls_t) name fn_builder in
+              (* Variable to store size in *)
+              (* let size_var = L.build_alloca i64_t "sz" fn_builder in
+              ignore (L.build_store (L.size_of cls_t) size_var fn_builder); *)
+              (* Malloc the memory *)
+              let mallocd = L.build_call (SMap.find "_kazm_malloc" all_funcs) [| L.size_of cls_t |] ("_malloc_" ^ name) fn_builder in
+              let castd = L.build_bitcast mallocd (L.pointer_type cls_t) ("_cast_" ^ name) fn_builder in
+              ignore (L.build_store castd ptr_var fn_builder);
+              Ctx(builder, add_var sp name ptr_var vtyp)
+            | _ ->
+              let var = L.build_alloca (typ_to_t vtyp) name fn_builder in
+              Ctx(builder, add_var sp name var vtyp))
       | SInitialize((vtyp, name), Some e) -> raise(Failure("SInitialize: TODO"))
     in
 
-    let fn_builder = L.builder_at_end context (L.entry_block fn) in
+    
     let add_param map (ptyp, name) param =
       L.set_value_name name param;
       let local_copy = L.build_alloca (typ_to_t ptyp) name fn_builder in
