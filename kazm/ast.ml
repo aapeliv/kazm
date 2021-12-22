@@ -102,13 +102,14 @@ string_of_expr e3  ^ ") " ^ string_of_stmt s
 | While(e, s) -> "while (" ^ string_of_expr e ^ ") " ^ string_of_stmt s
 | Break -> "break;"
 
-let string_of_typ = function
+let rec string_of_typ = function
 Int -> "int"
 | Bool -> "bool"
 | Double -> "double"
 | Void -> "void"
 | String -> "string"
 | Char -> "char"
+| ArrayT(arrtyp) -> string_of_typ arrtyp ^ " arr"
 | ClassT(name) -> "class " ^ name
 
 let string_of_vdecl (t, id) = string_of_typ t ^ " " ^ id ^ ";\n"

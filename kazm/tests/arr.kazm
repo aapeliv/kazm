@@ -1,4 +1,5 @@
 void main()
 {
     array int[5] c;
+    c[3] = 4;
 }
