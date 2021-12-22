@@ -24,6 +24,8 @@ let gen (bind_list, sfunction_decls, sclass_decls) =
   let void_t = L.void_type context in
   let char_ptr_t = L.pointer_type char_t in
   let void_ptr_t = L.pointer_type i8_t in
+  let array_t = fun llvm_t -> L.struct_type context [| L.pointer_type llvm_t; i32_t; i32_t |] in
+  let i32OF = L.const_int (L.i32_type context) in
 
   (* Map our AST type to LLVM type *)
   let typ_to_t_TODO_WITHOUT_CLASSES = function
@@ -31,6 +33,11 @@ let gen (bind_list, sfunction_decls, sclass_decls) =
     | A.Bool -> i1_t
     | A.Int -> i32_t
     | A.Double -> double_t
+  in
+
+  (* LLVM type of array element *)
+  let rec typ_to_t_array_element = function
+    A.ArrayT(t) -> typ_to_t_TODO_WITHOUT_CLASSES t
   in
 
   let codegen_class_decl map cls =
@@ -50,7 +57,9 @@ let gen (bind_list, sfunction_decls, sclass_decls) =
     | A.Int -> i32_t
     | A.Double -> double_t
     | A.ClassT(name) -> L.pointer_type (snd (SMap.find name all_classes))
+    | A.ArrayT(t) -> array_t (typ_to_t_TODO_WITHOUT_CLASSES t)
   in
+
 
   let codegen_func_decl name ret_t arg_ts =
     let func_t = L.function_type ret_t (Array.of_list arg_ts) in
@@ -79,6 +88,7 @@ let gen (bind_list, sfunction_decls, sclass_decls) =
     | A.Int -> ignore (L.build_ret (L.const_int i32_t 0) builder); ctx
     | A.Double -> ignore (L.build_ret (L.const_float double_t 0.) builder); ctx
   in
+
 
   let all_funcs = SMap.empty in
   (* Builtins... *)
@@ -135,6 +145,7 @@ let gen (bind_list, sfunction_decls, sclass_decls) =
       L.build_struct_gep load mem_pos_in_class ((snd tl) ^ "_ptr") builder
   in
 
+
   (* Codegen for an expression *)
   let rec codegen_expr ctx ((typ, e) : sexpr) =
     let Ctx(builder, sp) = ctx in
@@ -180,7 +191,84 @@ let gen (bind_list, sfunction_decls, sclass_decls) =
       let var = find_fq_var builder sp fqn in
       ignore (L.build_store e' var builder);
       (ctx, e')
+    | SArrayLit(a) -> 
+      let llvm_ty = typ_to_t (fst (List.hd a)) in
+      let ty = array_t llvm_ty in 
+      let alloc = L.build_alloca ty "alloc" builder in
+      let data_location = L.build_struct_gep alloc 0 "data_location" builder in
+      let len_loc = L.build_struct_gep alloc 1 "" builder in
+      let len = List.length a in
+      let cap = len * 2 in 
+      let data_loc = L.build_array_alloca llvm_ty (i32OF cap) "data_loc" builder in
+      let array_iter (acc, builder) ex = 
+        let new_ctx, new_expr = codegen_expr ctx ex in 
+        let Ctx(builder, sp) = new_ctx in (* need to keep this line to keep the change in builder *)
+        let item_loc = L.build_gep data_loc [|i32OF acc |] "item_loc" builder in
+        let _ = L.build_store new_expr item_loc builder in (acc+1, builder)
+      in 
+      let _, builder = List.fold_left array_iter (0, builder) a in
+      let _ = L.build_store data_loc data_location builder in
+      let _ = L.build_store (i32OF len) len_loc builder in
+      let ctx' = Ctx(builder, sp) in (* builder is the builder updated in array_iter *)
+      let e' = L.build_load alloc "value" builder in 
+      (ctx', e')
+    | SArrayIndex(id, idx) -> (* sexpr * sexpr, sexpr is typ * sx and the first must be SId *)
+      let name = match snd id with 
+          SId s -> snd (List.hd s)
+        (* | _ -> "Error: cannot array index non-identifier" *)
+      in
+      let a_addr = fst (find_var sp name) in (* sp is the current scope *)
+      let data_location = L.build_struct_gep a_addr 0 "" builder in
+      let data_loc = L.build_load data_location "" builder in
+      let new_ctx, new_expr = codegen_expr ctx idx in (* idx is a sexpr itself *)
+      let Ctx(builder, sp) = new_ctx in (* to update builder and sp *)
+      let i_addr = L.build_gep data_loc [| new_expr |] "" builder in 
+      let ctx' = Ctx(builder, sp) in 
+      let e' = L.build_load i_addr "" builder in 
+      (ctx', e')
+    | SArrayAssign (v, i, e) -> (* assign e to v[i] *)
+      let ctx, rval = codegen_expr ctx e in (* updating ctx *)
+      let Ctx(builder, sp) = ctx in 
+      let name = match snd v with SId s -> List.hd s in 
+      let a_addr = find_var sp (snd name) in 
+      let data_location = L.build_struct_gep (fst a_addr) 0 "" builder in 
+      let data_loc = L.build_load data_location "" builder in 
+      let ctx = Ctx(builder, sp) in 
+      let ctx, ival = codegen_expr ctx i in 
+      let Ctx(builder, sp) = ctx in 
+      let addr = L.build_gep data_loc [| ival |] "" builder in 
+      let _ = L.build_store rval addr builder in 
+      let ctx' = Ctx(builder, sp) in 
+      (ctx', rval) (* return the assigned value *)
+    | SArrayDecl(t, l, n) -> (* type length name in e.g. array int[5] a *)
+      let llvm_ty = typ_to_t t in 
+      let addr = L.build_alloca llvm_ty n builder in 
+      let alloc = L.build_alloca llvm_ty "alloc" builder in 
+      let data_location = L.build_struct_gep alloc 0 "data_location" builder in 
+      let len = (match l with _, SLiteral lit -> lit) in (* extract length from l *)
+      let len_loc = L.build_struct_gep alloc 1 "" builder in 
+      let cap = len * 2 in 
+      let data_loc = L.build_array_alloca (typ_to_t_array_element t) (i32OF cap) "data_loc" builder in 
+      let default_value = match t with 
+        ArrayT Ast.Int -> L.const_int i32_t 0
+        | ArrayT Ast.Double -> L.const_float double_t 0.0
+        | ArrayT Ast.Bool -> L.const_int i1_t 1
+      in 
+      let rec sto (acc, builder) = 
+        let item_loc = L.build_gep data_loc [| i32OF acc |] "item_loc" builder in 
+        let _ = L.build_store default_value item_loc builder in 
+        if acc < len then sto (acc + 1, builder) else acc, builder 
+      in 
+      let _, builder = sto (0, builder) in 
+      let _ = L.build_store data_loc data_location builder in
+      let _ = L.build_store (i32OF len) len_loc builder in
+      let value = L.build_load alloc "value" builder in 
+      let dl = find_var sp n in 
+      let _ = L.build_store value (fst dl) builder in 
+      let ctx' = Ctx(builder, sp) in     
+      (ctx', value) (* return the stored value *)
   in
+
 
   (* Add terminator to end of a basic block *)
   let add_terminator ctx build_terminator =
@@ -286,7 +374,7 @@ let gen (bind_list, sfunction_decls, sclass_decls) =
         (* Continue building after the end of the loop *)
         let Ctx(_, sp) = ctx in
         Ctx(end_builder, sp)
-      (* For a block of statements, just fold *)
+  
       | SBlock(stmts) -> List.fold_left codegen_stmt ctx stmts
     in
 

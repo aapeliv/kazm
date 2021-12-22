@@ -3,19 +3,21 @@
 open Ast
 %}
 
-%token PAREN_L PAREN_R BRACE_L BRACE_R SQB_L SQB_R SQB_PAIR /* ( ) { } [ ] */
+%token PAREN_L PAREN_R BRACE_L BRACE_R 
+%token SQB_L SQB_R /* ( ) { } [ ] */
 %token DOT SEMI COMMA MOD ASSIGN  /* . ; , * % = */
 %token PLUS MINUS TIMES DIVIDE  /* + - * / */
 %token PLUSEQ MINUSEQ TIMESEQ DIVIDEQ /* + - * / += -= *= /= */
 %token AND OR NOT  /* && || ! */
 %token EQ NEQ LT LEQ GT GEQ /* == != < <= > >= */
-%token VOID BOOL CHAR INT DOUBLE STRING
+%token VOID BOOL CHAR INT DOUBLE STRING 
+%token ARRAY 
 %token IF ELSE FOR WHILE
 %token RETURN BREAK
-%token CLASS
+%token CLASS 
 %token TRUE FALSE
 
-%token<string> IDENTIFIER CLASS_IDENTIFIER
+%token<string> IDENTIFIER CLASS_IDENTIFIER 
 %token<string> CLASS_NAME
 %token<string> STRING_LITERAL
 %token<float> DOUBLE_LITERAL
@@ -25,8 +27,8 @@ open Ast
 
 %nonassoc NOELSE
 %nonassoc ELSE
-%nonassoc PAREN_L PAREN_R BRACE_L BRACE_R SQB_L SQB_R
-%left SEMICO
+%nonassoc BRACE_L BRACE_R 
+%left SEMI
 %left IF
 %right ASSIGN PLUSEQ MINUSEQ TIMESEQ DIVIDEQ
 %left OR
@@ -36,6 +38,8 @@ open Ast
 %left PLUS MINUS
 %left TIMES DIVIDE MOD
 %right NOT
+%left SQB_L SQB_R
+%left PAREN_L PAREN_R
 
 %left DOT
 
@@ -85,8 +89,7 @@ formals_opt:
 //       fname = $1;
 //       formals = List.rev $3;
 //       locals = List.rev $6;
-//       body = List.rev $7 } }
-
+//       body = List.rev $7 } } 
 
 formal_list:
     typ IDENTIFIER { [($1,$2)] }
@@ -99,6 +102,7 @@ typ:
   | INT { Int }
   | DOUBLE { Double }
   | STRING { String }
+  | ARRAY typ { ArrayT($2) } // 
   | CLASS_IDENTIFIER { ClassT($1) }
 
 var_decls:
@@ -165,10 +169,20 @@ expr:
   | fq_identifier ASSIGN expr { Assign($1, $3) }
   | IDENTIFIER PAREN_L args_opt PAREN_R { Call($1, $3) }
   | fq_identifier      { Id($1) }
+  | typ SQB_L expr SQB_R IDENTIFIER {ArrayDecl($1, $3, $5)} 
+  | SQB_L array_opt SQB_R          { ArrayLit(List.rev $2) } 
+  | fq_identifier SQB_L expr SQB_R ASSIGN expr {ArrayAssign(Id($1), $3, $6)}
+  | fq_identifier SQB_L expr SQB_R {ArrayIndex(Id($1), $3)} 
 
 fq_identifier:
     IDENTIFIER { [$1] }
   | IDENTIFIER DOT IDENTIFIER { $1::$3::[] }
+
+array_opt:
+    { [] } 
+  | expr { [$1] }
+  | array_opt COMMA expr { $3 :: $1 }
+// can look like [0.0], [1, 2, 3], etc. 
 
 args_opt:
     /* nothing */ { [] }

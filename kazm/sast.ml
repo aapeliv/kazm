@@ -17,6 +17,10 @@ and sx =
   | SAssign of sref * sexpr
   | SCall of string * sexpr list
   | SNoexpr
+  | SArrayAssign of sexpr * sexpr * sexpr
+  | SArrayLit of sexpr list
+  | SArrayIndex of sexpr * sexpr
+  | SArrayDecl of typ * sexpr * string
 
 type sstmt =
     SBlock of sstmt list
@@ -88,3 +92,4 @@ let string_of_sfdecl fdecl =
 let string_of_sprogram (vars, funcs) =
   String.concat "" (List.map string_of_vdecl vars) ^ "\n" ^
   String.concat "\n" (List.map string_of_sfdecl funcs)
+

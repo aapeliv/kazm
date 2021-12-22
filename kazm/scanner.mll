@@ -21,7 +21,7 @@ rule tokenize = parse
 | ')' { PAREN_R }
 | '{' { BRACE_L }
 | '}' { BRACE_R }
-| "[]" { SQB_PAIR }
+(* | "[]" { SQB_PAIR } *)
 | '[' { SQB_L }
 | ']' { SQB_R }
 | '.' { DOT }
@@ -48,6 +48,7 @@ rule tokenize = parse
 | ">=" { GEQ }
 | "class" { CLASS }
 | "void" { VOID }
+| "array"  { ARRAY }
 | "bool" { BOOL }
 | "char" { CHAR }
 | "int" { INT }
@@ -77,7 +78,7 @@ and parse_string buffer = parse
 | eof                 { raise (Failure("Non-terminated double quotes")) }
 
 and multicomment = parse
-"*/" { tokenize lexbuf }
+  "*/" { tokenize lexbuf }
 | '\n' { Lexing.new_line lexbuf; multicomment lexbuf }
 | eof { raise (Failure("reached end of file with an unclosed multiline comment"))}
 | _ { multicomment lexbuf }
