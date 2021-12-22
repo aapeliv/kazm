@@ -71,6 +71,16 @@ let string_of_uop = function
 Neg -> "-"
 | Not -> "!"
 
+let rec string_of_typ = function
+Int -> "int"
+| Bool -> "bool"
+| Double -> "double"
+| Void -> "void"
+| String -> "string"
+| Char -> "char"
+| ArrayT(arrtyp) -> string_of_typ arrtyp ^ " arr"
+| ClassT(name) -> "class " ^ name
+
 let rec string_of_expr = function
 Literal(l) -> string_of_int l
 | Dliteral(l) -> l
@@ -85,6 +95,10 @@ string_of_expr e1 ^ " " ^ string_of_op o ^ " " ^ string_of_expr e2
 (* | Assign(v, e) -> v ^ " = " ^ string_of_expr e *)
 | Call(f, el) ->
 f ^ "(" ^ String.concat ", " (List.map string_of_expr el) ^ ")"
+| ArrayLit(l) -> "[" ^ (String.concat ", " (List.map string_of_expr l)) ^ "]"
+| ArrayAssign(id, idx, v) -> string_of_expr id ^ "[" ^ string_of_expr idx ^ "] = " ^ string_of_expr v
+| ArrayIndex(id, idx) -> string_of_expr id ^ "[" ^ string_of_expr idx ^ "]" 
+| ArrayDecl(t, idx, id) -> string_of_typ (t) ^ "[" ^ string_of_expr idx ^ "] " ^ id
 | Noexpr -> ""
 
 let rec string_of_stmt = function
@@ -102,15 +116,6 @@ string_of_expr e3  ^ ") " ^ string_of_stmt s
 | While(e, s) -> "while (" ^ string_of_expr e ^ ") " ^ string_of_stmt s
 | Break -> "break;"
 
-let rec string_of_typ = function
-Int -> "int"
-| Bool -> "bool"
-| Double -> "double"
-| Void -> "void"
-| String -> "string"
-| Char -> "char"
-| ArrayT(arrtyp) -> string_of_typ arrtyp ^ " arr"
-| ClassT(name) -> "class " ^ name
 
 let string_of_vdecl (t, id) = string_of_typ t ^ " " ^ id ^ ";\n"
 
