@@ -37,3 +37,12 @@ cc -o hello_world builtins.o hello_world.s
 # run!
 ./hello_world
 ```
+
+## Menhir
+```sh
+cd kazm
+menhir --interpret --interpret-show-cst parser.mly
+# void main() {} corresponds to 
+VOID IDENTIFIER PAREN_L PAREN_R BRACE_L BRACE_R
+# fill in the space between BRACE_L and BRACE_R to test other programs
+```
