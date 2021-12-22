@@ -17,7 +17,7 @@ cat sample.kazm | ./kazm.native
 ```
 
 
-## Running the "hello world" example
+## Running the array example
 
 In the OCaml/LLVM docker container:
 
