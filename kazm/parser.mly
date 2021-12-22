@@ -102,7 +102,7 @@ typ:
   | INT { Int }
   | DOUBLE { Double }
   | STRING { String }
-  | ARRAY typ { ArrayT($2) } // 
+  | ARRAY typ SQB_L INT_LITERAL SQB_R { ArrayT($2) } // 
   | CLASS_IDENTIFIER { ClassT($1) }
 
 var_decls:
