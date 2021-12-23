@@ -194,7 +194,10 @@ let check (globals, functions, classes) =
         let right_t, value' = expr value in 
         let index_t, index' = expr index in 
         let _ = match index' with 
-            SLiteral l -> l (* add within array length checking later *)
+            SLiteral l -> 
+            let arrLit = StringMap.find name' map in 
+            if index >= List.length arrLit  && size != 0 then raise(Failure("Array Index out ouf bound: " ^ string_of_int l)) 
+            else l (* add within array length checking later *)
           | _ -> 0 
         in 
         let element_t = match left_t with 

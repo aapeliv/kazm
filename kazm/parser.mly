@@ -106,7 +106,7 @@ typ:
   | CLASS_IDENTIFIER { ClassT($1) }
 
 atyp:
-    ARRAY typ SQB_L INT_LITERAL SQB_R { ArrayT($2, $4) } 
+    ARRAY typ SQB_L INT_LITERAL SQB_R { ArrayT($2) } 
 
 var_decls:
     { [] }
@@ -169,10 +169,10 @@ expr:
   | expr OR     expr   { Binop($1, Or,    $3)   }
   | NOT expr           { Unop(Not, $2) }
   | PAREN_L expr PAREN_R { $2 }
-  | fq_identifier ASSIGN expr { Assign($1, $3) }
+  | fq_identifier ASSIGN expr { Assign($1, $3) } 
   | IDENTIFIER PAREN_L args_opt PAREN_R { Call($1, $3) }
   | fq_identifier      { Id($1) }
-  | typ SQB_L expr SQB_R IDENTIFIER {ArrayDecl($1, $3, $5)} (* array void[4] my_arr;*)
+  | typ SQB_L expr SQB_R IDENTIFIER {ArrayDecl($1, $3, $5)} 
   | SQB_L array_opt SQB_R          { ArrayLit(List.rev $2) } 
   | fq_identifier SQB_L expr SQB_R ASSIGN expr {ArrayAssign(Id($1), $3, $6)}
   | fq_identifier SQB_L expr SQB_R {ArrayIndex(Id($1), $3)} 

@@ -7,6 +7,6 @@ int main()
     int_println(my_arr[1]);
     int_println(my_arr[2]);
     int_println(my_arr[3]);
-    int_println(my_arr[5]);
+    int_println(my_arr[9]);
 
 }
