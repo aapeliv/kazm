@@ -79,7 +79,7 @@ let gen (bind_list, sfunction_decls, sclass_decls) =
     | A.Int -> ignore (L.build_ret (L.const_int i32_t 0) builder); ctx
     | A.Double -> ignore (L.build_ret (L.const_float double_t 0.) builder); ctx
   in
-
+  
   let all_funcs = SMap.empty in
   (* Builtins... *)
   let all_funcs = add_func_decl all_funcs "print" void_t [char_ptr_t] in
@@ -100,6 +100,14 @@ let gen (bind_list, sfunction_decls, sclass_decls) =
 
   let all_funcs = List.fold_left codegen_func_sig all_funcs sfunction_decls in
 
+  let codegen_class_method map cls = 
+    let name = cls.scname in
+    let methods_map = List.fold_left codegen_func_sig SMap.empty cls.scmethods in
+    SMap.add name methods_map map
+  in
+
+  let all_methods = List.fold_left codegen_class_method SMap.empty sclass_decls in
+
   let new_scope ctx =
     let Ctx(_, parent_scope) = ctx in
     Scope(Some parent_scope, SMap.empty)
@@ -119,20 +127,21 @@ let gen (bind_list, sfunction_decls, sclass_decls) =
 
   let find_fq_var builder scope = function
     (* Unqualified access *)
-      ref::[] -> fst (find_var scope (snd ref))
+      ref::[] -> fst (find_var scope ref)
     (* Qualified access *)
     | hd::tl::[] ->
       (* Get info about the variable *)
-      let (cval, ClassT(cname)) = find_var scope (snd hd) in
+      let (cval, ClassT(cname)) = find_var scope hd in
       (* Get info about the class *)
       let (cls, cls_t) = SMap.find cname all_classes in
       (* Members names with indexes *)
       let mems = List.mapi (fun ix v -> (ix, snd v)) cls.scvars in
       (* Filter out the members that have the same name as the sought after member (there should only be 1) *)
-      let (mem_pos_in_class, _) = List.hd (List.filter (fun (ix, v) -> ((snd tl) = v)) mems) in
+      let (mem_pos_in_class, _) = List.hd (List.filter (fun (ix, v) -> (tl = v)) mems) in
       (* Load address of the struct *)
-      let load = L.build_load cval ("_struct_" ^ (snd hd)) builder in
-      L.build_struct_gep load mem_pos_in_class ((snd tl) ^ "_ptr") builder
+      let load = L.build_load cval ("_struct_" ^ hd) builder in
+      L.build_struct_gep load mem_pos_in_class (tl ^ "_ptr") builder
+    | _ -> raise (Failure("find_fq_var: cannot be other patterns"))
   in
 
   (* Codegen for an expression *)
@@ -140,10 +149,19 @@ let gen (bind_list, sfunction_decls, sclass_decls) =
     let Ctx(builder, sp) = ctx in
     match e with
     (* Function call *)
-      SCall(cname, exprs) ->
-        let (ctx', args) = Future.fold_left_map codegen_expr ctx exprs in
-        let ex = L.build_call (SMap.find cname all_funcs) (Array.of_list args) "" builder in
-        (ctx', ex)
+      SCall(ref, exprs) -> (match ref with 
+                            fname :: [] ->  
+                                let (ctx', args) = Future.fold_left_map codegen_expr ctx exprs in
+                                let ex = L.build_call (SMap.find fname all_funcs) (Array.of_list args) "" builder in
+                                (ctx', ex)
+                          | s :: methodname :: [] -> 
+                                let (ctx', args) = Future.fold_left_map codegen_expr ctx exprs in
+                                let (l, typ) = find_var sp s in
+                                let A.ClassT(cname) = typ in
+                                let methodmap = SMap.find cname all_methods in
+                                let ex = L.build_call (SMap.find methodname methodmap) (Array.of_list args) "" builder in
+                                (ctx', ex)
+                          | _ -> raise (Failure("codegen_expr SCall:cannot be other patterns")))
     (* New bool literal *)
     | SBoolLit(value) -> (ctx, L.const_int i1_t (if value then 1 else 0))
     (* New 32-bit integer literal *)
@@ -200,12 +218,14 @@ let gen (bind_list, sfunction_decls, sclass_decls) =
     let typ = func.styp in
     let name = func.sfname in
     let formals = func.sformals in
-    let locals = func.slocals in
     (* Defines the func *)
-    let fn = SMap.find name all_funcs in
+    let fn = try SMap.find name all_funcs 
+             with Not_found -> let methodmap = SMap.find "StructWithMethods" all_methods in
+                                (SMap.find name methodmap)in
 
     (* Codegen for a statement *)
     (* Takes ctx and statement and returns a ctx *)
+    let fn_builder = L.builder_at_end context (L.entry_block fn) in
     let rec codegen_stmt ctx stmt =
       let Ctx(builder, sp) = ctx in
       match stmt with
@@ -288,9 +308,28 @@ let gen (bind_list, sfunction_decls, sclass_decls) =
         Ctx(end_builder, sp)
       (* For a block of statements, just fold *)
       | SBlock(stmts) -> List.fold_left codegen_stmt ctx stmts
+      | SInitialize((vtyp, name), None) ->
+          (match vtyp with
+              A.ClassT(cname) ->
+              (* Class info *)
+              let (cls, cls_t) = SMap.find cname all_classes in
+              (* A pointer to the right struct *)
+              let ptr_var = L.build_alloca (L.pointer_type cls_t) name fn_builder in
+              (* Variable to store size in *)
+              (* let size_var = L.build_alloca i64_t "sz" fn_builder in
+              ignore (L.build_store (L.size_of cls_t) size_var fn_builder); *)
+              (* Malloc the memory *)
+              let mallocd = L.build_call (SMap.find "_kazm_malloc" all_funcs) [| L.size_of cls_t |] ("_malloc_" ^ name) fn_builder in
+              let castd = L.build_bitcast mallocd (L.pointer_type cls_t) ("_cast_" ^ name) fn_builder in
+              ignore (L.build_store castd ptr_var fn_builder);
+              Ctx(builder, add_var sp name ptr_var vtyp)
+            | _ ->
+              let var = L.build_alloca (typ_to_t vtyp) name fn_builder in
+              Ctx(builder, add_var sp name var vtyp))
+      | SInitialize((vtyp, name), Some e) -> raise(Failure("SInitialize: TODO"))
     in
 
-    let fn_builder = L.builder_at_end context (L.entry_block fn) in
+    
     let add_param map (ptyp, name) param =
       L.set_value_name name param;
       let local_copy = L.build_alloca (typ_to_t ptyp) name fn_builder in
@@ -319,12 +358,14 @@ let gen (bind_list, sfunction_decls, sclass_decls) =
         let var = L.build_alloca (typ_to_t vtyp) name fn_builder in
         add_var scope name var vtyp
     in
-    let fn_scope' = List.fold_left initialize_var fn_scope locals in
+    let fn_scope' = List.fold_left initialize_var fn_scope [] in
     let fn_ctx = Ctx(fn_builder, fn_scope') in
     (* Build all statements *)
     let ctx' = codegen_stmt fn_ctx (SBlock body) in
     ignore (add_terminator ctx' (build_default_return typ))
   in
-
-  ignore (List.map gen_func sfunction_decls);
+  let all_funcs_methods = 
+      (List.fold_left (fun lst cls -> cls.scmethods @ sfunction_decls) sfunction_decls sclass_decls)
+  in
+  ignore (List.map gen_func all_funcs_methods);
   m

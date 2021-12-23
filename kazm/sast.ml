@@ -11,11 +11,11 @@ and sx =
   | SBoolLit of bool
   | SCharLit of string
   | SStringLit of string
-  | SId of sref
+  | SId of ref
   | SBinop of sexpr * op * sexpr
   | SUnop of uop * sexpr
-  | SAssign of sref * sexpr
-  | SCall of string * sexpr list
+  | SAssign of ref * sexpr
+  | SCall of ref * sexpr list
   | SNoexpr
 
 type sstmt =
@@ -27,22 +27,25 @@ type sstmt =
   | SWhile of sexpr * sstmt
   | SBreak
   | SEmptyReturn
+  | SInitialize of bind * sexpr option
 
 type sfunc_decl = {
     styp : typ;
     sfname : string;
     sformals : bind list;
-    slocals : bind list;
     sbody : sstmt list;
 }
 
 type sclass_decl = {
     scname : class_t;
     scvars : bind list;
+    scmethods : sfunc_decl list;
 }
 
-(* Pretty-printing functions *)
+type sprogram = bind list * sfunc_decl list * sclass_decl list
 
+(* Pretty-printing functions *)
+(* TODO: maybe fix later *)
 let rec string_of_sexpr (t, e) =
   "(" ^ string_of_typ t ^ " : " ^ (match e with
     SLiteral(l) -> string_of_int l
@@ -56,8 +59,8 @@ let rec string_of_sexpr (t, e) =
       string_of_sexpr e1 ^ " " ^ string_of_op o ^ " " ^ string_of_sexpr e2
   | SUnop(o, e) -> string_of_uop o ^ string_of_sexpr e
   (* | SAssign(v, e) -> v ^ " = " ^ string_of_sexpr e *)
-  | SCall(f, el) ->
-      f ^ "(" ^ String.concat ", " (List.map string_of_sexpr el) ^ ")"
+  (* | SCall(f, el) ->
+      f ^ "(" ^ String.concat ", " (List.map string_of_sexpr el) ^ ")" *)
   | SNoexpr -> ""
                   ) ^ ")"
 
@@ -81,8 +84,7 @@ let string_of_sfdecl fdecl =
   string_of_typ fdecl.styp ^ " " ^
   fdecl.sfname ^ "(" ^ String.concat ", " (List.map snd fdecl.sformals) ^
   ")\n{\n" ^
-  String.concat "" (List.map string_of_vdecl fdecl.slocals) ^
-  String.concat "" (List.map string_of_sstmt fdecl.sbody) ^
+  String.concat " " (List.map string_of_sstmt fdecl.sbody) ^
   "}\n"
 
 let string_of_sprogram (vars, funcs) =

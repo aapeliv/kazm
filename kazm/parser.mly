@@ -46,6 +46,7 @@ open Ast
 program:
   decls EOF { $1 }
 
+// TO THINK: Order matters?
 decls:
    /* nothing */ { ([], [], []) }
  | decls var_decl {
@@ -62,18 +63,35 @@ decls:
  }
 
 fdecl:
-   typ IDENTIFIER PAREN_L formals_opt PAREN_R BRACE_L var_decls stmts BRACE_R
+   typ IDENTIFIER PAREN_L formals_opt PAREN_R BRACE_L stmts BRACE_R
      { { typ = $1;
          fname = $2;
          formals = List.rev $4;
-         locals = List.rev $7;
-         body = List.rev $8 } }
+         body = List.rev $7 } }
 
+// TO THINK: Order matters?
 cdecl:
-    CLASS CLASS_IDENTIFIER BRACE_L class_body BRACE_R SEMI { { cname = $2; cvars = $4 } }
+    CLASS CLASS_IDENTIFIER BRACE_L class_body BRACE_R SEMI {
+      { cname = $2; cvars = fst $4; cmethods = snd $4 }
+    }
 
 class_body:
-    var_decls { $1 }
+    { ([], []) }
+  | class_body var_decl {
+   let (f, s) = $1 in
+   (f @ [$2], s)
+  }
+  | class_body mdecl {
+   let (f, s) = $1 in
+   (f, s @ [$2])
+  }
+
+mdecl:
+   typ IDENTIFIER PAREN_L formals_opt PAREN_R BRACE_L stmts BRACE_R
+     { { typ = $1;
+         fname = $2;
+         formals = List.rev $4;
+         body = List.rev $7 } }
 
 formals_opt:
     /* nothing */ { [] }
@@ -119,6 +137,7 @@ stmt:
   | if_stmt { $1 }
   | while_stmt { $1 }
   | for_stmt { $1 }
+  | var_decl_stmt SEMI { $1 }
 
 block_stmt:
     BRACE_L stmts BRACE_R { Block(List.rev $2) }
@@ -139,6 +158,10 @@ while_stmt:
 
 for_stmt:
     FOR PAREN_L expr SEMI expr SEMI expr PAREN_R BRACE_L stmts BRACE_R { For($3, $5, $7, Block(List.rev $10)) }
+
+var_decl_stmt:
+    typ IDENTIFIER { Initialize(($1, $2), None) }
+  | typ IDENTIFIER ASSIGN expr { Initialize(($1, $2), Some $4) }
 
 expr:
     INT_LITERAL        { Literal($1) }
@@ -163,7 +186,7 @@ expr:
   | NOT expr           { Unop(Not, $2) }
   | PAREN_L expr PAREN_R { $2 }
   | fq_identifier ASSIGN expr { Assign($1, $3) }
-  | IDENTIFIER PAREN_L args_opt PAREN_R { Call($1, $3) }
+  | fq_identifier PAREN_L args_opt PAREN_R { Call($1, $3) }
   | fq_identifier      { Id($1) }
 
 fq_identifier:
