@@ -162,6 +162,47 @@ let check (globals, functions, classes) =
           in
           let args' = List.map2 check_call fd.formals args
           in (fd.typ, SCall(fname, args'))
+      | ArrayLit(values) -> 
+        let array_body = List.map expr values in 
+        let array_t, _ = List.nth array_body 0 in 
+        (ArrayT array_t, SArrayLit(List.map (fun (t, sx) -> (t, sx)) array_body))
+      | ArrayDecl(array_t, array_len, array_name) -> 
+        let (len_type, checked_length) = expr array_len in 
+        if len_type != Ast.Int then raise(Failure("Array length should be an Integer, not " ^ string_of_typ array_t))
+        else let array_len' = match array_len with Ast.Literal t -> t in 
+             (ArrayT array_t, SArrayDecl(array_t, (len_type, checked_length), array_name))
+      | ArrayIndex(name, index) -> 
+        let array_name = match name with
+            Id i -> i
+          | _ -> raise(Failure("Invalid name for array: " ^ string_of_expr name)) in 
+        let (type', sid) = expr name in 
+        let (index_type, index') = expr index in 
+        let _ = match index' with 
+            SLiteral l -> l
+          | _ -> 0 
+        in
+        let element_type = match type' with 
+            ArrayT(t) -> t
+          | _ -> raise(Failure("Type is not expected: " ^ string_of_typ type'))
+        in 
+      (element_type, SArrayIndex((type', sid), (index_type, index'))) 
+      | ArrayAssign(name, index, value) -> (* assign value to name[index] *)
+        let name' = match name with 
+            Id i -> i
+          | _    -> raise(Failure("Invalid identifier for array: " ^ string_of_expr name)) in 
+        let left_t, name' = expr name in   
+        let right_t, value' = expr value in 
+        let index_t, index' = expr index in 
+        let _ = match index' with 
+            SLiteral l -> l (* add within array length checking later *)
+          | _ -> 0 
+        in 
+        let element_t = match left_t with 
+          ArrayT(t) -> t
+        | _ -> raise (Failure ("got " ^ string_of_typ left_t))
+        in 
+        (element_t, SArrayAssign((left_t, name'), (right_t, value'), (index_t, index')))
+
     in
 
     let check_bool_expr e =

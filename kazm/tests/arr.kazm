@@ -1,5 +1,5 @@
 void main()
 {
-    array int[5] c;
-    c[3] = 4;
+    array int[5] a; 
+    a[3] = 4;
 }
