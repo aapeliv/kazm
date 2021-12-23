@@ -65,7 +65,7 @@ let rec string_of_sexpr (t, e) =
   | SArrayAssign(id, idx, v) -> string_of_sexpr id ^ "[" ^ string_of_sexpr idx ^"] = " ^ string_of_sexpr v
   | SArrayLit(l) -> "[" ^ (String.concat ", " (List.map string_of_sexpr l)) ^ "]"
   | SArrayIndex(id, idx) -> string_of_sexpr id ^ "[" ^ string_of_sexpr idx ^ "]"
-  | SArrayDecl(t, idx, id) -> string_of_sexpr fst t ^ "[" ^ string_of_sexpr idx ^ "] " ^ string_of_sexpr id
+  | SArrayDecl(t, idx, id) -> string_of_typ t ^ "[" ^ string_of_sexpr idx ^ "] " ^ id
   | SNoexpr -> ""
                   ) ^ ")"
 
