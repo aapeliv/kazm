@@ -111,6 +111,7 @@ var_decls:
 
 var_decl:
     typ IDENTIFIER SEMI { ($1, $2) }
+  | typ IDENTIFIER ASSIGN expr SEMI { ($1, $2, $4) }
 
 stmts:
     { [] }
@@ -123,7 +124,7 @@ stmt:
   | if_stmt { $1 }
   | while_stmt { $1 }
   | for_stmt { $1 }
-  | array_stmt: { $1 }
+  | array_stmt { $1 }
 
 block_stmt:
     BRACE_L stmts BRACE_R { Block(List.rev $2) }
@@ -131,10 +132,9 @@ block_stmt:
 return_stmt:
     RETURN expr { Return $2 }
   | RETURN { EmptyReturn }
-
+/* arr int[4] my_arr = [1,2,3,4]; */ 
 array_stmt:
-  dtype ID ASSIGN expr SEMI { var_decl($1, $2, $4) }
-  (* arr int[4] my_arr = [1,2,3,4]; *)
+  typ IDENTIFIER ASSIGN expr SEMI { ArrayExp($1, $2, $4) }
 
 break_stmt:
     BREAK { Break }
