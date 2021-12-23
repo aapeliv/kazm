@@ -269,7 +269,8 @@ let gen (bind_list, sfunction_decls, sclass_decls) =
       let dl = find_var sp n in 
       let _ = L.build_store value (fst dl) builder in 
       let ctx' = Ctx(builder, sp) in     
-      (ctx', value) (* return the stored value *)
+      (ctx', value) 
+
   in
 
 
