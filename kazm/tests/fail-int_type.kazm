@@ -1,0 +1,7 @@
+/* Type check should fail */ 
+
+int main() {
+
+    int a = 3.14;
+    return 0;
+}
