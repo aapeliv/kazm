@@ -1,6 +1,9 @@
 int main()
 {
     array int[5] my_arr;
+    array int[3] a; 
+    // a[0] = 3; 
+    // int_println(a[0]);
     my_arr = [1,2,3,4,5];
     int_println(my_arr[2]);
     my_arr[2] = 5;

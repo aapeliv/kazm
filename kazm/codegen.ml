@@ -5,6 +5,7 @@ open Sast
 module SMap = Map.Make(String)
 
 (* A variable scope, contains variables and a ref to the parent scope *)
+(* tuple with fst optional reference to parent scope, snd a SMap with (L.llvalue * A.typ) values *)
 type vscope = Scope of (vscope option) * (L.llvalue * A.typ) SMap.t
 (* A codegen context: builder and variable scope *)
 type ctx_t = Ctx of L.llbuilder * vscope
@@ -117,13 +118,13 @@ let gen (bind_list, sfunction_decls, sclass_decls) =
 
   let rec find_var scope name =
     match scope with
-      Scope(None, map) -> SMap.find name map
+      Scope(None, map) -> SMap.find name map (* i.e. there is no parent scope *)
     | Scope(Some parent, map) -> if SMap.mem name map then SMap.find name map else find_var parent name
   in
 
   let add_var scope name l vtyp =
-    let Scope(p, map) = scope in
-    let map' = SMap.add name (l, vtyp) map in
+    let Scope(p, map) = scope in (* decompose previous scope into a scope and a map *)
+    let map' = SMap.add name (l, vtyp) map in (* add key name and value L.llvalue * A.typ *)
     Scope(p, map')
   in
 
@@ -240,6 +241,7 @@ let gen (bind_list, sfunction_decls, sclass_decls) =
       let _ = L.build_store rval addr builder in 
       let ctx' = Ctx(builder, sp) in 
       (ctx', rval) (* return the assigned value *)
+
     | SArrayDecl(t, l, n) -> (* type length name in e.g. array int[5] a *)
       let llvm_ty = typ_to_t t in 
       let addr = L.build_alloca llvm_ty n builder in 
@@ -260,6 +262,7 @@ let gen (bind_list, sfunction_decls, sclass_decls) =
         if acc < len then sto (acc + 1, builder) else acc, builder 
       in 
       let _, builder = sto (0, builder) in 
+      let sp = add_var sp n addr A.Void in (* update current scope *)
       let _ = L.build_store data_loc data_location builder in
       let _ = L.build_store (i32OF len) len_loc builder in
       let value = L.build_load alloc "value" builder in 
