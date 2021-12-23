@@ -2,8 +2,11 @@ int main()
 {
     array int[5] my_arr;
     my_arr = [1,2,3,4,5];
+    
+    int_println(my_arr[0]);
+    int_println(my_arr[1]);
     int_println(my_arr[2]);
-    my_arr[2] = 5;
-    int_println(my_arr[2]);
-    println("wanted 3 and then 5");
+    int_println(my_arr[3]);
+    int_println(my_arr[5]);
+
 }
