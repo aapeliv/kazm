@@ -195,8 +195,7 @@ let check (globals, functions, classes) =
         let index_t, index' = expr index in 
         let _ = match index' with 
             SLiteral l -> 
-            let arrLit = StringMap.find name' map in 
-            if index >= List.length arrLit  && size != 0 then raise(Failure("Array Index out ouf bound: " ^ string_of_int l)) 
+            if index >= List.length (List.rev name') && size != 0 then raise(Failure("Array Index out ouf bound: " ^ string_of_int l)) 
             else l (* add within array length checking later *)
           | _ -> 0 
         in 
