@@ -102,7 +102,7 @@ typ:
   | INT { Int }
   | DOUBLE { Double }
   | STRING { String }
-  | ARRAY typ SQB_L INT_LITERAL SQB_R { ArrayT($2) } // 
+  | ARRAY typ SQB_L INT_LITERAL SQB_R { ArrayT($2) } 
   | CLASS_IDENTIFIER { ClassT($1) }
 
 var_decls:
@@ -123,6 +123,7 @@ stmt:
   | if_stmt { $1 }
   | while_stmt { $1 }
   | for_stmt { $1 }
+  | array_stmt: { $1 }
 
 block_stmt:
     BRACE_L stmts BRACE_R { Block(List.rev $2) }
@@ -130,6 +131,10 @@ block_stmt:
 return_stmt:
     RETURN expr { Return $2 }
   | RETURN { EmptyReturn }
+
+array_stmt:
+  dtype ID ASSIGN expr SEMI { var_decl($1, $2, $4) }
+  (* arr int[4] my_arr = [1,2,3,4]; *)
 
 break_stmt:
     BREAK { Break }
