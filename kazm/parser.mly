@@ -102,8 +102,11 @@ typ:
   | INT { Int }
   | DOUBLE { Double }
   | STRING { String }
-  | ARRAY typ SQB_L INT_LITERAL SQB_R { ArrayT($2) } 
+  | atyp { $1 } // 
   | CLASS_IDENTIFIER { ClassT($1) }
+
+atyp:
+    ARRAY typ SQB_L INT_LITERAL SQB_R { ArrayT($2) } 
 
 var_decls:
     { [] }
@@ -111,7 +114,6 @@ var_decls:
 
 var_decl:
     typ IDENTIFIER SEMI { ($1, $2) }
-  | typ IDENTIFIER ASSIGN expr SEMI { ($1, $2, $4) }
 
 stmts:
     { [] }
@@ -124,7 +126,6 @@ stmt:
   | if_stmt { $1 }
   | while_stmt { $1 }
   | for_stmt { $1 }
-  | array_stmt { $1 }
 
 block_stmt:
     BRACE_L stmts BRACE_R { Block(List.rev $2) }
@@ -132,9 +133,6 @@ block_stmt:
 return_stmt:
     RETURN expr { Return $2 }
   | RETURN { EmptyReturn }
-/* arr int[4] my_arr = [1,2,3,4]; */ 
-array_stmt:
-  typ IDENTIFIER ASSIGN expr SEMI { ArrayExp($1, $2, $4) }
 
 break_stmt:
     BREAK { Break }
@@ -178,6 +176,7 @@ expr:
   | SQB_L array_opt SQB_R          { ArrayLit(List.rev $2) } 
   | fq_identifier SQB_L expr SQB_R ASSIGN expr {ArrayAssign(Id($1), $3, $6)}
   | fq_identifier SQB_L expr SQB_R {ArrayIndex(Id($1), $3)} 
+  | atyp IDENTIFIER ASSIGN SQB_L array_opt SQB_R { ArrayExp($1, $2, (List.rev $5))}
 
 fq_identifier:
     IDENTIFIER { [$1] }

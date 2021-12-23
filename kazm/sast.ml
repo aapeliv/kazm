@@ -21,6 +21,7 @@ and sx =
   | SArrayLit of sexpr list
   | SArrayIndex of sexpr * sexpr
   | SArrayDecl of typ * sexpr * string
+  | SArrayExp of typ * string * sexpr list
 
 type sstmt =
     SBlock of sstmt list
@@ -31,6 +32,7 @@ type sstmt =
   | SWhile of sexpr * sstmt
   | SBreak
   | SEmptyReturn
+
 
 type sfunc_decl = {
     styp : typ;
@@ -66,6 +68,7 @@ let rec string_of_sexpr (t, e) =
   | SArrayLit(l) -> "[" ^ (String.concat ", " (List.map string_of_sexpr l)) ^ "]"
   | SArrayIndex(id, idx) -> string_of_sexpr id ^ "[" ^ string_of_sexpr idx ^ "]"
   | SArrayDecl(t, idx, id) -> string_of_typ t ^ "[" ^ string_of_sexpr idx ^ "] " ^ id
+  | SArrayExp(ty, str, exp) -> "ArrayExp;"
   | SNoexpr -> ""
                   ) ^ ")"
 

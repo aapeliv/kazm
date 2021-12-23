@@ -25,6 +25,7 @@ Literal of int
 | ArrayLit of expr list
 | ArrayIndex of expr * expr
 | ArrayDecl of typ * expr * string 
+| ArrayExp of typ * string * expr list
 
 type stmt =
 Block of stmt list
@@ -99,6 +100,7 @@ f ^ "(" ^ String.concat ", " (List.map string_of_expr el) ^ ")"
 | ArrayAssign(id, idx, v) -> string_of_expr id ^ "[" ^ string_of_expr idx ^ "] = " ^ string_of_expr v
 | ArrayIndex(id, idx) -> string_of_expr id ^ "[" ^ string_of_expr idx ^ "]" 
 | ArrayDecl(t, idx, id) -> string_of_typ (t) ^ "[" ^ string_of_expr idx ^ "] " ^ id
+| ArrayExp(ty, str, exp) -> "ArrayExp"
 | Noexpr -> ""
 
 let rec string_of_stmt = function
@@ -115,7 +117,6 @@ string_of_stmt s1 ^ "else\n" ^ string_of_stmt s2
 string_of_expr e3  ^ ") " ^ string_of_stmt s
 | While(e, s) -> "while (" ^ string_of_expr e ^ ") " ^ string_of_stmt s
 | Break -> "break;"
-
 
 let string_of_vdecl (t, id) = string_of_typ t ^ " " ^ id ^ ";\n"
 
