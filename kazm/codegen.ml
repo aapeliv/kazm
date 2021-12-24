@@ -234,13 +234,7 @@ let gen (bind_list, sfunction_decls, sclass_decls) =
       let a_addr = find_var sp name in 
       let data_location = L.build_struct_gep (fst a_addr) 0 "" builder in 
       let data_loc = L.build_load data_location "" builder in 
-<<<<<<< HEAD
-      let ctx2 = Ctx(builder, sp) in 
-      let ctx3, ival = codegen_expr ctx2 i in 
-      let Ctx(builder, sp) = ctx3 in 
-=======
       let ctx, ival = codegen_expr ctx i in 
->>>>>>> 938380a312a7703fad37eea73f339689caf72baf
       let addr = L.build_gep data_loc [| ival |] "" builder in 
       let _ = L.build_store rval addr builder in 
       let ctx' = Ctx(builder, sp) in 

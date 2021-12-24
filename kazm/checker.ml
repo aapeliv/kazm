@@ -180,8 +180,8 @@ let check (globals, functions, classes) =
         let _ = match index' with 
             SLiteral l -> 
             let ArrayT(_, len) = StringMap.find (string_of_expr name) symbols in
-              if l >= len || l < 0 then raise(Failure("Array Index out of Bounds: " ^ string_of_int l^" on
-              " ^ string_of_typ type'^ " (arr = " ^ string_of_expr name^")")) 
+              if l >= len || l < 0 then raise(Failure("Array (" ^ string_of_expr name ^ ") Index (" 
+              ^ string_of_int l ^ ") out of Bounds (" ^ string_of_int len ^")")) 
               else l
           | _ -> 0 
         in
