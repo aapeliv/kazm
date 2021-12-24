@@ -190,6 +190,7 @@ let check (globals, functions, classes) =
           | _ -> raise(Failure("Type is not expected: " ^ string_of_typ type'))
         in 
       (element_type, SArrayIndex((type', sid), (index_type, index'))) 
+      (** Original 
       | ArrayAssign(name, index, value) -> (* assign value to name[index] *)
         let name' = match name with 
             Id i -> i
@@ -207,6 +208,40 @@ let check (globals, functions, classes) =
         in 
         (element_t, SArrayAssign((left_t, name'), (right_t, value'), (index_t, index')))
 
+    in*)
+
+    | ArrayAssign(v, e1, e2) as arrassign -> (*javalite *)
+    (* check if type of e is an int
+        v[e1] = e2;
+      *)
+    let (t, e1') = expr e1 in
+    if t != Int then raise (Failure (string_of_expr e1 ^ " is not of int type in " ^ string_of_expr arrassign))
+    else
+    (* check if variable is array type *)
+    let v_ty = type_of_identifier v in
+    let e_ty = is_arr_ty (v, v_ty) in
+    let (rt, _) = expr e2 in
+    let err = "illegal assignment " ^ string_of_typ e_ty ^ " = " ^ 
+        string_of_typ rt ^ " in " ^ string_of_expr arrassign in
+    let (ty, e2') = check_assign_null e2 e_ty err
+    in (ty, SArrAssign(v, (t,e1'), (ty,e2')))
+  )
+in
+
+    | ArrAssign(v, e1, e2) as arrassign -> (*javalite *)
+        (* check if type of e is an int *)
+        let (t, e1') = expr e1 in
+        if t != Int then raise (Failure (string_of_expr e1 ^ " is not of int type in " ^ string_of_expr arrassign))
+        else
+        (* check if variable is array type *)
+        let v_ty = type_of_identifier v in
+        let e_ty = is_arr_ty (v, v_ty) in
+        let (rt, _) = expr e2 in
+        let err = "illegal assignment " ^ string_of_typ e_ty ^ " = " ^ 
+            string_of_typ rt ^ " in " ^ string_of_expr arrassign in
+        let (ty, e2') = check_assign_null e2 e_ty err
+        in (ty, SArrAssign(v, (t,e1'), (ty,e2')))
+      )
     in
 
     let check_bool_expr e =
