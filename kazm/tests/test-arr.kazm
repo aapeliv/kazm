@@ -3,6 +3,9 @@ int main()
     array int[5] my_arr;
     int e;
     my_arr = [1, 2, 3, 4, 5];
-    e = my_arr[5];
+    my_arr[1] = my_arr[0];
+    e = my_arr[0];
+    int_println(my_arr[0]);
+    int_println(my_arr[1]);
     int_println(e);
 }
