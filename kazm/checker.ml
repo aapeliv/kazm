@@ -165,12 +165,12 @@ let check (globals, functions, classes) =
       | ArrayLit(values) -> 
         let array_body = List.map expr values in 
         let array_t, _ = List.nth array_body 0 in 
-        (ArrayT array_t, SArrayLit(List.map (fun (t, sx) -> (t, sx)) array_body))
+        (ArrayT (array_t, List.length values), SArrayLit(List.map (fun (t, sx) -> (t, sx)) array_body))
       | ArrayDecl(array_t, array_len, array_name) -> 
         let (len_type, checked_length) = expr array_len in 
         if len_type != Ast.Int then raise(Failure("Array length should be an Integer, not " ^ string_of_typ array_t))
         else let array_len' = match array_len with Ast.Literal t -> t in 
-             (ArrayT array_t, SArrayDecl(array_t, (len_type, checked_length), array_name))
+             (ArrayT (array_t, array_len'), SArrayDecl(array_t, (len_type, checked_length), array_name))
       | ArrayIndex(name, index) -> 
         let array_name = match name with
             Id i -> i
@@ -178,11 +178,15 @@ let check (globals, functions, classes) =
         let (type', sid) = expr name in 
         let (index_type, index') = expr index in 
         let _ = match index' with 
-            SLiteral l -> l
+            SLiteral l -> 
+            let ArrayT(_, len) = StringMap.find (string_of_expr name) symbols in
+              if l >= len || l < 0 then raise(Failure("Array Index out of Bounds: " ^ string_of_int l^" on
+              " ^ string_of_typ type'^ " (arr = " ^ string_of_expr name^")")) 
+              else l
           | _ -> 0 
         in
         let element_type = match type' with 
-            ArrayT(t) -> t
+            ArrayT(t, _) -> t
           | _ -> raise(Failure("Type is not expected: " ^ string_of_typ type'))
         in 
       (element_type, SArrayIndex((type', sid), (index_type, index'))) 
@@ -194,13 +198,11 @@ let check (globals, functions, classes) =
         let right_t, value' = expr value in 
         let index_t, index' = expr index in 
         let _ = match index' with 
-            SLiteral l -> 
-            if index >= List.length (List.rev name') && size != 0 then raise(Failure("Array Index out ouf bound: " ^ string_of_int l)) 
-            else l (* add within array length checking later *)
+            SLiteral l -> l (* add within array length checking later *)
           | _ -> 0 
         in 
         let element_t = match left_t with 
-          ArrayT(t) -> t
+          ArrayT(t, _) -> t
         | _ -> raise (Failure ("got " ^ string_of_typ left_t))
         in 
         (element_t, SArrayAssign((left_t, name'), (right_t, value'), (index_t, index')))

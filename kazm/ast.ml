@@ -4,7 +4,7 @@ And | Or | Mod
 type uop = Neg | Not
 
 type class_t = string
-type typ = Int | Bool | Double | Void | String | Char | Float | ClassT of class_t | ArrayT of typ
+type typ = Int | Bool | Double | Void | String | Char | Float | ClassT of class_t | ArrayT of typ * int
 type bind = typ * string
 
 type ref = string list
@@ -79,7 +79,7 @@ Int -> "int"
 | Void -> "void"
 | String -> "string"
 | Char -> "char"
-| ArrayT(arrtyp) -> string_of_typ arrtyp ^ " arr"
+| ArrayT(arrtyp, len) ->" arr " ^ string_of_typ arrtyp ^"["^ string_of_int len ^ "]"
 | ClassT(name) -> "class " ^ name
 
 let rec string_of_expr = function
