@@ -241,7 +241,6 @@ let gen (bind_list, sfunction_decls, sclass_decls) =
       let _ = L.build_store rval addr builder in 
       let ctx' = Ctx(builder, sp) in 
       (ctx', rval) (* return the assigned value *)
-
     | SArrayDecl(t, l, n) -> (* type length name in e.g. array int[5] a *)
       let llvm_ty = typ_to_t t in 
       let addr = L.build_alloca llvm_ty n builder in 
@@ -270,9 +269,7 @@ let gen (bind_list, sfunction_decls, sclass_decls) =
       let _ = L.build_store value (fst dl) builder in 
       let ctx' = Ctx(builder, sp) in     
       (ctx', value) 
-
   in
-
 
   (* Add terminator to end of a basic block *)
   let add_terminator ctx build_terminator =
