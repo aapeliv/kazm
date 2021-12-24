@@ -1,0 +1,9 @@
+int main() {
+
+    arr int[5] my_arr;
+    int x;
+    my_arr = [1,2,3,4,5];
+    x = my_arr[6];
+
+
+}

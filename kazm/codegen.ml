@@ -38,7 +38,7 @@ let gen (bind_list, sfunction_decls, sclass_decls) =
 
   (* LLVM type of array element *)
   let rec typ_to_t_array_element = function
-    A.ArrayT(t) -> typ_to_t_TODO_WITHOUT_CLASSES t
+    A.ArrayT(t, _) -> typ_to_t_TODO_WITHOUT_CLASSES t
   in
 
   let codegen_class_decl map cls =
@@ -58,7 +58,7 @@ let gen (bind_list, sfunction_decls, sclass_decls) =
     | A.Int -> i32_t
     | A.Double -> double_t
     | A.ClassT(name) -> L.pointer_type (snd (SMap.find name all_classes))
-    | A.ArrayT(t) -> array_t (typ_to_t_TODO_WITHOUT_CLASSES t)
+    | A.ArrayT(t, _) -> array_t (typ_to_t_TODO_WITHOUT_CLASSES t)
   in
 
 
@@ -251,9 +251,9 @@ let gen (bind_list, sfunction_decls, sclass_decls) =
       let cap = len * 2 in 
       let data_loc = L.build_array_alloca (typ_to_t_array_element t) (i32OF cap) "data_loc" builder in 
       let default_value = match t with 
-        ArrayT Ast.Int -> L.const_int i32_t 0
-        | ArrayT Ast.Double -> L.const_float double_t 0.0
-        | ArrayT Ast.Bool -> L.const_int i1_t 1
+        ArrayT (Ast.Int, _) -> L.const_int i32_t 0
+        | ArrayT (Ast.Double, _) -> L.const_float double_t 0.0
+        | ArrayT (Ast.Bool,_) -> L.const_int i1_t 1
       in 
       let rec sto (acc, builder) = 
         let item_loc = L.build_gep data_loc [| i32OF acc |] "item_loc" builder in 
