@@ -16,6 +16,7 @@ open Ast
 %token RETURN BREAK
 %token CLASS 
 %token TRUE FALSE
+%token SIZEOF
 
 %token<string> IDENTIFIER CLASS_IDENTIFIER 
 %token<string> CLASS_NAME
@@ -169,6 +170,7 @@ expr:
   | expr OR     expr   { Binop($1, Or,    $3)   }
   | NOT expr           { Unop(Not, $2) }
   | PAREN_L expr PAREN_R { $2 }
+  | SIZEOF PAREN_L expr PAREN_R { Sizeof($3)}
   | atyp IDENTIFIER ASSIGN SQB_L array_opt SQB_R { ArrayExp($1, $2, (List.rev $5))}
   | fq_identifier ASSIGN expr { Assign($1, $3) } 
   | IDENTIFIER PAREN_L args_opt PAREN_R { Call($1, $3) }

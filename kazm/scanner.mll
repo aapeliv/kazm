@@ -39,7 +39,7 @@ rule tokenize = parse
 | "/=" { DIVIDEQ }
 | "&&" { AND }
 | "||" { OR }
-| '!' { NOT } (* "!" in C-Net *)
+| '!' { NOT } 
 | "==" { EQ }
 | "!=" { NEQ }
 | '<' { LT }
@@ -61,6 +61,7 @@ rule tokenize = parse
 | "break" { BREAK }
 | "true" { TRUE }
 | "false" { FALSE }
+| "sizeof" { SIZEOF }
 (* | "\"" ([^'\"']+ as str) "\"" { STRING_LITERAL(str) } *)
 | ['0'-'9']+ as int { INT_LITERAL(int_of_string int) }
 | double as doublelit {DOUBLE_LITERAL(float_of_string doublelit)}
