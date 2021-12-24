@@ -227,16 +227,20 @@ let gen (bind_list, sfunction_decls, sclass_decls) =
       let ctx' = Ctx(builder, sp) in 
       let e' = L.build_load i_addr "" builder in 
       (ctx', e')
+
     | SArrayAssign (v, i, e) -> (* assign e to v[i] *)
-      let ctx, rval = codegen_expr ctx e in (* updating ctx *)
-      let Ctx(builder, sp) = ctx in 
-      let name = match snd v with SId s -> List.hd s in 
-      let a_addr = find_var sp (snd name) in 
+      let ctx, rval = codegen_expr ctx e in 
+      let name = match snd v with SId s -> snd (List.hd s) in (* retrieving string name *)
+      let a_addr = find_var sp name in 
       let data_location = L.build_struct_gep (fst a_addr) 0 "" builder in 
       let data_loc = L.build_load data_location "" builder in 
+<<<<<<< HEAD
       let ctx2 = Ctx(builder, sp) in 
       let ctx3, ival = codegen_expr ctx2 i in 
       let Ctx(builder, sp) = ctx3 in 
+=======
+      let ctx, ival = codegen_expr ctx i in 
+>>>>>>> 938380a312a7703fad37eea73f339689caf72baf
       let addr = L.build_gep data_loc [| ival |] "" builder in 
       let _ = L.build_store rval addr builder in 
       let ctx' = Ctx(builder, sp) in 
@@ -270,9 +274,7 @@ let gen (bind_list, sfunction_decls, sclass_decls) =
       let _ = L.build_store value (fst dl) builder in 
       let ctx' = Ctx(builder, sp) in     
       (ctx', value) 
-
   in
-
 
   (* Add terminator to end of a basic block *)
   let add_terminator ctx build_terminator =

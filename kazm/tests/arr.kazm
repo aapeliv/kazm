@@ -3,6 +3,14 @@ int main()
     array int[5] my_arr;
     int e;
     my_arr = [1, 2, 3, 4, 5];
+<<<<<<< HEAD:kazm/tests/arr.kazm
     my_arr[3] = 0;
     int_println(my_arr[3]);
+=======
+    my_arr[1] = my_arr[0];
+    e = my_arr[0];
+    int_println(my_arr[0]);
+    int_println(my_arr[1]);
+    int_println(e);
+>>>>>>> 938380a312a7703fad37eea73f339689caf72baf:kazm/tests/test-arr.kazm
 }
