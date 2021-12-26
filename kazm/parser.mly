@@ -184,6 +184,7 @@ expr:
   | expr AND    expr   { Binop($1, And,   $3)   }
   | expr OR     expr   { Binop($1, Or,    $3)   }
   | NOT expr           { Unop(Not, $2) }
+  | MINUS expr %prec NOT { Unop(Neg, $2)      }
   | PAREN_L expr PAREN_R { $2 }
   | fq_identifier ASSIGN expr { Assign($1, $3) }
   | fq_identifier PAREN_L args_opt PAREN_R { Call($1, $3) }

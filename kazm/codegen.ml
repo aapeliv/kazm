@@ -169,6 +169,12 @@ let gen (bind_list, sfunction_decls, sclass_decls) =
     | SDliteral(value) -> (ctx, L.const_float double_t (float_of_string value))
     (* New string literal (just make a new global string) *)
     | SStringLit(value) -> (ctx, L.build_global_stringptr value "globalstring" builder)
+    (* | SUnop(op, ((t, _) as e)) ->
+        let (ctx1, e') = codegen_expr ctx e in
+        let x = match op with
+          A.Neg when t = A.Float -> L.build_fneg 
+        | A.Neg                  -> L.build_neg
+        | A.Not                  -> L.build_not) e' "tmp" builder *)
     | SBinop(e1, op, e2) ->
       (* Lookup right thing to build in llvm *)
       let lbuild = match op with

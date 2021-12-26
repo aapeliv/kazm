@@ -175,14 +175,10 @@ let check (globals, functions, classes) =
           and (t2, e2') = expr e2 locals in
           (* All binary operators require operands of the same type *)
           let same = t1 = t2 in
-          (* let t = match op with 
-              Div when same && t1 = Int -> if e2' = SLiteral(0) then raise(Failure("Div by 0: " ^ string_of_expr e))
-          (* | Div when same && t1 = Float -> if e2 = Dliteral(0.0) then raise(Failure("Div by 0: " ^ string_of_expr e)) *)
-          in  *)
           let ty = match op with
-            Add | Sub | Mult when same &&t1 = Int -> Int 
-          | Div | Mod when same && t1 = Int   -> if e2' = SLiteral(0) then raise(Failure("Div by 0: " ^ string_of_expr e)) else Int
-          (* | Mod when same && t1 = Int   -> if e2' = SLiteral(0) then raise(Failure("Mod by 0: " ^ string_of_expr e)) else Int *)
+            Add | Sub | Mult when same && t1 = Int -> Int 
+          | Div | Mod when same && t1 = Int   -> if e2' = SLiteral(0) 
+            then raise(Failure("Div by 0: " ^ string_of_expr e)) else Int
           | Add | Sub | Mult | Div when same && t1 = Float -> Float
           | Equal | Neq            when same               -> Bool
           | Less | Leq | Greater | Geq

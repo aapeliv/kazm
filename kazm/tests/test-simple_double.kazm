@@ -1,5 +1,0 @@
-int main() {
-  double a;
-  a = 2.56;
-  double_println(a);
-}
