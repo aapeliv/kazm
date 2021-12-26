@@ -1,0 +1,4 @@
+int main() {
+	String a;
+	println(a);
+}

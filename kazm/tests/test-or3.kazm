@@ -1,0 +1,14 @@
+int main() {
+	bool a;
+	bool b;
+	a = false;
+	b = a;
+
+	if (a || b){
+		println("fail");
+	} else if ( a && b) {
+		println("fail2");
+	} else {
+		println("pass");
+	}
+}

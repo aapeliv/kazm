@@ -1,0 +1,7 @@
+int main() {
+	double x;
+	double y;
+	double x = 10.0;
+	double y = -9.7;
+	double_print(x +y);
+}

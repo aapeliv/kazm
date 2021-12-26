@@ -1,0 +1,8 @@
+int main(){
+	double x;
+	x = 3.14;
+	//double y = 6.86;
+	x = x + 6.86;
+	double_print(x);
+
+}

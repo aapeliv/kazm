@@ -1,0 +1,7 @@
+int main(){
+	int x = 1000;	
+	x = x/10; // 100
+	x = x/10; // 10
+	x = x/10; // 1
+	int_println(x);
+}
