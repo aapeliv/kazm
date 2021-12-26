@@ -19,7 +19,7 @@ Literal of int
 | Binop of expr * op * expr
 | Unop of uop * expr
 | Assign of ref * expr
-| Call of string * expr list
+| Call of ref * expr list
 | Noexpr
 | ArrayAccess of string * expr
 | ArrayLit of expr list
@@ -36,18 +36,21 @@ Block of stmt list
 | While of expr * stmt
 | Break
 | EmptyReturn
+| Initialize of bind * expr option
+
 
 type func_decl = {
 typ : typ;
 fname : string;
 formals : bind list;
-locals : bind list;
 body : stmt list;
 }
 
 type class_decl = {
 cname : class_t;
 cvars : bind list;
+cmethods : func_decl list;
+
 }
 
 type program = bind list * func_decl list * class_decl list
@@ -95,8 +98,8 @@ string_of_expr e1 ^ " " ^ string_of_op o ^ " " ^ string_of_expr e2
 | Unop(o, e) -> string_of_uop o ^ string_of_expr e
 (* | Assign(v, e) -> v ^ " = " ^ string_of_expr e *)
 | Call(f, el) ->
-f ^ "(" ^ String.concat ", " (List.map string_of_expr el) ^ ")"
-(* | ArrayLit(l) -> "[" ^ (String.concat ", " (List.map string_of_expr l)) ^ "]"
+  String.concat " " f ^ "(" ^ String.concat ", " (List.map string_of_expr el) ^ ")"
+  (* | ArrayLit(l) -> "[" ^ (String.concat ", " (List.map string_of_expr l)) ^ "]"
 | ArrayAssign(id, idx, v) -> string_of_expr id ^ "[" ^ string_of_expr idx ^ "] = " ^ string_of_expr v
 | ArrayIndex(id, idx) -> string_of_expr id ^ "[" ^ string_of_expr idx ^ "]" 
 | ArrayDecl(t, idx, id) -> string_of_typ (t) ^ "[" ^ string_of_expr idx ^ "] " ^ id
@@ -125,7 +128,6 @@ let string_of_fdecl fdecl =
 string_of_typ fdecl.typ ^ " " ^
 fdecl.fname ^ "(" ^ String.concat ", " (List.map snd fdecl.formals) ^
 ")\n{\n" ^
-String.concat "" (List.map string_of_vdecl fdecl.locals) ^
 String.concat "" (List.map string_of_stmt fdecl.body) ^
 "}\n"
 
