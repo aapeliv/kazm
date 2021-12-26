@@ -21,12 +21,11 @@ Literal of int
 | Assign of ref * expr
 | Call of string * expr list
 | Noexpr
-| ArrayAssign of expr * expr * expr
+| ArrayAccess of string * expr
 | ArrayLit of expr list
-| ArrayIndex of expr * expr
-| ArrayDecl of typ * expr * string 
-| ArrayExp of typ * string * expr list
-| ArrayLength of expr 
+| ArrAssign of string * expr * expr
+| DecAssn of typ * expr * string * expr (* declare and initialize ARRAY *)
+(* ARRAY typ SQB_L INT_LITERAL SQB_R IDENTIFIER ASSIGN expr { DecAssn($2, $4, $6, $8) } *)
 
 type stmt =
 Block of stmt list
@@ -97,11 +96,11 @@ string_of_expr e1 ^ " " ^ string_of_op o ^ " " ^ string_of_expr e2
 (* | Assign(v, e) -> v ^ " = " ^ string_of_expr e *)
 | Call(f, el) ->
 f ^ "(" ^ String.concat ", " (List.map string_of_expr el) ^ ")"
-| ArrayLit(l) -> "[" ^ (String.concat ", " (List.map string_of_expr l)) ^ "]"
+(* | ArrayLit(l) -> "[" ^ (String.concat ", " (List.map string_of_expr l)) ^ "]"
 | ArrayAssign(id, idx, v) -> string_of_expr id ^ "[" ^ string_of_expr idx ^ "] = " ^ string_of_expr v
 | ArrayIndex(id, idx) -> string_of_expr id ^ "[" ^ string_of_expr idx ^ "]" 
 | ArrayDecl(t, idx, id) -> string_of_typ (t) ^ "[" ^ string_of_expr idx ^ "] " ^ id
-| ArrayExp(ty, str, exp) -> "ArrayExp"
+| ArrayExp(ty, str, exp) -> "ArrayExp" *)
 (* | ArrayLength(obj) ->  string_of_expr obj ^ ".length" *)
 | Noexpr -> ""
 

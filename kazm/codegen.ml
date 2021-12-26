@@ -25,7 +25,7 @@ let gen (bind_list, sfunction_decls, sclass_decls) =
   let void_t = L.void_type context in
   let char_ptr_t = L.pointer_type char_t in
   let void_ptr_t = L.pointer_type i8_t in
-  let array_t = fun llvm_t -> L.struct_type context [| L.pointer_type llvm_t; i32_t; i32_t |] in
+  (* let array_t = fun llvm_t -> L.struct_type context [| L.pointer_type llvm_t; i32_t; i32_t |] in *)
   let i32OF = L.const_int (L.i32_type context) in
 
   (* Map our AST type to LLVM type *)
@@ -58,7 +58,9 @@ let gen (bind_list, sfunction_decls, sclass_decls) =
     | A.Int -> i32_t
     | A.Double -> double_t
     | A.ClassT(name) -> L.pointer_type (snd (SMap.find name all_classes))
-    | A.ArrayT(t, _) -> array_t (typ_to_t_TODO_WITHOUT_CLASSES t)
+    (* | A.ArrayT(t, _) -> array_t (typ_to_t_TODO_WITHOUT_CLASSES t) *)
+    | A.ArrayT(t,_) -> L.pointer_type (typ_to_t_TODO_WITHOUT_CLASSES t)
+
   in
 
 
@@ -192,112 +194,60 @@ let gen (bind_list, sfunction_decls, sclass_decls) =
       let var = find_fq_var builder sp fqn in
       ignore (L.build_store e' var builder);
       (ctx, e')
-    | SArrayLit(a) -> 
-      let llvm_ty = typ_to_t (fst (List.hd a)) in
-      let ty = array_t llvm_ty in 
-      let alloc = L.build_alloca ty "alloc" builder in
-      let data_location = L.build_struct_gep alloc 0 "data_location" builder in
-      let len_loc = L.build_struct_gep alloc 1 "" builder in
-      let len = List.length a in
-      let cap = len * 2 in 
-      let data_loc = L.build_array_alloca llvm_ty (i32OF cap) "data_loc" builder in
-      let array_iter (acc, builder) ex = 
-        let new_ctx, new_expr = codegen_expr ctx ex in 
-        let Ctx(builder, sp) = new_ctx in (* need to keep this line to keep the change in builder *)
-        let item_loc = L.build_gep data_loc [|i32OF acc |] "item_loc" builder in
-        let _ = L.build_store new_expr item_loc builder in (acc+1, builder)
-      in 
-      let _, builder = List.fold_left array_iter (0, builder) a in
-      let _ = L.build_store data_loc data_location builder in
-      let _ = L.build_store (i32OF len) len_loc builder in
-      let ctx' = Ctx(builder, sp) in (* builder is the builder updated in array_iter *)
-      let e' = L.build_load alloc "value" builder in 
-      (ctx', e')
-    | SArrayIndex(id, idx) -> (* sexpr * sexpr, sexpr is typ * sx and the first must be SId *)
-      let name = match snd id with 
-          SId s -> snd (List.hd s)
-        | _ -> "Error: cannot array index non-identifier"
-      in
-      let a_addr = fst (find_var sp name) in (* sp is the current scope *)
-      let data_location = L.build_struct_gep a_addr 0 "" builder in
-      let data_loc = L.build_load data_location "" builder in
-      let new_ctx, new_expr = codegen_expr ctx idx in (* idx is a sexpr itself *)
-      let Ctx(builder, sp) = new_ctx in (* to update builder and sp *)
-      let i_addr = L.build_gep data_loc [| new_expr |] "" builder in 
-      let ctx' = Ctx(builder, sp) in 
-      let e' = L.build_load i_addr "" builder in 
-      (ctx', e')
-
-    | SArrayAssign (v, i, e) -> (* assign e to v[i] *)
-      let ctx, rval = codegen_expr ctx e in 
-      let name = match snd v with SId s -> snd (List.hd s) in (* retrieving string name *)
-      let a_addr = find_var sp name in 
-      let data_location = L.build_struct_gep (fst a_addr) 0 "" builder in 
-      let data_loc = L.build_load data_location "" builder in 
-      let ctx, ival = codegen_expr ctx i in 
-      let addr = L.build_gep data_loc [| ival |] "" builder in 
-      let _ = L.build_store rval addr builder in 
-      let ctx' = Ctx(builder, sp) in 
-      (ctx', rval) (* return the assigned value *)
-
-    | SArrayLength(arr) -> 
-      let name = match snd arr with 
-          SId s -> snd (List.hd s)
-        | _ -> "Error: cannot array index non-identifier"
-      in
-      let a_addr = fst (find_var sp name) in (* sp is the current scope *)
-      let data_location = L.build_struct_gep a_addr 0 "" builder in
-      let data_loc = L.build_load data_location "" builder in
-      let new_ctx, new_expr = codegen_expr ctx idx in (* idx is a sexpr itself *)
-      let Ctx(builder, sp) = new_ctx in (* to update builder and sp *)
-      let i_addr = L.build_gep data_loc [| new_expr |] "" builder in 
-      let ctx' = Ctx(builder, sp) in 
-      let e' = L.build_load i_addr "" builder in 
-      (ctx', e')
-
-    (* ecatz 
-      let array_struct = access builder locals s in
-      let length_ptr = L.build_struct_gep array_struct 1 "length_ptr" builder in
-      L.build_load length_ptr "length" builder 
-      
-      javalite:
-       let (ty,_) = e in
-        (match ty with
-          A.Arr(_,l) -> L.const_int i32_t l
-        | _ -> raise (Failure "function length cannot be called on non array type"))
-      
-      *)
-
-    | SArrayDecl(t, l, n) -> (* type length name in e.g. array int[5] a *)
-      let llvm_ty = typ_to_t t in 
-      let addr = L.build_alloca llvm_ty n builder in 
-      let alloc = L.build_alloca llvm_ty "alloc" builder in 
-      let data_location = L.build_struct_gep alloc 0 "data_location" builder in 
-      let len = (match l with _, SLiteral lit -> lit) in (* extract length from l *)
-      let len_loc = L.build_struct_gep alloc 1 "" builder in 
-      let cap = len * 2 in 
-      let data_loc = L.build_array_alloca (typ_to_t_array_element t) (i32OF cap) "data_loc" builder in 
-      let default_value = match t with 
-        ArrayT (Ast.Int, _) -> L.const_int i32_t 0
-        | ArrayT (Ast.Double, _) -> L.const_float double_t 0.0
-        | ArrayT (Ast.Bool,_) -> L.const_int i1_t 1
-      in 
-      let rec sto (acc, builder) = 
-        let item_loc = L.build_gep data_loc [| i32OF acc |] "item_loc" builder in 
-        let _ = L.build_store default_value item_loc builder in 
-        if acc < len then sto (acc + 1, builder) else acc, builder 
-      in 
-      let _, builder = sto (0, builder) in 
-      let sp = add_var sp n addr A.Void in (* update current scope *)
-      let _ = L.build_store data_loc data_location builder in
-      let _ = L.build_store (i32OF len) len_loc builder in
-      let value = L.build_load alloc "value" builder in 
-      let dl = find_var sp n in 
-      let _ = L.build_store value (fst dl) builder in 
-      let ctx' = Ctx(builder, sp) in     
-      (ctx', value) 
-  in
-
+    | SArrayLit arr   -> 
+      (* arr: sexpr list = typ * sx list *)
+      let len = L.const_int i32_t (List.length arr) in (* array length *)
+      let size = L.const_int i32_t ((List.length arr) + 1) in (* including null terminator *)
+      let (fst_t, _) = List.hd arr in 
+      let ty = typ_to_t (A.ArrayT(fst_t, (List.length arr))) in
+      (* allocate memory for array *)
+      let arr_alloca = L.build_array_alloca ty size "arr" builder in
+      (* bitcast -- pointer-to-int *)
+      let arr_ptr = L.build_pointercast arr_alloca ty "arrptr" builder in 
+      (* store all elements *)
+      let elts = List.map (codegen_expr ctx) arr in (* now arr is (ctx * sexpr) list *)
+      let store_elt ind elt = 
+        let (ctx', elt') = elt in 
+        let pos = L.const_int i32_t (ind) in
+          let elt_ptr = L.build_gep arr_ptr [| pos |] "arrelt" builder in
+        ignore(L.build_store elt' elt_ptr builder)
+      in List.iteri store_elt elts;
+      let elt_ptr = L.build_gep arr_ptr [| len |] "arrlast" builder in
+      let null_elt = L.const_null (L.element_type ty) in
+      ignore(L.build_store null_elt elt_ptr builder);
+      (ctx, arr_ptr)
+    | SArrayAccess (s, e)  ->  (* string * sexpr *)
+      let ind = codegen_expr ctx e in
+      let (ty, _) = e in (* sexpr is typ * sx *)
+      (* increment index by one to get actual ptr position *)
+      let pos = L.build_add (snd ind) (L.const_int i32_t 0) "accpos" builder in
+      let arr = fst (find_var sp s) in 
+      (* let arr = codegen_expr ctx (ty, (SVar s)) in *)
+      let elt = L.build_gep arr [| pos |] "acceltptr" builder in
+      let e = L.build_load elt "accelt" builder in 
+      (ctx, e)
+    | SArrAssign (s, e1, e2) ->
+      let ind = snd (codegen_expr ctx e1) in
+      let (ty, _) = e1 in
+      (* increment index by one to get actual ptr position *)
+      let pos = L.build_add ind (L.const_int i32_t 0) "accpos" builder in
+      let arr = fst (find_var sp s) in
+      let new_val = snd (codegen_expr ctx e2) in
+      let elt_ptr = L.build_gep arr [| pos |] "arrelt" builder in
+      let e = L.build_store new_val elt_ptr builder in 
+      (ctx, e)
+    (* I'm worried about ctx in SArrAssign *)
+    (* SDecAssn of typ * sexpr * string * sexpr for arrays *)
+    | SDecAssn (t, l, n, e) -> (* type length name value *)
+      let l = match l with (_, SLiteral(lit)) -> lit in 
+      let vtyp = A.ArrayT(t, l) in 
+      let e' = snd (codegen_expr ctx e) in 
+      let var = L.build_alloca (typ_to_t t) n builder in 
+      ignore (L.build_store e' var builder); 
+      add_var sp n var vtyp; 
+      (ctx, e')
+    (* I'm also worried about ctx in codegen *)
+  in 
   (* Add terminator to end of a basic block *)
   let add_terminator ctx build_terminator =
     let Ctx(builder, _) = ctx in

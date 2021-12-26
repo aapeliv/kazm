@@ -17,12 +17,10 @@ and sx =
   | SAssign of sref * sexpr
   | SCall of string * sexpr list
   | SNoexpr
-  | SArrayAssign of sexpr * sexpr * sexpr
+  | SArrayAccess of string * sexpr
   | SArrayLit of sexpr list
-  | SArrayIndex of sexpr * sexpr
-  | SArrayDecl of typ * sexpr * string
-  | SArrayExp of typ * string * sexpr list
-  | SArrayLength of sexpr
+  | SArrAssign of string * sexpr * sexpr
+  | SDecAssn of typ * sexpr * string * sexpr (* declare and initialize ARRAY *)
 
 type sstmt =
     SBlock of sstmt list
@@ -65,12 +63,11 @@ let rec string_of_sexpr (t, e) =
   (* | SAssign(v, e) -> v ^ " = " ^ string_of_sexpr e *)
   | SCall(f, el) ->
       f ^ "(" ^ String.concat ", " (List.map string_of_sexpr el) ^ ")"
-  | SArrayAssign(id, idx, v) -> string_of_sexpr id ^ "[" ^ string_of_sexpr idx ^"] = " ^ string_of_sexpr v
+  (* | SArrayAssign(id, idx, v) -> string_of_sexpr id ^ "[" ^ string_of_sexpr idx ^"] = " ^ string_of_sexpr v
   | SArrayLit(l) -> "[" ^ (String.concat ", " (List.map string_of_sexpr l)) ^ "]"
   | SArrayIndex(id, idx) -> string_of_sexpr id ^ "[" ^ string_of_sexpr idx ^ "]"
   | SArrayDecl(t, idx, id) -> string_of_typ t ^ "[" ^ string_of_sexpr idx ^ "] " ^ id
-  | SArrayExp(ty, str, exp) -> "ArrayExp;"
-  (* | SArrayLength(obj) -> "length of " ^ string_of_sexpr obj ^"" *)
+  | SArrayExp(ty, str, exp) -> "ArrayExp;" *)
   | SNoexpr -> ""
                   ) ^ ")"
 

@@ -166,15 +166,8 @@ let check (globals, functions, classes) =
         let array_body = List.map expr values in 
         let array_t, _ = List.nth array_body 0 in 
         (ArrayT (array_t, List.length values), SArrayLit(List.map (fun (t, sx) -> (t, sx)) array_body))
-      | ArrayDecl(array_t, array_len, array_name) -> 
-        let (len_type, checked_length) = expr array_len in 
-        if len_type != Ast.Int then raise(Failure("Array length should be an Integer, not " ^ string_of_typ array_t))
-        else let array_len' = match array_len with Ast.Literal t -> t in 
-             (ArrayT (array_t, array_len'), SArrayDecl(array_t, (len_type, checked_length), array_name))
-      | ArrayIndex(name, index) -> 
-        let array_name = match name with
-            Id i -> i
-          | _ -> raise(Failure("Invalid name for array: " ^ string_of_expr name)) in 
+
+      | ArrayAccess(name, index) -> (* string * expr *)
         let (type', sid) = expr name in 
         let (index_type, index') = expr index in 
         let _ = match index' with 
@@ -189,42 +182,13 @@ let check (globals, functions, classes) =
             ArrayT(t, _) -> t
           | _ -> raise(Failure("Type is not expected: " ^ string_of_typ type'))
         in 
-      (element_type, SArrayIndex((type', sid), (index_type, index'))) 
-      
-      | ArrayAssign(name, index, value) -> (* assign value to name[index] *)
-        let name' = match name with 
-            Id i -> i
-          | _    -> raise(Failure("Invalid identifier for array: " ^ string_of_expr name)) in 
-        let left_t, name' = expr name in   
-        let right_t, value' = expr value in 
-        let index_t, index' = expr index in 
-        let _ = match index' with 
-            SLiteral l -> l (* add within array length checking later *)
-          | _ -> 0 
-        in 
-        let element_t = match left_t with 
-          ArrayT(t, _) -> t
-        | _ -> raise (Failure ("got " ^ string_of_typ left_t))
-        in 
-        (element_t, SArrayAssign((left_t, name'), (right_t, value'), (index_t, index')))
+      (element_type, SArrayAccess(name, (index_type, index'))) (* string * sexpr *)
+(* 
+| ArrAssign of string * expr * expr
+| DecAssn of typ * expr * string * expr 
 
-      (* | ArrayLength(name) -> (*return the length of array *)
-        let ArrayT(typ, s') = StringMap.find (string_of_expr name) symbols in
-        (* Check that we're trying to get the length of an array*)
-        let _ = match typ with
-            ArrayT (t, x) -> t
-            | _ ->  raise (Failure (string_of_expr name ^ " is not an array." ))
-        in (Int, SArrayLength(typ,  SLiteral(s')))
-       *)
-      (*
-        let array_name = match obj with
-            Id i -> i
-          | _ -> raise(Failure("Invalid name for array: " ^ string_of_expr obj)) in
-        let (type', sid) = expr obj in
-        let ArrayT(_,_) = StringMap.find (string_of_expr name) symbols in
-            ArrayT(_, _) -> 
-          | _ -> raise(Failure(string_of_expr s ^ " is not an array. Cannot get lenght."))
-        in (Int, SarrayLength((type', sid)))*)
+*)
+
     in
 
     
