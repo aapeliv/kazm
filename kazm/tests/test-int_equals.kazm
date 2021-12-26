@@ -1,0 +1,10 @@
+int main() {
+	int x;
+	x = 4;
+	if (x == 4){
+		println("pass");
+	}
+	if (x != 3){
+		println("pass2");
+	}
+}

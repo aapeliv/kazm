@@ -69,6 +69,15 @@ let string_of_uop = function
     Neg -> "-"
   | Not -> "!"
 
+let string_of_typ = function
+    Int -> "int"
+  | Bool -> "bool"
+  | Double -> "double"
+  | Void -> "void"
+  | String -> "string"
+  | Char -> "char"
+  | ClassT(name) -> "class " ^ name
+  
 let rec string_of_expr = function
     Literal(l) -> string_of_int l
   | Dliteral(l) -> l
@@ -100,14 +109,6 @@ let rec string_of_stmt = function
   | While(e, s) -> "while (" ^ string_of_expr e ^ ") " ^ string_of_stmt s
   | Break -> "break;"
 
-let string_of_typ = function
-    Int -> "int"
-  | Bool -> "bool"
-  | Double -> "double"
-  | Void -> "void"
-  | String -> "string"
-  | Char -> "char"
-  | ClassT(name) -> "class " ^ name
 
 let string_of_vdecl (t, id) = string_of_typ t ^ " " ^ id ^ ";\n"
 

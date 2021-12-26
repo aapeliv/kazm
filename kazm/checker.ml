@@ -180,6 +180,8 @@ let check (globals, functions, classes) =
           | Div | Mod when same && t1 = Int   -> if e2' = SLiteral(0) 
             then raise(Failure("Div by 0: " ^ string_of_expr e)) else Int
           | Add | Sub | Mult | Div when same && t1 = Float -> Float
+          (* | Div when same && t1 = Float -> if e2' = SDliteral("0.0000") *)
+            (* then raise(Failure("Div by 0: " ^ string_of_expr e)) else Float *)
           | Equal | Neq            when same               -> Bool
           | Less | Leq | Greater | Geq
                      when same && (t1 = Int || t1 = Float) -> Bool

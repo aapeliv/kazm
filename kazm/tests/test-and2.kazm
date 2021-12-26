@@ -4,7 +4,7 @@ int main() {
 	a = false;
 	b = true;
 	if (a && b){
-		println("fail"):
+		println("fail");
 	} else {
 		println("pass");
 	}

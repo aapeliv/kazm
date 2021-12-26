@@ -21,6 +21,7 @@ open Ast
 %token<float> DOUBLE_LITERAL
 %token<char> CHAR_LITERAL
 %token<int> INT_LITERAL
+/* %token<bool> BOOL_LITERAL */
 %token EOF
 
 %nonassoc NOELSE
