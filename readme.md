@@ -3,6 +3,7 @@
 ## Final Report Overleaf Link: https://www.overleaf.com/1997148773tgqyfyqvktmx
 
 ## Running all tests
+ Please name all "passing" cases as test-\*.kazm and all "failing" cases as fail-\*.kazm
 
 ```sh
 cd kazm/
