@@ -2,6 +2,6 @@ int main() {
 	int x;
 	int y;
 	x = 100;
-	y = -100;
+	y = 100;
 	int_println(x - y);
 }

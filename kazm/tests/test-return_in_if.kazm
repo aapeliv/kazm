@@ -1,0 +1,11 @@
+int func() {
+  if (true) {
+    return 20;
+  }
+  return 10;
+}
+
+int main() {
+  func();
+  return 0;
+}

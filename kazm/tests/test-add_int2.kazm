@@ -1,5 +1,7 @@
 int main(){
-	int x = 100;
-	int y = -100;
+	int x;
+	int y;
+	x = 100;
+	y = 50;
 	int_println(x+y);
 }

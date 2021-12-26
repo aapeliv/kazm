@@ -1,0 +1,5 @@
+void test(int arg) {}
+
+int main() {
+  test(4);
+}

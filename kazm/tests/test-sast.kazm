@@ -1,0 +1,15 @@
+int fun()
+{
+  return 1;
+}
+
+int main()
+{
+  int i;
+  bool b;
+
+  b = true;
+  i = fun();
+
+  return 0;
+}
