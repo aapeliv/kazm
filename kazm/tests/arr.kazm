@@ -1,7 +1,0 @@
-int main()
-{
-    array int[5] my_arr;
-    int e;
-    my_arr = [1, 2, 3, 4, 5];
-    my_arr.length;
-}

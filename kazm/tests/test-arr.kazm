@@ -1,0 +1,4 @@
+int main() {
+	array int[4] my_arr;
+	my_arr[3] = 3;
+}

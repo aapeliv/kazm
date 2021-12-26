@@ -216,7 +216,7 @@ let gen (bind_list, sfunction_decls, sclass_decls) =
     | SArrayIndex(id, idx) -> (* sexpr * sexpr, sexpr is typ * sx and the first must be SId *)
       let name = match snd id with 
           SId s -> snd (List.hd s)
-        (* | _ -> "Error: cannot array index non-identifier" *)
+        | _ -> "Error: cannot array index non-identifier"
       in
       let a_addr = fst (find_var sp name) in (* sp is the current scope *)
       let data_location = L.build_struct_gep a_addr 0 "" builder in
@@ -240,7 +240,7 @@ let gen (bind_list, sfunction_decls, sclass_decls) =
       let ctx' = Ctx(builder, sp) in 
       (ctx', rval) (* return the assigned value *)
 
-    | SArrayLength(arr) ->
+    (* | SArrayLength(arr) -> *)
   
 
 

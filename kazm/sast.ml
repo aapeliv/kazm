@@ -70,7 +70,7 @@ let rec string_of_sexpr (t, e) =
   | SArrayIndex(id, idx) -> string_of_sexpr id ^ "[" ^ string_of_sexpr idx ^ "]"
   | SArrayDecl(t, idx, id) -> string_of_typ t ^ "[" ^ string_of_sexpr idx ^ "] " ^ id
   | SArrayExp(ty, str, exp) -> "ArrayExp;"
-  | SArrayLength(obj) -> "length of " ^ string_of_sexpr obj ^""
+  (* | SArrayLength(obj) -> "length of " ^ string_of_sexpr obj ^"" *)
   | SNoexpr -> ""
                   ) ^ ")"
 

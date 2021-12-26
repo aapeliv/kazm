@@ -16,7 +16,7 @@ open Ast
 %token RETURN BREAK
 %token CLASS 
 %token TRUE FALSE
-%token LENGTH 
+/* %token LENGTH  */
 
 %token<string> IDENTIFIER CLASS_IDENTIFIER 
 %token<string> CLASS_NAME
@@ -178,7 +178,7 @@ expr:
   | SQB_L array_opt SQB_R          { ArrayLit(List.rev $2) } 
   | fq_identifier SQB_L expr SQB_R ASSIGN expr {ArrayAssign(Id($1), $3, $6)}
   | fq_identifier SQB_L expr SQB_R {ArrayIndex(Id($1), $3)} 
-  | fq_identifier DOT LENGTH { ArrayLength($1) }
+  /* | fq_identifier DOT LENGTH { ArrayLength($1) } */
   /* | atyp IDENTIFIER ASSIGN SQB_L array_opt SQB_R { ArrayExp($1, $2, (List.rev $5))} */
 
 fq_identifier:
