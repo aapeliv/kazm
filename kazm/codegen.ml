@@ -240,9 +240,20 @@ let gen (bind_list, sfunction_decls, sclass_decls) =
       let ctx' = Ctx(builder, sp) in 
       (ctx', rval) (* return the assigned value *)
 
-    (* | SArrayLength(arr) -> *)
-  
-
+    | SArrayLength(arr) -> 
+      let name = match snd arr with 
+          SId s -> snd (List.hd s)
+        | _ -> "Error: cannot array index non-identifier"
+      in
+      let a_addr = fst (find_var sp name) in (* sp is the current scope *)
+      let data_location = L.build_struct_gep a_addr 0 "" builder in
+      let data_loc = L.build_load data_location "" builder in
+      let new_ctx, new_expr = codegen_expr ctx idx in (* idx is a sexpr itself *)
+      let Ctx(builder, sp) = new_ctx in (* to update builder and sp *)
+      let i_addr = L.build_gep data_loc [| new_expr |] "" builder in 
+      let ctx' = Ctx(builder, sp) in 
+      let e' = L.build_load i_addr "" builder in 
+      (ctx', e')
 
     (* ecatz 
       let array_struct = access builder locals s in
