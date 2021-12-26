@@ -16,7 +16,7 @@ open Ast
 %token RETURN BREAK
 %token CLASS 
 %token TRUE FALSE
-%token SIZEOF
+%token LENGTH 
 
 %token<string> IDENTIFIER CLASS_IDENTIFIER 
 %token<string> CLASS_NAME
@@ -170,7 +170,6 @@ expr:
   | expr OR     expr   { Binop($1, Or,    $3)   }
   | NOT expr           { Unop(Not, $2) }
   | PAREN_L expr PAREN_R { $2 }
-  | SIZEOF PAREN_L expr PAREN_R { Sizeof($3)}
   | atyp IDENTIFIER ASSIGN SQB_L array_opt SQB_R { ArrayExp($1, $2, (List.rev $5))}
   | fq_identifier ASSIGN expr { Assign($1, $3) } 
   | IDENTIFIER PAREN_L args_opt PAREN_R { Call($1, $3) }
@@ -179,6 +178,7 @@ expr:
   | SQB_L array_opt SQB_R          { ArrayLit(List.rev $2) } 
   | fq_identifier SQB_L expr SQB_R ASSIGN expr {ArrayAssign(Id($1), $3, $6)}
   | fq_identifier SQB_L expr SQB_R {ArrayIndex(Id($1), $3)} 
+  | fq_identifier DOT LENGTH { ArrayLength($1) }
   /* | atyp IDENTIFIER ASSIGN SQB_L array_opt SQB_R { ArrayExp($1, $2, (List.rev $5))} */
 
 fq_identifier:

@@ -26,7 +26,7 @@ Literal of int
 | ArrayIndex of expr * expr
 | ArrayDecl of typ * expr * string 
 | ArrayExp of typ * string * expr list
-| Sizeof of expr 
+| ArrayLength of expr 
 
 type stmt =
 Block of stmt list
@@ -102,7 +102,7 @@ f ^ "(" ^ String.concat ", " (List.map string_of_expr el) ^ ")"
 | ArrayIndex(id, idx) -> string_of_expr id ^ "[" ^ string_of_expr idx ^ "]" 
 | ArrayDecl(t, idx, id) -> string_of_typ (t) ^ "[" ^ string_of_expr idx ^ "] " ^ id
 | ArrayExp(ty, str, exp) -> "ArrayExp"
-| Sizeof(obj) -> "sizeof(" ^ string_of_expr obj ^ ")"
+| ArrayLength(obj) ->  "length of " ^ string_of_expr obj 
 | Noexpr -> ""
 
 let rec string_of_stmt = function

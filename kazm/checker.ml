@@ -208,6 +208,23 @@ let check (globals, functions, classes) =
         in 
         (element_t, SArrayAssign((left_t, name'), (right_t, value'), (index_t, index')))
 
+      | ArrayLength(name) -> (*return the length of array *)
+        let ArrayT(typ, s') = StringMap.find (string_of_expr name) symbols in
+        (* Check that we're trying to get the length of an array*)
+        let _ = match typ with
+            ArrayT (t, x) -> t
+            | _ ->  raise (Failure (string_of_expr name ^ " is not an array." ))
+        in (Int, SArrayLength(typ,  SLiteral(s')))
+      
+      (*
+        let array_name = match obj with
+            Id i -> i
+          | _ -> raise(Failure("Invalid name for array: " ^ string_of_expr obj)) in
+        let (type', sid) = expr obj in
+        let ArrayT(_,_) = StringMap.find (string_of_expr name) symbols in
+            ArrayT(_, _) -> 
+          | _ -> raise(Failure(string_of_expr s ^ " is not an array. Cannot get lenght."))
+        in (Int, SarrayLength((type', sid)))*)
     in
 
     

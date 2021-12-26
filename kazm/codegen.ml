@@ -240,6 +240,23 @@ let gen (bind_list, sfunction_decls, sclass_decls) =
       let ctx' = Ctx(builder, sp) in 
       (ctx', rval) (* return the assigned value *)
 
+    | SArrayLength(arr) ->
+  
+
+
+    (* ecatz 
+      let array_struct = access builder locals s in
+      let length_ptr = L.build_struct_gep array_struct 1 "length_ptr" builder in
+      L.build_load length_ptr "length" builder 
+      
+      javalite:
+       let (ty,_) = e in
+        (match ty with
+          A.Arr(_,l) -> L.const_int i32_t l
+        | _ -> raise (Failure "function length cannot be called on non array type"))
+      
+      *)
+
     | SArrayDecl(t, l, n) -> (* type length name in e.g. array int[5] a *)
       let llvm_ty = typ_to_t t in 
       let addr = L.build_alloca llvm_ty n builder in 
