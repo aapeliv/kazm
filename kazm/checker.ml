@@ -164,7 +164,7 @@ let check (globals, functions, classes) =
       | Unop(op, e) as ex ->
           let (t, e') = expr locals e in
           let ty = match op with
-            Neg when t = Int || t = Float -> t
+            Neg when t = Int || t = Double -> t
           | Not when t = Bool -> Bool
           | _ -> raise (Failure ("illegal unary operator " ^
                                  string_of_uop op ^ string_of_typ t ^
@@ -179,12 +179,12 @@ let check (globals, functions, classes) =
             Add | Sub | Mult when same && t1 = Int -> Int 
           | Div | Mod when same && t1 = Int   -> if e2' = SLiteral(0) 
             then raise(Failure("Div by 0: " ^ string_of_expr e)) else Int
-          | Add | Sub | Mult | Div when same && t1 = Float -> Float
-          (* | Div when same && t1 = Float -> if e2' = SDliteral("0.0000") *)
-            (* then raise(Failure("Div by 0: " ^ string_of_expr e)) else Float *)
+          | Add | Sub | Mult when same && t1 = Double -> Double
+          | Div when same && t1 = Double -> if e2' = SDliteral("0.")
+            then raise(Failure("Div by 0.0: " ^ string_of_expr e)) else Double
           | Equal | Neq            when same               -> Bool
           | Less | Leq | Greater | Geq
-                     when same && (t1 = Int || t1 = Float) -> Bool
+                     when same && (t1 = Int || t1 = Double) -> Bool
           | And | Or when same && t1 = Bool -> Bool
           | _ -> raise (
           Failure ("illegal binary operator " ^
