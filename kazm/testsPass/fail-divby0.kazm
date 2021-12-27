@@ -1,5 +1,0 @@
-int main() {
-	int x;
-	x = 10;
-	int_println(x/0);
-}

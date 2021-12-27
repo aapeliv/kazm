@@ -241,6 +241,13 @@ let check (globals, functions, classes) =
             in 
             let (typ'', sx'') = expr locals e2 in 
             (e_ty, SArrAssign(v, (typ', sx'), (typ'', sx'')))
+      | ArrayLength(name) -> (*return the length of array *)
+        let v_ty = type_of_identifier name locals in
+        let e_ty = match v_ty with 
+            Arr(t, l) -> t
+          | _ -> raise(Failure("Wrong type of variable in array length"))
+        in 
+        (e_ty, SArrayLength(name))
     in
 
     let check_bool_expr e locals =

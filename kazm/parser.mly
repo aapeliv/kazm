@@ -13,7 +13,7 @@ open Ast
 %token IF ELSE FOR WHILE
 %token RETURN BREAK
 %token CLASS
-%token ARRAY 
+%token ARRAY LENGTH
 %token TRUE FALSE
 
 %token<string> IDENTIFIER CLASS_IDENTIFIER
@@ -195,6 +195,7 @@ expr:
   | SQB_L args_opt SQB_R { ArrayLit($2) }
   | IDENTIFIER SQB_L expr SQB_R { ArrayAccess($1, $3) }
   | IDENTIFIER SQB_L expr SQB_R ASSIGN expr { ArrAssign($1, $3, $6) }
+  | IDENTIFIER DOT LENGTH { ArrayLength($1) }
 
 fq_identifier:
     IDENTIFIER { [$1] }

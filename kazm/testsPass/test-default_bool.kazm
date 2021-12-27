@@ -1,8 +1,0 @@
-int main() {
-	bool x;
-	if (x == false){
-		println("pass");
-	} else {
-		println("fail");
-	}
-}
