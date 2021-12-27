@@ -226,6 +226,19 @@ let check (globals, functions, classes) =
               Arr(t, l) -> t (* we take only the type because that's what's needed for printing *)
             | _ -> raise(Failure("Wrong type of variable in array access"))
             in (e_ty, SArrayAccess(v, (typ', sx')))
+      | ArrAssign(v, e1, e2) as arrassign -> (* array name array index value to be assigned *)
+        (* check if type of e1 is int *)
+        let (typ', sx') = expr locals e1 in 
+          if typ' != Int 
+          then raise(Failure("Wrong type of array index in array access"))
+          else (* check if type of v is array *)
+            let v_ty = type_of_identifier v locals in 
+            let e_ty = match v_ty with 
+                Arr(t, l) -> t 
+              | _ -> raise(Failure("Wrong type of variable in array assign"))
+            in 
+            let (typ'', sx'') = expr locals e2 in 
+            (e_ty, SArrAssign(v, (typ', sx'), (typ'', sx'')))
     in
 
     let check_bool_expr e locals =

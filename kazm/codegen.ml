@@ -235,6 +235,14 @@ let gen (bind_list, sfunction_decls, sclass_decls) =
       let elt = L.build_gep arr [| pos |] "acceltptr" builder in 
       (ctx'', L.build_load elt "accelt" builder)
       (* I'm worried about ctx and builder *)
+    | SArrAssign (s, e1, e2) ->
+      let (ctx', ind) = codegen_expr ctx e1 in 
+      let (ty, _) = e1 in 
+      let pos = L.build_add ind (L.const_int i32_t 0) "accpos" builder in 
+      let (ctx'', arr) = codegen_expr ctx' (ty, SId([s])) in 
+      let (ctx''', new_val) = codegen_expr ctx'' e2 in 
+      let elt_ptr = L.build_gep arr [| pos |] "arrelt" builder in 
+      (ctx''', L.build_store new_val elt_ptr builder)
   in
 
   (* Add terminator to end of a basic block *)
@@ -374,6 +382,8 @@ let gen (bind_list, sfunction_decls, sclass_decls) =
           | _ -> raise(Failure("SInitialize: TODO"))
           )
       (* | SInitialize((vtyp, name), Some e) -> raise(Failure("SInitialize: TODO")) *)
+
+
     in
 
     
