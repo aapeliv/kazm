@@ -224,7 +224,7 @@ let check (globals, functions, classes) =
             let v_ty = type_of_identifier v locals in 
             let e_ty = match v_ty with 
               Arr(t, l) -> 
-                if e >= Literal(l) then raise(Failure("Array (" ^ v ^") index (" ^ 
+                if e >= Literal(l) || e < Literal(0) then raise(Failure("Array (" ^ v ^") index (" ^ 
                 string_of_expr e ^ ") out of bounds (" ^ string_of_int l ^")")) else t (* we take only the type because that's what's needed for printing *)
             | _ -> raise(Failure("Wrong type of variable in array access"))
             in (e_ty, SArrayAccess(v, (typ', sx')))
