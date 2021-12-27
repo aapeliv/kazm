@@ -220,11 +220,11 @@ let gen (bind_list, sfunction_decls, sclass_decls) =
     | SArrayLit arr   -> 
       (* arr: sexpr list = typ * sx list *)
       let len = L.const_int i32_t (List.length arr) in (* array length *)
-      let size = L.const_int i32_t ((List.length arr) + 1) in (* including null terminator *)
+      (* let size = L.const_int i32_t ((List.length arr) + 1) in  *)
       let (fst_t, _) = List.hd arr in 
       let ty = typ_to_t (A.Arr(fst_t, (List.length arr))) in
       (* allocate memory for array *)
-      let arr_alloca = L.build_array_alloca ty size "arr" builder in
+      let arr_alloca = L.build_array_alloca ty len "arr" builder in
       (* bitcast -- pointer-to-int *)
       let arr_ptr = L.build_pointercast arr_alloca ty "arrptr" builder in 
       (* store all elements *)
@@ -236,8 +236,6 @@ let gen (bind_list, sfunction_decls, sclass_decls) =
         ignore(L.build_store elt' elt_ptr builder)
       in List.iteri store_elt elts;
       let elt_ptr = L.build_gep arr_ptr [| len |] "arrlast" builder in
-      let null_elt = L.const_null (L.element_type ty) in
-      ignore(L.build_store null_elt elt_ptr builder);
       (ctx, arr_ptr)
     | SArrayAccess (s, e) -> 
       let (ctx', ind) = codegen_expr ctx e in 
