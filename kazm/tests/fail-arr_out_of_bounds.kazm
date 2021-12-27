@@ -1,0 +1,4 @@
+int main(){
+	array int[4] x = [1,2,3,4];
+	int_println(x[4]);
+}
