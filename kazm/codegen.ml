@@ -253,6 +253,12 @@ let gen (bind_list, sfunction_decls, sclass_decls) =
       let (ctx''', new_val) = codegen_expr ctx'' e2 in 
       let elt_ptr = L.build_gep arr [| pos |] "arrelt" builder in 
       (ctx''', L.build_store new_val elt_ptr builder)
+    | SArrayLength(name) -> 
+      let var = find_var sp name in 
+      let (ll, vtyp) = var in (* llvalue and Ast typ *)
+      let Arr(t, l) = vtyp in (* Ast typ and length of array *)
+      (ctx, L.const_int i32_t l) 
+      (* where would the length be stored *)
   in
 
   (* Add terminator to end of a basic block *)
