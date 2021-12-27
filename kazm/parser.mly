@@ -193,6 +193,7 @@ expr:
   | fq_identifier PAREN_L args_opt PAREN_R { Call($1, $3) }
   | fq_identifier      { Id($1) }
   | SQB_L args_opt SQB_R { ArrayLit($2) }
+  | IDENTIFIER SQB_L expr SQB_R { ArrayAccess($1, $3) }
 
 fq_identifier:
     IDENTIFIER { [$1] }

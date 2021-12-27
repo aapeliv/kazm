@@ -159,7 +159,7 @@ let check (globals, functions, classes) =
           | _ -> raise (Failure ("Usage: cls_instance.cls_var (e.g. car.power)"))
           and (rt, e') = expr locals e in
           let err = "illegal assignment " ^ string_of_typ lt ^ " = " ^
-                      string_of_typ rt ^ " in " ^ string_of_expr ex
+                      string_of_typ rt ^ " in " (* ^ string_of_expr ex *)
           in (check_assign lt rt err, SAssign(ref, (rt, e')))
       | Unop(op, e) as ex ->
           let (t, e') = expr locals e in
@@ -215,7 +215,18 @@ let check (globals, functions, classes) =
         let array_body = List.map (expr locals) values in 
         let array_t, _ = List.hd array_body in 
         (Arr (array_t, List.length values), SArrayLit(array_body))
-in
+      | ArrayAccess(v, e) -> (* array name and array index *)
+        (* check if type of e is an int *)
+        let (typ', sx') = expr locals e in 
+          if typ' != Int 
+          then raise(Failure("Wrong type of array index in array access"))
+          else 
+            let v_ty = type_of_identifier v locals in 
+            let e_ty = match v_ty with 
+              Arr(t, l) -> t (* we take only the type because that's what's needed for printing *)
+            | _ -> raise(Failure("Wrong type of variable in array access"))
+            in (e_ty, SArrayAccess(v, (typ', sx')))
+    in
 
     let check_bool_expr e locals =
       let (t', e') = expr locals e

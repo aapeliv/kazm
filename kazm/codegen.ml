@@ -227,6 +227,14 @@ let gen (bind_list, sfunction_decls, sclass_decls) =
       let null_elt = L.const_null (L.element_type ty) in
       ignore(L.build_store null_elt elt_ptr builder);
       (ctx, arr_ptr)
+    | SArrayAccess (s, e) -> 
+      let (ctx', ind) = codegen_expr ctx e in 
+      let (ty, _) = e in (* e is sexpr which is typ * sx so we retrieve the Ast typ *)
+      let pos = L.build_add ind (L.const_int i32_t 0) "accpos" builder in 
+      let (ctx'', arr) = codegen_expr ctx' (ty, SId([s])) in 
+      let elt = L.build_gep arr [| pos |] "acceltptr" builder in 
+      (ctx'', L.build_load elt "accelt" builder)
+      (* I'm worried about ctx and builder *)
   in
 
   (* Add terminator to end of a basic block *)

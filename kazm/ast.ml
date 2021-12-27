@@ -22,6 +22,7 @@ type expr =
   | Call of ref * expr list
   | Noexpr
   | ArrayLit of expr list
+  | ArrayAccess of string * expr
 
 type stmt =
     Block of stmt list
@@ -78,6 +79,7 @@ let string_of_typ = function
   | String -> "string"
   | Char -> "char"
   | ClassT(name) -> "class " ^ name
+  | Arr(t, l) -> "array"
   
 let rec string_of_expr = function
     Literal(l) -> string_of_int l
@@ -94,6 +96,8 @@ let rec string_of_expr = function
   | Call(f, el) ->
       String.concat " " f ^ "(" ^ String.concat ", " (List.map string_of_expr el) ^ ")"
   | Noexpr -> ""
+  | ArrayLit(values) -> "values"
+  | ArrayAccess(name, value) -> name
 
 let rec string_of_stmt = function
     Block(stmts) ->
