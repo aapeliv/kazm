@@ -120,6 +120,7 @@ typ:
   | DOUBLE { Double }
   | STRING { String }
   | CLASS_IDENTIFIER { ClassT($1) }
+  | ARRAY typ SQB_L INT_LITERAL SQB_R {Arr($2, $4)}
 
 var_decls:
     { [] }

@@ -355,7 +355,17 @@ let gen (bind_list, sfunction_decls, sclass_decls) =
             | _ ->
               let var = L.build_alloca (typ_to_t vtyp) name fn_builder in
               Ctx(builder, add_var sp name var vtyp))
-      | SInitialize((vtyp, name), Some e) -> raise(Failure("SInitialize: TODO"))
+      
+      | SInitialize((vtyp, name), Some e) -> 
+          (match vtyp with 
+            A.Arr(t, l) -> (* type * length *) (* e will be an ArrayLit *)
+              let (ctx', e') = codegen_expr ctx e in 
+              let var = L.build_alloca (typ_to_t vtyp) name builder in
+              ignore (L.build_store e' var builder); 
+              Ctx(builder, add_var sp name var vtyp)
+          | _ -> raise(Failure("SInitialize: TODO"))
+          )
+      (* | SInitialize((vtyp, name), Some e) -> raise(Failure("SInitialize: TODO")) *)
     in
 
     
