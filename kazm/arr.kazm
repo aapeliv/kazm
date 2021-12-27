@@ -1,7 +1,0 @@
-void main()
-{
-    array int[3] a = [1, 2, 3]; 
-    int_println(a[2]);
-    a[2] = a[1]; 
-    int_println(a[2]);
-}
