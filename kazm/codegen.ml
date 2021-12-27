@@ -267,6 +267,26 @@ let gen (bind_list, sfunction_decls, sclass_decls) =
     | None -> ignore (build_terminator ctx)
   in
 
+  let build_class_alloc cname name builder =
+    (* Class info *)
+    let (cls, cls_t) = SMap.find cname all_classes in
+    (* A pointer to the right struct *)
+    let ptr_var = L.build_alloca (L.pointer_type cls_t) name builder in
+    (* Malloc the memory *)
+    let mallocd = L.build_call (SMap.find "_kazm_malloc" all_funcs) [| L.size_of cls_t |] ("_malloc_" ^ name) builder in
+    let castd = L.build_bitcast mallocd (L.pointer_type cls_t) ("_cast_" ^ name) builder in
+    ignore (L.build_store castd ptr_var builder);
+    ptr_var
+  in
+
+  let build_alloc vtyp name builder =
+    match vtyp with
+      | A.ClassT(cname) ->
+        build_class_alloc cname name builder
+      | _ ->
+        L.build_alloca (typ_to_t vtyp) name builder
+  in
+
   (* Codegen for function body *)
   let gen_func func =
     (* let A.Func(bind, body) = func in *)
@@ -368,15 +388,7 @@ let gen (bind_list, sfunction_decls, sclass_decls) =
       | SInitialize((vtyp, name), None) ->
           (match vtyp with
               A.ClassT(cname) ->
-              (* Class info *)
-              let (cls, cls_t) = SMap.find cname all_classes in
-              (* A pointer to the right struct *)
-              let ptr_var = L.build_alloca (L.pointer_type cls_t) name fn_builder in
-              (* Malloc the memory *)
-              let mallocd = L.build_call (SMap.find "_kazm_malloc" all_funcs) [| L.size_of cls_t |] ("_malloc_" ^ name) fn_builder in
-              let castd = L.build_bitcast mallocd (L.pointer_type cls_t) ("_cast_" ^ name) fn_builder in
-              ignore (L.build_store castd ptr_var fn_builder);
-              Ctx(builder, add_var sp name ptr_var vtyp)
+                Ctx(builder, add_var sp name (build_class_alloc cname name fn_builder) vtyp)
             | A.Int ->  let var = L.build_alloca (typ_to_t vtyp) name fn_builder in
                         let ctx = Ctx(builder, add_var sp name var vtyp) in
                         let (ctx', e') = codegen_expr ctx (A.Int, SLiteral 0) in
@@ -424,20 +436,7 @@ let gen (bind_list, sfunction_decls, sclass_decls) =
     let vars = List.fold_left2 add_param SMap.empty formals (Array.to_list (L.params fn)) in
     let fn_scope = Scope(None, vars) in
     let initialize_var scope (vtyp, name) =
-      match vtyp with
-        A.ClassT(cname) ->
-        (* Class info *)
-        let (cls, cls_t) = SMap.find cname all_classes in
-        (* A pointer to the right struct *)
-        let ptr_var = L.build_alloca (L.pointer_type cls_t) name fn_builder in
-        (* Malloc the memory *)
-        let mallocd = L.build_call (SMap.find "_kazm_malloc" all_funcs) [| L.size_of cls_t |] ("_malloc_" ^ name) fn_builder in
-        let castd = L.build_bitcast mallocd (L.pointer_type cls_t) ("_cast_" ^ name) fn_builder in
-        ignore (L.build_store castd ptr_var fn_builder);
-        add_var scope name ptr_var vtyp
-      | _ ->
-        let var = L.build_alloca (typ_to_t vtyp) name fn_builder in
-        add_var scope name var vtyp
+      add_var scope name (build_alloc vtyp name fn_builder) vtyp
     in
     let fn_scope' = List.fold_left initialize_var fn_scope [] in
     let fn_ctx = Ctx(fn_builder, fn_scope') in
