@@ -1,0 +1,4 @@
+int main() {
+  int_println(3.14);
+  return 0;
+}

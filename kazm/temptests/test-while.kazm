@@ -1,0 +1,6 @@
+int main() {
+  while (next_int() < 10) {
+    println("Woop!");
+  }
+  return 0;
+}
