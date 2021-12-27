@@ -50,6 +50,7 @@ let gen (bind_list, sfunction_decls, sclass_decls) =
     | A.Int -> i32_t
     | A.Double -> double_t
     | A.ClassT(name) -> L.pointer_type (snd (SMap.find name all_classes))
+    | A.Arr(ty,_) -> L.pointer_type (typ_to_t_TODO_WITHOUT_CLASSES ty)
   in
 
   let codegen_func_decl name ret_t arg_ts =
@@ -216,6 +217,44 @@ let gen (bind_list, sfunction_decls, sclass_decls) =
       let var = find_fq_var builder sp fqn in
       ignore (L.build_store e' var builder);
       (ctx, e')
+    | SArrayLit arr   -> 
+      (* arr: sexpr list = typ * sx list *)
+      let len = L.const_int i32_t (List.length arr) in (* array length *)
+      let size = L.const_int i32_t ((List.length arr) + 1) in (* including null terminator *)
+      let (fst_t, _) = List.hd arr in 
+      let ty = typ_to_t (A.Arr(fst_t, (List.length arr))) in
+      (* allocate memory for array *)
+      let arr_alloca = L.build_array_alloca ty size "arr" builder in
+      (* bitcast -- pointer-to-int *)
+      let arr_ptr = L.build_pointercast arr_alloca ty "arrptr" builder in 
+      (* store all elements *)
+      let elts = List.map (codegen_expr ctx) arr in (* now arr is (ctx * sexpr) list *)
+      let store_elt ind elt = 
+        let (ctx', elt') = elt in 
+        let pos = L.const_int i32_t (ind) in
+          let elt_ptr = L.build_gep arr_ptr [| pos |] "arrelt" builder in
+        ignore(L.build_store elt' elt_ptr builder)
+      in List.iteri store_elt elts;
+      let elt_ptr = L.build_gep arr_ptr [| len |] "arrlast" builder in
+      let null_elt = L.const_null (L.element_type ty) in
+      ignore(L.build_store null_elt elt_ptr builder);
+      (ctx, arr_ptr)
+    | SArrayAccess (s, e) -> 
+      let (ctx', ind) = codegen_expr ctx e in 
+      let (ty, _) = e in (* e is sexpr which is typ * sx so we retrieve the Ast typ *)
+      let pos = L.build_add ind (L.const_int i32_t 0) "accpos" builder in 
+      let (ctx'', arr) = codegen_expr ctx' (ty, SId([s])) in 
+      let elt = L.build_gep arr [| pos |] "acceltptr" builder in 
+      (ctx'', L.build_load elt "accelt" builder)
+      (* I'm worried about ctx and builder *)
+    | SArrAssign (s, e1, e2) ->
+      let (ctx', ind) = codegen_expr ctx e1 in 
+      let (ty, _) = e1 in 
+      let pos = L.build_add ind (L.const_int i32_t 0) "accpos" builder in 
+      let (ctx'', arr) = codegen_expr ctx' (ty, SId([s])) in 
+      let (ctx''', new_val) = codegen_expr ctx'' e2 in 
+      let elt_ptr = L.build_gep arr [| pos |] "arrelt" builder in 
+      (ctx''', L.build_store new_val elt_ptr builder)
   in
 
   (* Add terminator to end of a basic block *)
@@ -329,18 +368,18 @@ let gen (bind_list, sfunction_decls, sclass_decls) =
       | SInitialize((vtyp, name), None) ->
           (match vtyp with
               A.ClassT(cname) ->
-              (* Class info *)
-              let (cls, cls_t) = SMap.find cname all_classes in
-              (* A pointer to the right struct *)
-              let ptr_var = L.build_alloca (L.pointer_type cls_t) name fn_builder in
-              (* Variable to store size in *)
-              (* let size_var = L.build_alloca i64_t "sz" fn_builder in
-              ignore (L.build_store (L.size_of cls_t) size_var fn_builder); *)
-              (* Malloc the memory *)
-              let mallocd = L.build_call (SMap.find "_kazm_malloc" all_funcs) [| L.size_of cls_t |] ("_malloc_" ^ name) fn_builder in
-              let castd = L.build_bitcast mallocd (L.pointer_type cls_t) ("_cast_" ^ name) fn_builder in
-              ignore (L.build_store castd ptr_var fn_builder);
-              Ctx(builder, add_var sp name ptr_var vtyp)
+                (* Class info *)
+                let (cls, cls_t) = SMap.find cname all_classes in
+                (* A pointer to the right struct *)
+                let ptr_var = L.build_alloca (L.pointer_type cls_t) name fn_builder in
+                (* Variable to store size in *)
+                (* let size_var = L.build_alloca i64_t "sz" fn_builder in
+                ignore (L.build_store (L.size_of cls_t) size_var fn_builder); *)
+                (* Malloc the memory *)
+                let mallocd = L.build_call (SMap.find "_kazm_malloc" all_funcs) [| L.size_of cls_t |] ("_malloc_" ^ name) fn_builder in
+                let castd = L.build_bitcast mallocd (L.pointer_type cls_t) ("_cast_" ^ name) fn_builder in
+                ignore (L.build_store castd ptr_var fn_builder);
+                Ctx(builder, add_var sp name ptr_var vtyp)
             | A.Int ->  let var = L.build_alloca (typ_to_t vtyp) name fn_builder in
                         let ctx = Ctx(builder, add_var sp name var vtyp) in
                         let (ctx', e') = codegen_expr ctx (A.Int, SLiteral 0) in
@@ -352,10 +391,29 @@ let gen (bind_list, sfunction_decls, sclass_decls) =
                           let (ctx', e') = codegen_expr ctx (A.Double, SDliteral "0.0") in
                           ignore (L.build_store e' var fn_builder);
                           ctx'
+            | A.Arr(t, l) -> 
+              let arr_e = (match t with 
+                    A.Int -> List.map (fun x -> (A.Int, SLiteral(0))) (List.init l (fun x -> 0))
+                  | A.Bool -> List.map (fun x -> (A.Bool, SBoolLit(false))) (List.init l (fun x -> 1))
+                  | A.Double -> List.map (fun x -> (A.Double, SDliteral("0.0"))) (List.init l (fun x -> 0.0))
+                ) in 
+              let e = (A.Arr(t, l), SArrayLit(arr_e)) in
+              let (ctx', e') = codegen_expr ctx e in 
+              let var = L.build_alloca (typ_to_t vtyp) name builder in
+              ignore (L.build_store e' var builder); 
+              Ctx(builder, add_var sp name var vtyp)
             | _ ->  let var = L.build_alloca (typ_to_t vtyp) name fn_builder in
                     Ctx(builder, add_var sp name var vtyp))
+      | SInitialize((vtyp, name), Some e) -> 
+        (match vtyp with 
+          A.Arr(t, l) -> (* type * length *) (* e will be an ArrayLit *)
+            let (ctx', e') = codegen_expr ctx e in 
+            let var = L.build_alloca (typ_to_t vtyp) name builder in
+            ignore (L.build_store e' var builder); 
+            Ctx(builder, add_var sp name var vtyp)
+        | _ -> raise(Failure("SInitialize: TODO"))
+        )
 
-      | SInitialize((vtyp, name), Some e) -> raise(Failure("SInitialize: TODO"))
     in
 
     

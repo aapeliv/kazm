@@ -13,6 +13,7 @@ open Ast
 %token IF ELSE FOR WHILE
 %token RETURN BREAK
 %token CLASS
+%token ARRAY 
 %token TRUE FALSE
 
 %token<string> IDENTIFIER CLASS_IDENTIFIER
@@ -119,6 +120,7 @@ typ:
   | DOUBLE { Double }
   | STRING { String }
   | CLASS_IDENTIFIER { ClassT($1) }
+  | ARRAY typ SQB_L INT_LITERAL SQB_R {Arr($2, $4)}
 
 var_decls:
     { [] }
@@ -190,6 +192,9 @@ expr:
   | fq_identifier ASSIGN expr { Assign($1, $3) }
   | fq_identifier PAREN_L args_opt PAREN_R { Call($1, $3) }
   | fq_identifier      { Id($1) }
+  | SQB_L args_opt SQB_R { ArrayLit($2) }
+  | IDENTIFIER SQB_L expr SQB_R { ArrayAccess($1, $3) }
+  | IDENTIFIER SQB_L expr SQB_R ASSIGN expr { ArrAssign($1, $3, $6) }
 
 fq_identifier:
     IDENTIFIER { [$1] }

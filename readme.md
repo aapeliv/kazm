@@ -30,7 +30,7 @@ docker run --rm -it -v $(pwd):/home/kazm -w=/home/kazm aapeliv/plt
 # now inside the container
 opam config exec -- ocamlbuild -use-ocamlfind kazm.native
 # run the kazm compiler to output LLVM IR
-cat hello_world.kazm | ./kazm.native > hello_world.ll
+cat arr.kazm | ./kazm.native > hello_world.ll
 # compile LLVM IR into assembly
 llc --relocation-model=pic hello_world.ll
 # compile builtins
