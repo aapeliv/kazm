@@ -50,6 +50,7 @@ let gen (bind_list, sfunction_decls, sclass_decls) =
     | A.Int -> i32_t
     | A.Double -> double_t
     | A.ClassT(name) -> L.pointer_type (snd (SMap.find name all_classes))
+    | A.Arr(ty,_) -> L.pointer_type (typ_to_t_TODO_WITHOUT_CLASSES ty)
   in
 
   let codegen_func_decl name ret_t arg_ts =
@@ -204,6 +205,28 @@ let gen (bind_list, sfunction_decls, sclass_decls) =
       let var = find_fq_var builder sp fqn in
       ignore (L.build_store e' var builder);
       (ctx, e')
+    | SArrayLit arr   -> 
+      (* arr: sexpr list = typ * sx list *)
+      let len = L.const_int i32_t (List.length arr) in (* array length *)
+      let size = L.const_int i32_t ((List.length arr) + 1) in (* including null terminator *)
+      let (fst_t, _) = List.hd arr in 
+      let ty = typ_to_t (A.Arr(fst_t, (List.length arr))) in
+      (* allocate memory for array *)
+      let arr_alloca = L.build_array_alloca ty size "arr" builder in
+      (* bitcast -- pointer-to-int *)
+      let arr_ptr = L.build_pointercast arr_alloca ty "arrptr" builder in 
+      (* store all elements *)
+      let elts = List.map (codegen_expr ctx) arr in (* now arr is (ctx * sexpr) list *)
+      let store_elt ind elt = 
+        let (ctx', elt') = elt in 
+        let pos = L.const_int i32_t (ind) in
+          let elt_ptr = L.build_gep arr_ptr [| pos |] "arrelt" builder in
+        ignore(L.build_store elt' elt_ptr builder)
+      in List.iteri store_elt elts;
+      let elt_ptr = L.build_gep arr_ptr [| len |] "arrlast" builder in
+      let null_elt = L.const_null (L.element_type ty) in
+      ignore(L.build_store null_elt elt_ptr builder);
+      (ctx, arr_ptr)
   in
 
   (* Add terminator to end of a basic block *)

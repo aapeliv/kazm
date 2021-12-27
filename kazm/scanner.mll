@@ -48,6 +48,8 @@ rule tokenize = parse
 | ">=" { GEQ }
 | "class" { CLASS }
 | "void" { VOID }
+| "array"  { ARRAY }
+
 | "bool" { BOOL }
 | "char" { CHAR }
 | "int" { INT }

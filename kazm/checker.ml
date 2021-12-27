@@ -141,7 +141,7 @@ let check (globals, functions, classes) =
     in
 
     (* Return a semantically-checked expression, i.e., with a type *)
-    let rec expr e locals =
+    let rec expr locals e =
       match e with
         Literal  l -> (Int, SLiteral l)
       | Dliteral l -> (Double, SDliteral l)
@@ -157,12 +157,12 @@ let check (globals, functions, classes) =
             var :: [] -> type_of_identifier var locals
           | s :: var :: [] -> trace_type s var locals
           | _ -> raise (Failure ("Usage: cls_instance.cls_var (e.g. car.power)"))
-          and (rt, e') = expr e locals in
+          and (rt, e') = expr locals e in
           let err = "illegal assignment " ^ string_of_typ lt ^ " = " ^
                       string_of_typ rt ^ " in " ^ string_of_expr ex
           in (check_assign lt rt err, SAssign(ref, (rt, e')))
       | Unop(op, e) as ex ->
-          let (t, e') = expr e locals in
+          let (t, e') = expr locals e in
           let ty = match op with
             Neg when t = Int || t = Float -> t
           | Not when t = Bool -> Bool
@@ -171,8 +171,8 @@ let check (globals, functions, classes) =
                                  " in " ^ string_of_expr ex))
           in (ty, SUnop(op, (t, e')))
       | Binop(e1, op, e2) as e ->
-          let (t1, e1') = expr e1 locals
-          and (t2, e2') = expr e2 locals in
+          let (t1, e1') = expr locals e1
+          and (t2, e2') = expr locals e2 in
           (* All binary operators require operands of the same type *)
           let same = t1 = t2 in
           let ty = match op with
@@ -204,17 +204,21 @@ let check (globals, functions, classes) =
             raise (Failure ("expecting " ^ string_of_int param_length ^
                           " arguments in " ^ string_of_expr call))
             else let check_call (ft, _) e =
-              let (et, e') = expr e locals in
+              let (et, e') = expr locals e in
               let err = "illegal argument found " ^ string_of_typ et ^
                 " expected " ^ string_of_typ ft ^ " in " ^ string_of_expr e
               in (check_assign ft et err, e')
             in
             let args' = List.map2 check_call fd.formals args
             in (fd.typ, SCall(ref, args'))
-    in
+      | ArrayLit(values) -> 
+        let array_body = List.map (expr locals) values in 
+        let array_t, _ = List.hd array_body in 
+        (Arr (array_t, List.length values), SArrayLit(array_body))
+in
 
     let check_bool_expr e locals =
-      let (t', e') = expr e locals
+      let (t', e') = expr locals e
       and err = "expected Boolean expression in " ^ string_of_expr e
       in if t' != Bool then raise (Failure err) else (t', e')
     in
@@ -222,15 +226,15 @@ let check (globals, functions, classes) =
     (* Return a semantically-checked statement i.e. containing sexprs *)
     let rec check_stmt stmt locals =
       match stmt with
-        Expr e -> SExpr (expr e locals)
+        Expr e -> SExpr (expr locals e)
       | Initialize (_, _) -> raise (Failure ("Initialize stmts are inside Block."))
       | If(p, b1, b2) -> SIf(check_bool_expr p locals, check_stmt b1 locals, check_stmt b2 locals)
       | For(e1, e2, e3, st) ->
-      SFor(expr e1 locals, check_bool_expr e2 locals, expr e3 locals, check_stmt st locals)
+      SFor(expr locals e1, check_bool_expr e2 locals, expr locals e3, check_stmt st locals)
       | While(p, s) -> SWhile(check_bool_expr p locals, check_stmt s locals)
       | EmptyReturn -> SEmptyReturn
       | Break -> SBreak
-      | Return e -> let (t, e') = expr e locals in
+      | Return e -> let (t, e') = expr locals e in
         if t = func.typ then SReturn (t, e')
         else raise (
       Failure ("return gives " ^ string_of_typ t ^ " expected " ^
@@ -249,7 +253,7 @@ let check (globals, functions, classes) =
                           else SInitialize(bd, None) :: check_stmt_list ss (StringMap.add name typ locals)
             | Initialize (bd, Some e) :: ss -> 
                 let (typ, name) = bd in
-                let se = expr e locals in
+                let se = expr locals e in
                 if StringMap.mem name locals = true 
                           then raise (Failure ("cannot initialize " ^ name ^ " twice"))
                           else SInitialize(bd, Some se) :: check_stmt_list ss (StringMap.add name typ locals)

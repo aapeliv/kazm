@@ -4,7 +4,7 @@ type op = Add | Sub | Mult | Div | Equal | Neq | Less | Leq | Greater | Geq |
 type uop = Neg | Not
 
 type class_t = string
-type typ = Int | Bool | Double | Void | String | Char | Float | ClassT of class_t
+type typ = Int | Bool | Double | Void | String | Char | Float | ClassT of class_t | Arr of typ * int
 type bind = typ * string
 
 type ref = string list
@@ -21,6 +21,7 @@ type expr =
   | Assign of ref * expr
   | Call of ref * expr list
   | Noexpr
+  | ArrayLit of expr list
 
 type stmt =
     Block of stmt list
