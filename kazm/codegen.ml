@@ -169,20 +169,32 @@ let gen (bind_list, sfunction_decls, sclass_decls) =
     | SDliteral(value) -> (ctx, L.const_float double_t (float_of_string value))
     (* New string literal (just make a new global string) *)
     | SStringLit(value) -> (ctx, L.build_global_stringptr value "globalstring" builder)
-    (* | SUnop(op, ((t, _) as e)) ->
+    | SUnop(op, ((t, _) as e)) ->
         let (ctx1, e') = codegen_expr ctx e in
-        let x = match op with
-          A.Neg when t = A.Float -> L.build_fneg 
-        | A.Neg                  -> L.build_neg
-        | A.Not                  -> L.build_not) e' "tmp" builder *)
+        let lbuild = match op with
+            A.Neg when t = A.Double -> L.build_fneg 
+          | A.Neg                  -> L.build_neg
+          | A.Not                  -> L.build_not
+        in
+        let Ctx(builder, sp) = ctx1 in
+        let new_expr = lbuild e' "im" builder in
+        (ctx1, new_expr)
     | SBinop(e1, op, e2) ->
       (* Lookup right thing to build in llvm *)
       let lbuild = match op with
-          A.Add -> L.build_add
-        | A.Sub -> L.build_sub
+          A.Add when typ = Int -> L.build_add
+        | A.Add when typ = Double -> L.build_fadd
+        | A.Sub when typ = Int -> L.build_sub
+        | A.Sub when typ = Double -> L.build_fsub
         | A.Mult -> L.build_mul
-        | A.Div -> L.build_sdiv
+        (* TODO: Simply tested but more tests may be needed *)
+        | A.Div when typ = Int -> L.build_sdiv
+        (* | A.Div when typ = Double ->L.build_fdiv *)
+        | A.Div when typ = Double ->  let (Double, SDliteral l) = e2 in
+                                      raise(Failure(l))
         | A.Mod -> L.build_srem
+        | A.And -> L.build_and
+        | A.Or -> L.build_or
         | A.Equal -> L.build_icmp L.Icmp.Eq
         | A.Neq -> L.build_icmp L.Icmp.Ne
         | A.Less -> L.build_icmp L.Icmp.Slt
@@ -329,9 +341,20 @@ let gen (bind_list, sfunction_decls, sclass_decls) =
               let castd = L.build_bitcast mallocd (L.pointer_type cls_t) ("_cast_" ^ name) fn_builder in
               ignore (L.build_store castd ptr_var fn_builder);
               Ctx(builder, add_var sp name ptr_var vtyp)
-            | _ ->
-              let var = L.build_alloca (typ_to_t vtyp) name fn_builder in
-              Ctx(builder, add_var sp name var vtyp))
+            | A.Int ->  let var = L.build_alloca (typ_to_t vtyp) name fn_builder in
+                        let ctx = Ctx(builder, add_var sp name var vtyp) in
+                        let (ctx', e') = codegen_expr ctx (A.Int, SLiteral 0) in
+                        ignore (L.build_store e' var fn_builder);
+                        ctx'
+            (* TODO: simply tested but more tests may needed *)
+            | A.Double -> let var = L.build_alloca (typ_to_t vtyp) name fn_builder in
+                          let ctx = Ctx(builder, add_var sp name var vtyp) in
+                          let (ctx', e') = codegen_expr ctx (A.Double, SDliteral "0.0") in
+                          ignore (L.build_store e' var fn_builder);
+                          ctx'
+            | _ ->  let var = L.build_alloca (typ_to_t vtyp) name fn_builder in
+                    Ctx(builder, add_var sp name var vtyp))
+
       | SInitialize((vtyp, name), Some e) -> raise(Failure("SInitialize: TODO"))
     in
 

@@ -6,7 +6,8 @@ int main() {
 
 	if (a || b){
 		println("fail");
-	} else if ( a && b) {
+	} 
+	if ( a && b) {
 		println("fail2");
 	} else {
 		println("pass");
