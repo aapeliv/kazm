@@ -394,7 +394,7 @@ let gen (bind_list, sfunction_decls, sclass_decls) =
             | A.Arr(t, l) -> 
               let arr_e = (match t with 
                     A.Int -> List.map (fun x -> (A.Int, SLiteral(0))) (List.init l (fun x -> 0))
-                  | A.Bool -> List.map (fun x -> (A.Bool, SBoolLit(true))) (List.init l (fun x -> 1))
+                  | A.Bool -> List.map (fun x -> (A.Bool, SBoolLit(false))) (List.init l (fun x -> 1))
                   | A.Double -> List.map (fun x -> (A.Double, SDliteral("0.0"))) (List.init l (fun x -> 0.0))
                 ) in 
               let e = (A.Arr(t, l), SArrayLit(arr_e)) in
