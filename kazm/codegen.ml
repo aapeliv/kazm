@@ -368,18 +368,15 @@ let gen (bind_list, sfunction_decls, sclass_decls) =
       | SInitialize((vtyp, name), None) ->
           (match vtyp with
               A.ClassT(cname) ->
-                (* Class info *)
-                let (cls, cls_t) = SMap.find cname all_classes in
-                (* A pointer to the right struct *)
-                let ptr_var = L.build_alloca (L.pointer_type cls_t) name fn_builder in
-                (* Variable to store size in *)
-                (* let size_var = L.build_alloca i64_t "sz" fn_builder in
-                ignore (L.build_store (L.size_of cls_t) size_var fn_builder); *)
-                (* Malloc the memory *)
-                let mallocd = L.build_call (SMap.find "_kazm_malloc" all_funcs) [| L.size_of cls_t |] ("_malloc_" ^ name) fn_builder in
-                let castd = L.build_bitcast mallocd (L.pointer_type cls_t) ("_cast_" ^ name) fn_builder in
-                ignore (L.build_store castd ptr_var fn_builder);
-                Ctx(builder, add_var sp name ptr_var vtyp)
+              (* Class info *)
+              let (cls, cls_t) = SMap.find cname all_classes in
+              (* A pointer to the right struct *)
+              let ptr_var = L.build_alloca (L.pointer_type cls_t) name fn_builder in
+              (* Malloc the memory *)
+              let mallocd = L.build_call (SMap.find "_kazm_malloc" all_funcs) [| L.size_of cls_t |] ("_malloc_" ^ name) fn_builder in
+              let castd = L.build_bitcast mallocd (L.pointer_type cls_t) ("_cast_" ^ name) fn_builder in
+              ignore (L.build_store castd ptr_var fn_builder);
+              Ctx(builder, add_var sp name ptr_var vtyp)
             | A.Int ->  let var = L.build_alloca (typ_to_t vtyp) name fn_builder in
                         let ctx = Ctx(builder, add_var sp name var vtyp) in
                         let (ctx', e') = codegen_expr ctx (A.Int, SLiteral 0) in
@@ -433,9 +430,6 @@ let gen (bind_list, sfunction_decls, sclass_decls) =
         let (cls, cls_t) = SMap.find cname all_classes in
         (* A pointer to the right struct *)
         let ptr_var = L.build_alloca (L.pointer_type cls_t) name fn_builder in
-        (* Variable to store size in *)
-        (* let size_var = L.build_alloca i64_t "sz" fn_builder in
-        ignore (L.build_store (L.size_of cls_t) size_var fn_builder); *)
         (* Malloc the memory *)
         let mallocd = L.build_call (SMap.find "_kazm_malloc" all_funcs) [| L.size_of cls_t |] ("_malloc_" ^ name) fn_builder in
         let castd = L.build_bitcast mallocd (L.pointer_type cls_t) ("_cast_" ^ name) fn_builder in
