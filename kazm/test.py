@@ -109,6 +109,7 @@ failed = []
 passed = []
 flog = open("loggy.txt", "w")
 flog.write("Kazm's Test Suite Log\n\n")
+right_total = 0
 count = 0
 for filename, name, out_file, run_err_file, compile_err_file in tests:
     count +=1
@@ -173,6 +174,7 @@ for filename, name, out_file, run_err_file, compile_err_file in tests:
             raise TestFailed("returned with non-zero exit code")
         raise TestPassed()
     except TestPassed:
+        right_total +=1
         status = "pass"
         passed.append(name)
         flog.write("PASS\n")
@@ -191,7 +193,9 @@ for filename, name, out_file, run_err_file, compile_err_file in tests:
     if output:
         test_output += "\n" + "\n".join([f"    {line}" for line in output.splitlines()]) + "\n\n"
 
-
+flog.write("Passed Cases: " + str(right_total)+ "\n")
+flog.write("Total cases: " + str(count) + "\n")
+flog.write("Accuracy Rate: " + str(100*(right_total/count))+ "% \n")
 total_tests = len(tests)
 assert len(passed) + len(failed) == total_tests
 test_output += "\n\n\n"
