@@ -30,15 +30,3 @@ int _the_next_int = 0;
 int next_int() {
   return _the_next_int++;
 }
-
-
-// class functions
-
-void* _kazm_malloc(size_t s) {
-  return malloc(s);
-}
-
-// just ignore errors...
-void _kazm_free(void* ptr) {
-  free(ptr);
-}

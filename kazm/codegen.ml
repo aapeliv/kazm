@@ -92,8 +92,6 @@ let gen (bind_list, sfunction_decls, sclass_decls) =
   let all_funcs = add_func_decl all_funcs "double_print" void_t [double_t] in
   let all_funcs = add_func_decl all_funcs "double_println" void_t [double_t] in
   let all_funcs = add_func_decl all_funcs "next_int" i32_t [] in
-  let all_funcs = add_func_decl all_funcs "_kazm_malloc" void_ptr_t [i64_t] in
-  let all_funcs = add_func_decl all_funcs "_kazm_free" void_t [void_ptr_t] in
 
   (* Codegen function definitions *)
   let codegen_func_sig all_funcs func =
@@ -268,9 +266,8 @@ let gen (bind_list, sfunction_decls, sclass_decls) =
     (* A pointer to the right struct *)
     let ptr_var = L.build_alloca (L.pointer_type cls_t) name builder in
     (* Malloc the memory *)
-    let mallocd = L.build_call (SMap.find "_kazm_malloc" all_funcs) [| L.size_of cls_t |] ("_malloc_" ^ name) builder in
-    let castd = L.build_bitcast mallocd (L.pointer_type cls_t) ("_cast_" ^ name) builder in
-    ignore (L.build_store castd ptr_var builder);
+    let mallocd = L.build_malloc cls_t ("_malloc_" ^ name) builder in
+    ignore (L.build_store mallocd ptr_var builder);
     ptr_var
   in
 
