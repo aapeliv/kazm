@@ -49,6 +49,7 @@ rule tokenize = parse
 | "class" { CLASS }
 | "void" { VOID }
 | "array"  { ARRAY }
+| "length" { LENGTH }
 | "bool" { BOOL }
 | "char" { CHAR }
 | "int" { INT }

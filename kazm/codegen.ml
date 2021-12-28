@@ -276,6 +276,11 @@ let gen (bind_list, sfunction_decls, sclass_decls) =
       let (ctx', assign) = codegen_expr ctx assign_ex in
       let (ctx'', element) = build_array_element_ptr ctx' name pos_ex in
       (ctx'', L.build_store assign element builder)
+    | SArrayLength(name) -> 
+      let var = find_var sp name in 
+      let (ll, vtyp) = var in (* llvalue and Ast typ *)
+      let ArrT(t, l) = vtyp in (* Ast typ and length of array *)
+      (ctx, L.const_int i32_t l) 
   and build_array_element_ptr ctx name pos_ex =
     let Ctx(builder, sp) = ctx in
     let (ctx', pos) = codegen_expr ctx pos_ex in

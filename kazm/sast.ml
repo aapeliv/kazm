@@ -20,6 +20,7 @@ and sx =
   | SArrayLit of typ * sx list
   | SArrayAccess of string * sexpr
   | SArrayAssign of string * sexpr * sexpr
+  | SArrayLength of string
 
 type sstmt =
     SBlock of sstmt list
