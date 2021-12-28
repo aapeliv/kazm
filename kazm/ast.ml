@@ -24,6 +24,7 @@ type expr =
   | ArrayLit of expr list
   | ArrayAccess of string * expr
   | ArrayAssign of string * expr * expr
+  | ArrayLength of string 
 
 type stmt =
     Block of stmt list
@@ -100,6 +101,7 @@ let rec string_of_expr = function
   | Noexpr -> ""
   | ArrayLit(values) -> "values"
   | ArrayAccess(name, value) -> name
+  | ArrayLength(name) -> "length"
 
 let rec string_of_stmt = function
     Block(stmts) ->
