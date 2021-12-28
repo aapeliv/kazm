@@ -1,0 +1,4 @@
+int main() {
+  double a;
+  a = 2.71;
+}

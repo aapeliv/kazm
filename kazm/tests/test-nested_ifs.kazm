@@ -1,0 +1,8 @@
+int main() {
+  println("Nested ifs");
+  if (next_int() < 2) {
+    if (next_int() > 10) {}
+  }
+  println("Done");
+  return 0;
+}
