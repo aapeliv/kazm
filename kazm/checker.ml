@@ -73,8 +73,7 @@ let check (globals, functions, classes) =
   in
 
   (* Collect all class info into class symbol table *)
-  let class_decls = List.fold_left add_class StringMap.empty classes
-  in
+  let class_decls = List.fold_left add_class StringMap.empty classes in
 
   (* Collect all class_method info into class_method symbol table *)
   let class_methods_decls = List.fold_left
