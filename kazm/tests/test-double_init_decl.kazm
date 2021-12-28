@@ -1,0 +1,4 @@
+int main(){
+	double b = 30.575;
+	double_println(b);
+}

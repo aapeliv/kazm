@@ -1,0 +1,9 @@
+int main() {
+  bool b;
+  b = false;
+  if (!b){
+    println("pass");
+  } else {
+    println("fail");
+  }
+}

@@ -1,0 +1,6 @@
+int main(){
+	bool b = true;
+	if (b == true){ 
+		println("pass");
+	}
+}

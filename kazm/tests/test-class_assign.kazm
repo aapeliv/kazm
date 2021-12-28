@@ -1,19 +1,20 @@
-class Person {
-	int x;
-	double y;
+class Test {
+  int first;
+  int second;
 };
 
-int main(){
-	Person a;
-	Person b;
-	a.x = 40;
-	a.y = 30.0;
-	b = a;
-	int_println(b.x);
-	double_print(b.y);
-	println("");
+int func(int a, int b) {
+  return a * b;
+}
 
-	b.x = b.x + b.x;
-	a = b;
-	int_println(a.x);
+int main() {
+  Test t;
+  t.first = 5;
+  t.second = 10;
+  int_println(t.first);
+  int_println(t.second);
+  t.first = 22;
+  int_println(t.first);
+  t.second = 2 + func(3, 5);
+  int_println(t.second);
 }

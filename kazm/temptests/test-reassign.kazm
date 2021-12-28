@@ -1,9 +1,0 @@
-int main() {
-  int a;
-  a = 3;
-  int_println(a);
-  a = 5;
-  int_println(a);
-  a = 1;
-  int_println(a);
-}

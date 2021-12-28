@@ -22,7 +22,7 @@ let check (globals, functions, classes) =
     in dups (List.sort (fun (_,a) (_,b) -> compare a b) binds)
   in
 
-  (**** Check global variables ****)
+  (* Check global variables *)
   check_binds "global" globals;
 
   (* Collect function declarations for built-in functions: no bodies *)
@@ -36,7 +36,7 @@ let check (globals, functions, classes) =
       typ = Int;
       fname = "next_int";
       formals = [];
-      body = [] } StringMap.empty 
+      body = [] } StringMap.empty
     in List.fold_left add_bind smap [ ("print", String);
                                ("println", String);
                                ("int_print", Int);
@@ -61,10 +61,10 @@ let check (globals, functions, classes) =
   let function_decls = List.fold_left add_func built_in_decls functions
   in
 
-  (* Add class name to class symbol table with cvars*)
-  let add_class map cls = 
+  (* Add class name to class symbol table with cvars *)
+  let add_class map cls =
     let dup_error = "duplicate class " ^ cls.cname
-    and make_err er = raise (Failure er) 
+    and make_err er = raise (Failure er)
     and n = cls.cname
     and vars = List.fold_left (fun m (ty, name) -> StringMap.add name ty m) StringMap.empty cls.cvars
     in match cls with
@@ -73,21 +73,14 @@ let check (globals, functions, classes) =
   in
 
   (* Collect all class info into class symbol table *)
-  let class_decls = List.fold_left add_class StringMap.empty classes 
+  let class_decls = List.fold_left add_class StringMap.empty classes
   in
 
   (* Collect all class_method info into class_method symbol table *)
-  let class_methods_decls = List.fold_left 
-          (fun map cls -> StringMap.add cls.cname 
+  let class_methods_decls = List.fold_left
+          (fun map cls -> StringMap.add cls.cname
               (List.fold_left add_func StringMap.empty cls.cmethods) map) StringMap.empty classes
   in
-
-  (* Return a function from our class_method symbol table *)
-  (*let find_classmethod clsname methodname =
-  *if StringMap.mem clsname class_decls = false then raise (Failure ("unrecognized class " ^ clsname))
-  *  else try StringMap.find methodname (StringMap.find clsname class_decls)
-  *       with Not_found -> raise (Failure ("unrecognized function " ^ methodname ^ " in class " ^ clsname))
-  *in *)
 
   (* Return a function from our function symbol table *)
   let find_func s =
@@ -97,7 +90,7 @@ let check (globals, functions, classes) =
 
   let _ = find_func "main" in (* Ensure "main" is defined *)
 
-  (**** Check functions ****)
+  (* Check functions *)
   let check_function vars func =
     (* Make sure no formals are void or duplicates *)
     check_binds "formal" func.formals;
@@ -123,7 +116,7 @@ let check (globals, functions, classes) =
     (* Return a ref (e.g. car.power) type *)
     let trace_type cls_instance cls_var locals =
       match type_of_identifier cls_instance locals with
-        ClassT(clsname) -> (if StringMap.mem clsname class_decls = false 
+        ClassT(clsname) -> (if StringMap.mem clsname class_decls = false
                             then raise (Failure ("no class type " ^ clsname))
                             else let vars_map = StringMap.find clsname class_decls in
                                   try StringMap.find cls_var vars_map
@@ -133,7 +126,7 @@ let check (globals, functions, classes) =
 
     (* Return a method function *)
     let trace_method clsname methodname =
-        if StringMap.mem clsname class_decls = false 
+        if StringMap.mem clsname class_decls = false
         then raise (Failure ("no class type " ^ clsname))
         else let methods_map = StringMap.find clsname class_methods_decls in
               try StringMap.find methodname methods_map
@@ -176,8 +169,8 @@ let check (globals, functions, classes) =
           (* All binary operators require operands of the same type *)
           let same = t1 = t2 in
           let ty = match op with
-            Add | Sub | Mult when same && t1 = Int -> Int 
-          | Div | Mod when same && t1 = Int   -> if e2' = SLiteral(0) 
+            Add | Sub | Mult when same && t1 = Int -> Int
+          | Div | Mod when same && t1 = Int   -> if e2' = SLiteral(0)
             then raise(Failure("Div by 0: " ^ string_of_expr e)) else Int
           | Add | Sub | Mult when same && t1 = Double -> Double
           | Div when same && t1 = Double -> if e2' = SDliteral("0.")
@@ -194,11 +187,11 @@ let check (globals, functions, classes) =
       | Call(ref, args) as call ->
           let fd = match ref with
             fname :: [] -> find_func fname
-          | s :: methodname :: [] -> (match type_of_identifier s locals with 
+          | s :: methodname :: [] -> (match type_of_identifier s locals with
                                       ClassT(clsname) -> trace_method clsname methodname
                                     | _ -> raise (Failure (s ^ " must be a class instance")))
           | _ -> raise (Failure ("Usage: cls_instance.cls_var (e.g. car.power)"))
-          in 
+          in
             let param_length = List.length fd.formals in
             if List.length args != param_length then
             raise (Failure ("expecting " ^ string_of_int param_length ^
@@ -211,36 +204,43 @@ let check (globals, functions, classes) =
             in
             let args' = List.map2 check_call fd.formals args
             in (fd.typ, SCall(ref, args'))
-      | ArrayLit(values) -> 
-        let array_body = List.map (expr locals) values in 
-        let array_t, _ = List.hd array_body in 
-        (Arr (array_t, List.length values), SArrayLit(array_body))
+      | ArrayLit(values) ->
+        let array_body = List.map (expr locals) values in
+        (* Type of first element in array *)
+        let array_t, _ = List.hd array_body in
+        let type_check el =
+          let el_t = fst el in
+          if el_t != array_t then raise (Failure ("Types in array literal must all match")) else ()
+        in
+        (* Check all the types match *)
+        ignore (List.map type_check array_body);
+        (ArrT(array_t, List.length values), SArrayLit(array_t, List.map snd array_body))
       | ArrayAccess(v, e) -> (* array name and array index *)
         (* check if type of e is an int *)
-        let (typ', sx') = expr locals e in 
-          if typ' != Int 
+        let (typ', sx') = expr locals e in
+          if typ' != Int
           then raise(Failure("Wrong type of array index in array access"))
-          else 
-            let v_ty = type_of_identifier v locals in 
-            let e_ty = match v_ty with 
-              Arr(t, l) -> 
-                if e >= Literal(l) || e < Literal(0) then raise(Failure("Array (" ^ v ^") index (" ^ 
+          else
+            let v_ty = type_of_identifier v locals in
+            let e_ty = match v_ty with
+              ArrT(t, l) ->
+                if e >= Literal(l) || e < Literal(0) then raise(Failure("Array (" ^ v ^") index (" ^
                 string_of_expr e ^ ") out of bounds (" ^ string_of_int l ^")")) else t (* we take only the type because that's what's needed for printing *)
             | _ -> raise(Failure("Wrong type of variable in array access"))
             in (e_ty, SArrayAccess(v, (typ', sx')))
-      | ArrAssign(v, e1, e2) as arrassign -> (* array name array index value to be assigned *)
+      | ArrayAssign(v, e1, e2) -> (* array name array index value to be assigned *)
         (* check if type of e1 is int *)
-        let (typ', sx') = expr locals e1 in 
-          if typ' != Int 
+        let (typ', sx') = expr locals e1 in
+          if typ' != Int
           then raise(Failure("Wrong type of array index in array access"))
           else (* check if type of v is array *)
-            let v_ty = type_of_identifier v locals in 
-            let e_ty = match v_ty with 
-                Arr(t, l) -> t 
+            let v_ty = type_of_identifier v locals in
+            let e_ty = match v_ty with
+                ArrT(t, l) -> t
               | _ -> raise(Failure("Wrong type of variable in array assign"))
-            in 
-            let (typ'', sx'') = expr locals e2 in 
-            (e_ty, SArrAssign(v, (typ', sx'), (typ'', sx'')))
+            in
+            let (typ'', sx'') = expr locals e2 in
+            (e_ty, SArrayAssign(v, (typ', sx'), (typ'', sx'')))
     in
 
     let check_bool_expr e locals =
@@ -266,21 +266,30 @@ let check (globals, functions, classes) =
       Failure ("return gives " ^ string_of_typ t ^ " expected " ^
             string_of_typ func.typ ^ " in " ^ string_of_expr e))
 
+      | StmtScope(block) ->
+        check_stmt block locals
         (* A block is correct if each statement is correct and nothing
             follows any Return statement.  Nested blocks are flattened. *)
       | Block sl ->
-          let rec check_stmt_list stmts locals = 
+          let rec check_stmt_list stmts locals =
             match stmts with
               [Return _ as s] -> [check_stmt s locals]
-            | Initialize (bd, None) :: ss -> 
+            | Initialize ((ClassT c, name), None) :: ss ->
+                if StringMap.mem c class_decls = false then raise (Failure (c ^" class " ^ "is undefined"))
+                else SInitialize((ClassT c, name), None) :: check_stmt_list ss (StringMap.add name (ClassT c) locals)
+            | Initialize (bd, None) :: ss ->
                 let (typ, name) = bd in
-                if StringMap.mem name locals = true 
-                          then raise (Failure ("cannot initialize " ^ name ^ " twice"))
-                          else SInitialize(bd, None) :: check_stmt_list ss (StringMap.add name typ locals)
-            | Initialize (bd, Some e) :: ss -> 
+                if StringMap.mem name locals = true
+                then raise (Failure ("cannot initialize " ^ name ^ " twice"))
+                else SInitialize(bd, None) :: check_stmt_list ss (StringMap.add name typ locals)
+            | Initialize ((ClassT c, name), Some e) :: ss ->
+                let se = expr locals e in
+                if StringMap.mem c class_decls = false then raise (Failure (c ^" class " ^ "is undefined"))
+                else SInitialize((ClassT c, name), None) :: check_stmt_list ss (StringMap.add name (ClassT c) locals)
+            | Initialize (bd, Some e) :: ss ->
                 let (typ, name) = bd in
                 let se = expr locals e in
-                if StringMap.mem name locals = true 
+                if StringMap.mem name locals = true
                           then raise (Failure ("cannot initialize " ^ name ^ " twice"))
                           else SInitialize(bd, Some se) :: check_stmt_list ss (StringMap.add name typ locals)
             | Return _ :: _   -> raise (Failure "nothing may follow a return")

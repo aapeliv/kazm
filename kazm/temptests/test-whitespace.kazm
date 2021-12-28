@@ -1,7 +1,0 @@
-/* Testing whitespace in kazm */ 
-
-int main() {
-  int x;
-  x     = 		15;
-  int_println(x);
-}

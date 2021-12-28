@@ -17,9 +17,9 @@ and sx =
   | SAssign of ref * sexpr
   | SCall of ref * sexpr list
   | SNoexpr
-  | SArrayLit of sexpr list
+  | SArrayLit of typ * sx list
   | SArrayAccess of string * sexpr
-  | SArrAssign of string * sexpr * sexpr
+  | SArrayAssign of string * sexpr * sexpr
 
 type sstmt =
     SBlock of sstmt list

@@ -14,7 +14,8 @@ import argparse
 
 parser = argparse.ArgumentParser(description="Kazm test runner")
 parser.add_argument("--last_failed", dest="last_failed", action="store_true")
-parser.set_defaults(last_failed=False)
+parser.add_argument("--select", dest="select")
+parser.set_defaults(last_failed=False, select="")
 args = parser.parse_args()
 
 # clean test build dir
@@ -84,6 +85,11 @@ if args.last_failed:
             print(red("No failed tests found"))
         else:
             tests = [test for test in tests if test[1] in lf_test_names]
+
+if args.select:
+    selected_tests = args.select.split(",")
+    tests = [test for test in tests if test[1] in selected_tests]
+    print(f"Selected only {len(tests)} tests.")
 
 print(f"Picked up {len(tests)} tests.")
 

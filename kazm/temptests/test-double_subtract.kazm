@@ -1,6 +1,0 @@
-int main(){
-	double x;
-	x = 3.14;
-	x = x - .02;
-	double_print(x);
-}

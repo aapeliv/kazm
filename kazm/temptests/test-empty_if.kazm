@@ -1,9 +1,0 @@
-/* Basic blocks without terminators are tricky, this might cause issues */
-void func() {
-  if (true) {}
-}
-
-int main() {
-  func();
-  return 0;
-}

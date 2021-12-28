@@ -13,7 +13,7 @@ open Ast
 %token IF ELSE FOR WHILE
 %token RETURN BREAK
 %token CLASS
-%token ARRAY 
+%token ARRAY
 %token TRUE FALSE
 
 %token<string> IDENTIFIER CLASS_IDENTIFIER
@@ -69,7 +69,7 @@ fdecl:
      { { typ = $1;
          fname = $2;
          formals = List.rev $4;
-         body = List.rev $7 } }
+         body = $7 } }
 
 // TO THINK: Order matters?
 cdecl:
@@ -93,20 +93,11 @@ mdecl:
      { { typ = $1;
          fname = $2;
          formals = List.rev $4;
-         body = List.rev $7 } }
+         body = $7 } }
 
 formals_opt:
     /* nothing */ { [] }
   | formal_list   { $1 }
-
-/* doesnt have a type yet */
-// constructor:
-//   CLASS_IDENTIFIER PAREN_L formals_opt PAREN_R BRACE_L var_decls stmts BRACE_R { {
-//       fname = $1;
-//       formals = List.rev $3;
-//       locals = List.rev $6;
-//       body = List.rev $7 } }
-
 
 formal_list:
     typ IDENTIFIER { [($1,$2)] }
@@ -120,7 +111,7 @@ typ:
   | DOUBLE { Double }
   | STRING { String }
   | CLASS_IDENTIFIER { ClassT($1) }
-  | ARRAY typ SQB_L INT_LITERAL SQB_R {Arr($2, $4)}
+  | ARRAY typ SQB_L INT_LITERAL SQB_R {ArrT($2, $4)}
 
 var_decls:
     { [] }
@@ -131,10 +122,11 @@ var_decl:
 
 stmts:
     { [] }
-  | stmts stmt { $2::$1 }
+  | stmts stmt { $1 @ [$2] }
 
 stmt:
     expr SEMI { Expr $1 }
+  | scope { $1 }
   | return_stmt SEMI { $1 }
   | break_stmt SEMI { $1 }
   | if_stmt { $1 }
@@ -142,8 +134,11 @@ stmt:
   | for_stmt { $1 }
   | var_decl_stmt SEMI { $1 }
 
+scope:
+    BRACE_L block_stmt BRACE_R { StmtScope($2) }
+
 block_stmt:
-    BRACE_L stmts BRACE_R { Block(List.rev $2) }
+    stmts { Block($1) }
 
 return_stmt:
     RETURN expr { Return $2 }
@@ -153,14 +148,14 @@ break_stmt:
     BREAK { Break }
 
 if_stmt:
-    IF PAREN_L expr PAREN_R BRACE_L stmts BRACE_R ELSE BRACE_L stmts BRACE_R { If($3, Block(List.rev $6), Block(List.rev $10)) }
-  | IF PAREN_L expr PAREN_R BRACE_L stmts BRACE_R { If($3, Block(List.rev $6), Block([])) }
+    IF PAREN_L expr PAREN_R scope ELSE scope { If($3, $5, $7) }
+  | IF PAREN_L expr PAREN_R scope { If($3, $5, Block([])) }
 
 while_stmt:
-    WHILE PAREN_L expr PAREN_R BRACE_L stmts BRACE_R { While($3, Block(List.rev $6)) }
+    WHILE PAREN_L expr PAREN_R scope { While($3, $5) }
 
 for_stmt:
-    FOR PAREN_L expr SEMI expr SEMI expr PAREN_R BRACE_L stmts BRACE_R { For($3, $5, $7, Block(List.rev $10)) }
+    FOR PAREN_L expr SEMI expr SEMI expr PAREN_R scope { For($3, $5, $7, $9) }
 
 var_decl_stmt:
     typ IDENTIFIER { Initialize(($1, $2), None) }
@@ -190,26 +185,17 @@ expr:
   | MINUS expr %prec NOT { Unop(Neg, $2)      }
   | PAREN_L expr PAREN_R { $2 }
   | fq_identifier ASSIGN expr { Assign($1, $3) }
-  | fq_identifier PAREN_L args_opt PAREN_R { Call($1, $3) }
+  | fq_identifier PAREN_L expr_list PAREN_R { Call($1, $3) }
   | fq_identifier      { Id($1) }
-  | SQB_L args_opt SQB_R { ArrayLit($2) }
+  | SQB_L expr_list SQB_R { ArrayLit($2) }
   | IDENTIFIER SQB_L expr SQB_R { ArrayAccess($1, $3) }
-  | IDENTIFIER SQB_L expr SQB_R ASSIGN expr { ArrAssign($1, $3, $6) }
+  | IDENTIFIER SQB_L expr SQB_R ASSIGN expr { ArrayAssign($1, $3, $6) }
 
 fq_identifier:
     IDENTIFIER { [$1] }
   | IDENTIFIER DOT IDENTIFIER { $1::$3::[] }
 
-args_opt:
-    /* nothing */ { [] }
-  | args_list     { List.rev $1 }
-
-args_list:
-    expr                    { [$1] }
-  | args_list COMMA expr { $3 :: $1 }
-
 expr_list:
     { [] }
-  | expr_list COMMA expr { $3::$1 }
-  | expr { $1::[] }
-
+  | expr_list COMMA expr { $1 @ [$3] }
+  | expr { [$1] }

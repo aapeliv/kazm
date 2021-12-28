@@ -1,0 +1,13 @@
+int main() {
+  int x;
+  int y;
+
+  if ( 5 < 10){
+    println("pass");
+  }
+  x = 10;
+  y = 20;
+  if (x < y){
+    println("pass");
+  }
+}

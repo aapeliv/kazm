@@ -1,0 +1,11 @@
+int main() {
+  bool a;
+  bool b;
+  a = false;
+  b = true;
+  if (a || b){
+    println("pass");
+  } else {
+    println("fail");
+  }
+}

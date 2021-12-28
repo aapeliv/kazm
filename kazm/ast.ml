@@ -4,7 +4,7 @@ type op = Add | Sub | Mult | Div | Equal | Neq | Less | Leq | Greater | Geq |
 type uop = Neg | Not
 
 type class_t = string
-type typ = Int | Bool | Double | Void | String | Char | Float | ClassT of class_t | Arr of typ * int
+type typ = Int | Bool | Double | Void | String | Char | Float | ClassT of class_t | ArrT of typ * int
 type bind = typ * string
 
 type ref = string list
@@ -23,10 +23,11 @@ type expr =
   | Noexpr
   | ArrayLit of expr list
   | ArrayAccess of string * expr
-  | ArrAssign of string * expr * expr
+  | ArrayAssign of string * expr * expr
 
 type stmt =
     Block of stmt list
+  | StmtScope of stmt
   | Expr of expr
   | Return of expr
   | If of expr * stmt * stmt
@@ -80,8 +81,8 @@ let string_of_typ = function
   | String -> "string"
   | Char -> "char"
   | ClassT(name) -> "class " ^ name
-  | Arr(t, l) -> "array"
-  
+  | ArrT(t, l) -> "array"
+
 let rec string_of_expr = function
     Literal(l) -> string_of_int l
   | Dliteral(l) -> l
@@ -103,6 +104,8 @@ let rec string_of_expr = function
 let rec string_of_stmt = function
     Block(stmts) ->
       "{\n" ^ String.concat "" (List.map string_of_stmt stmts) ^ "}\n"
+  | StmtScope(stmt) ->
+    string_of_stmt stmt
   | Expr(expr) -> string_of_expr expr ^ ";\n";
   | Return(expr) -> "return " ^ string_of_expr expr ^ ";\n";
   | EmptyReturn -> "return;\n";

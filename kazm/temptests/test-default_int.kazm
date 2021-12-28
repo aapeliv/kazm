@@ -1,4 +1,0 @@
-int main() {
-	int x;
-	int_println(x);
-}

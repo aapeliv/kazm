@@ -1,9 +1,0 @@
-void takes_int(int arg) {
-  int_println(arg);
-}
-
-int main() {
-  // give it a double
-  takes_int(3.14);
-  return 0;
-}

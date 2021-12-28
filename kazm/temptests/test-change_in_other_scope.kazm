@@ -1,9 +1,0 @@
-int main() {
-  int a;
-  a = 0;
-  int_println(a);
-  if (true) {
-    a = 5;
-  }
-  int_println(a);
-}

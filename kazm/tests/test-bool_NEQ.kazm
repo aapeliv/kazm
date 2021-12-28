@@ -1,0 +1,10 @@
+int main() {
+  bool x;
+  bool y;
+  x = !x;
+  if (y != x){
+    println("pass");
+  } else {
+    println("fail");
+  }
+}

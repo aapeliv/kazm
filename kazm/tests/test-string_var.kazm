@@ -1,0 +1,8 @@
+/* Test STring variable */
+
+int main() {
+  string a;
+  a = "hi";
+  a = "world";
+  println(a);
+}
