@@ -1,0 +1,17 @@
+class Class1 {
+  int a;
+};
+
+class Class2 {
+  int b;
+
+  int add_to_c1(Class1 c1) {
+    return me.b + c1.a;
+  }
+};
+
+int main() {
+  Class1 c1; c1.a = 40;
+  Class2 c2; c2.b = 2;
+  int_println(c2.add_to_c1(c1));
+}
