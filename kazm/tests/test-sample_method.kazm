@@ -1,0 +1,16 @@
+class Example {
+  int a; double b;
+
+  void print_b() { double_println(me.b); }
+  int add_with_a(int number) {
+    return me.a + number;
+  }
+};
+
+double get_b(Example e) { return e.b; }
+
+int main() {
+  Example ex; ex.a = 3; ex.b = 7.;
+  int_println(ex.add_with_a(10)); // 13
+  double_println(get_b(ex)); // 7.000000
+}
