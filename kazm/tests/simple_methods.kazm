@@ -17,8 +17,8 @@ class StructWithMethods {
 
 int main() {
   StructWithMethods s;
-  s.x = 5;
+  s.x = 4;
   s.y = 6;
   int_println(s.getX());
-  s.print6();
+  s.printY();
 }
