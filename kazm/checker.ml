@@ -236,7 +236,8 @@ let check (globals, functions, classes) =
           else (* check if type of v is array *)
             let v_ty = type_of_identifier v locals in 
             let e_ty = match v_ty with 
-                Arr(t, l) -> t 
+                Arr(t, l) -> if e >= Literal(l) || e < Literal(0) then raise(Failure("Array (" ^ v ^") index (" ^ 
+                string_of_expr e ^ ") out of bounds (" ^ string_of_int l ^")")) else t
               | _ -> raise(Failure("Wrong type of variable in array assign"))
             in 
             let (typ'', sx'') = expr locals e2 in 
@@ -245,7 +246,7 @@ let check (globals, functions, classes) =
         let v_ty = type_of_identifier name locals in
         let e_ty = match v_ty with 
             Arr(t, l) -> t
-          | _ -> raise(Failure("Wrong type of variable in array length"))
+          | _ -> raise(Failure("Must call .length on an array. " ^ name ^ " is not an array"))
         in 
         (e_ty, SArrayLength(name))
     in
@@ -284,9 +285,19 @@ let check (globals, functions, classes) =
                 if StringMap.mem name locals = true 
                           then raise (Failure ("cannot initialize " ^ name ^ " twice"))
                           else SInitialize(bd, None) :: check_stmt_list ss (StringMap.add name typ locals)
-            | Initialize (bd, Some e) :: ss -> 
+            | Initialize (bd, Some e) :: ss -> (* come back for array *)
                 let (typ, name) = bd in
                 let se = expr locals e in
+                let typ' = match typ with
+                    Arr(t, l) -> 
+                    let e' = match e with 
+                      ArrayLit(ex) -> ex 
+                    | _ -> raise(Failure(""))
+                    in 
+                    if (List.length e') != l then raise(Failure("Array (" ^ name ^ ") " ^
+                    "declared with length (" ^ string_of_int l ^") but init with length (" ^ string_of_int (List.length e') ^")" )) else t
+                  | _ -> Int
+                in 
                 if StringMap.mem name locals = true 
                           then raise (Failure ("cannot initialize " ^ name ^ " twice"))
                           else SInitialize(bd, Some se) :: check_stmt_list ss (StringMap.add name typ locals)
