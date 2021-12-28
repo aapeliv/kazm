@@ -155,6 +155,7 @@ for filename, name, out_file, run_err_file, compile_err_file in tests:
             output = stderr
             raise TestFailed("failed to link")
         # actually run the code
+        print(f" Running '{name}'...")
         code, stdout, stderr = run([ex_file])
         if code == 0:
             if not out_file.exists():
