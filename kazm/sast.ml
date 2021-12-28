@@ -19,7 +19,7 @@ and sx =
   | SNoexpr
   | SArrayLit of typ * sx list
   | SArrayAccess of string * sexpr
-  | SArrAssign of string * sexpr * sexpr
+  | SArrayAssign of string * sexpr * sexpr
 
 type sstmt =
     SBlock of sstmt list

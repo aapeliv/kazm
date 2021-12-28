@@ -228,7 +228,7 @@ let check (globals, functions, classes) =
                 string_of_expr e ^ ") out of bounds (" ^ string_of_int l ^")")) else t (* we take only the type because that's what's needed for printing *)
             | _ -> raise(Failure("Wrong type of variable in array access"))
             in (e_ty, SArrayAccess(v, (typ', sx')))
-      | ArrAssign(v, e1, e2) as arrassign -> (* array name array index value to be assigned *)
+      | ArrayAssign(v, e1, e2) -> (* array name array index value to be assigned *)
         (* check if type of e1 is int *)
         let (typ', sx') = expr locals e1 in
           if typ' != Int
@@ -240,7 +240,7 @@ let check (globals, functions, classes) =
               | _ -> raise(Failure("Wrong type of variable in array assign"))
             in
             let (typ'', sx'') = expr locals e2 in
-            (e_ty, SArrAssign(v, (typ', sx'), (typ'', sx'')))
+            (e_ty, SArrayAssign(v, (typ', sx'), (typ'', sx'')))
     in
 
     let check_bool_expr e locals =

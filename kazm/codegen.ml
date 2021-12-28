@@ -244,7 +244,7 @@ let gen (bind_list, sfunction_decls, sclass_decls) =
       let elt = L.build_gep arr [| pos |] "acceltptr" builder in
       (ctx'', L.build_load elt "accelt" builder)
       (* I'm worried about ctx and builder *)
-    | SArrAssign (s, e1, e2) ->
+    | SArrayAssign (s, e1, e2) ->
       let (ctx', ind) = codegen_expr ctx e1 in
       let (ty, _) = e1 in
       let pos = L.build_add ind (L.const_int i32_t 0) "accpos" builder in

@@ -185,7 +185,7 @@ expr:
   | fq_identifier      { Id($1) }
   | SQB_L expr_list SQB_R { ArrayLit($2) }
   | IDENTIFIER SQB_L expr SQB_R { ArrayAccess($1, $3) }
-  | IDENTIFIER SQB_L expr SQB_R ASSIGN expr { ArrAssign($1, $3, $6) }
+  | IDENTIFIER SQB_L expr SQB_R ASSIGN expr { ArrayAssign($1, $3, $6) }
 
 fq_identifier:
     IDENTIFIER { [$1] }

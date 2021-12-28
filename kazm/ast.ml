@@ -23,7 +23,7 @@ type expr =
   | Noexpr
   | ArrayLit of expr list
   | ArrayAccess of string * expr
-  | ArrAssign of string * expr * expr
+  | ArrayAssign of string * expr * expr
 
 type stmt =
     Block of stmt list
