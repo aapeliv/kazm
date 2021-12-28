@@ -236,7 +236,8 @@ let check (globals, functions, classes) =
           else (* check if type of v is array *)
             let v_ty = type_of_identifier v locals in
             let e_ty = match v_ty with
-                ArrT(t, l) -> t
+                ArrT(t, l) -> if e >= Literal(l) || e < Literal(0) then raise(Failure("Array (" ^ v ^") index (" ^ 
+                string_of_expr e ^ ") out of bounds (" ^ string_of_int l ^")")) else t
               | _ -> raise(Failure("Wrong type of variable in array assign"))
             in
             let (typ'', sx'') = expr locals e2 in
@@ -289,9 +290,12 @@ let check (globals, functions, classes) =
             | Initialize (bd, Some e) :: ss ->
                 let (typ, name) = bd in
                 let se = expr locals e in
-                if StringMap.mem name locals = true
-                          then raise (Failure ("cannot initialize " ^ name ^ " twice"))
-                          else SInitialize(bd, Some se) :: check_stmt_list ss (StringMap.add name typ locals)
+                let (typ', sx') = se in 
+                if typ <> typ' then raise (Failure ("initialize: variable and value to be assigned of different types"))
+                else 
+                  (if StringMap.mem name locals = true
+                            then raise (Failure ("cannot initialize " ^ name ^ " twice"))
+                            else SInitialize(bd, Some se) :: check_stmt_list ss (StringMap.add name typ locals))
             | Return _ :: _   -> raise (Failure "nothing may follow a return")
             | Block sl :: ss  -> check_stmt_list (sl @ ss) locals (* Flatten blocks *)
             | s :: ss         -> check_stmt s locals :: check_stmt_list ss locals

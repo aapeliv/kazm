@@ -460,6 +460,30 @@ let gen (bind_list, sfunction_decls, sclass_decls) =
             let var = L.build_alloca (typ_to_t vtyp) name builder in
             ignore (L.build_store e' var builder);
             Ctx(builder, add_var sp name var vtyp)
+        | A.Int ->  
+          let var = L.build_alloca (typ_to_t vtyp) name builder in
+          let ctx = Ctx(builder, add_var sp name var vtyp) in
+          let (ctx', e') = codegen_expr ctx e in
+          ignore (L.build_store e' var builder);
+          ctx'
+        | A.Double ->  
+            let var = L.build_alloca (typ_to_t vtyp) name builder in
+            let ctx = Ctx(builder, add_var sp name var vtyp) in
+            let (ctx', e') = codegen_expr ctx e in
+            ignore (L.build_store e' var builder);
+            ctx'
+        | A.Bool ->  
+            let var = L.build_alloca (typ_to_t vtyp) name builder in
+            let ctx = Ctx(builder, add_var sp name var vtyp) in
+            let (ctx', e') = codegen_expr ctx e in
+            ignore (L.build_store e' var builder);
+            ctx'
+        | A.String -> 
+          let var = L.build_alloca (typ_to_t vtyp) name builder in
+          let ctx = Ctx(builder, add_var sp name var vtyp) in
+          let (ctx', e') = codegen_expr ctx e in
+          ignore (L.build_store e' var builder);
+          ctx'
         | _ -> raise(Failure("SInitialize: TODO"))
         )
 
