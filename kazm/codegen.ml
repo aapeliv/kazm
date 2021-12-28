@@ -46,6 +46,7 @@ let gen (bind_list, sfunction_decls, sclass_decls) =
     | A.ClassT(name) ->
       let cls_t = SMap.find name cls_ts in
       L.pointer_type cls_t
+    | A.Char -> i8_t
     | A.ArrT(ty, _) -> L.pointer_type (typ_to_t ty)
   in
 
@@ -112,6 +113,7 @@ let gen (bind_list, sfunction_decls, sclass_decls) =
   let all_funcs = add_func_decl all_funcs "int_println" void_t [i32_t] in
   let all_funcs = add_func_decl all_funcs "double_print" void_t [double_t] in
   let all_funcs = add_func_decl all_funcs "double_println" void_t [double_t] in
+  let all_funcs = add_func_decl all_funcs "char_println" void_t [i8_t] in
   let all_funcs = add_func_decl all_funcs "next_int" i32_t [] in
 
   (* Codegen function definitions *)

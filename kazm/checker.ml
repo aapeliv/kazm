@@ -42,7 +42,8 @@ let check (globals, functions, classes) =
                                ("int_print", Int);
                                ("int_println", Int);
                                ("double_print", Double);
-                               ("double_println", Double)]
+                               ("double_println", Double);
+                               ("char_println", Char)]
   in
 
   (* Add function name to symbol table *)
@@ -265,8 +266,7 @@ let check (globals, functions, classes) =
         Expr e -> SExpr (expr locals e)
       | Initialize (_, _) -> raise (Failure ("Initialize stmts are inside Block."))
       | If(p, b1, b2) -> SIf(check_bool_expr p locals, check_stmt b1 locals, check_stmt b2 locals)
-      | For(e1, e2, e3, st) ->
-      SFor(expr locals e1, check_bool_expr e2 locals, expr locals e3, check_stmt st locals)
+      | For(e1, e2, e3, st) -> check_stmt (Block([Expr(e1); While(e2, Block([st; Expr(e3)]))])) locals
       | While(p, s) -> SWhile(check_bool_expr p locals, check_stmt s locals)
       | EmptyReturn -> SEmptyReturn
       | Break -> SBreak

@@ -1,0 +1,6 @@
+int main() {
+  int j;
+  for (j = 2; j <= 5; j = j + 1) {
+    int_println(j);
+  }
+}
