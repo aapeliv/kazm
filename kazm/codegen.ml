@@ -14,6 +14,8 @@ let gen (bind_list, sfunction_decls, sclass_decls) =
   let context = L.global_context () in
   let m = L.create_module context "kazm" in
 
+  let mangle_method_name cname mname = cname ^ "__" ^ mname in
+
   (* Set up types in the context *)
   let i1_t = L.i1_type context in
   let i8_t = L.i8_type context in
@@ -34,12 +36,29 @@ let gen (bind_list, sfunction_decls, sclass_decls) =
     | A.Double -> double_t
   in
 
+  (* Codegen function definitions *)
+  let get_func_sig func =
+    let ret_t = typ_to_t_TODO_WITHOUT_CLASSES func.styp in
+    let arg_types = List.map (fun sformal -> typ_to_t_TODO_WITHOUT_CLASSES (fst sformal)) func.sformals in
+    (ret_t, arg_types)
+  in
+
   let codegen_class_decl map cls =
     let name = cls.scname in
-    let arg_ts = List.map (fun v -> typ_to_t_TODO_WITHOUT_CLASSES (fst v)) cls.scvars in
+    let member_ts = List.map (fun v -> typ_to_t_TODO_WITHOUT_CLASSES (fst v)) cls.scvars in
     let cls_t = L.named_struct_type context name in
-    ignore (L.struct_set_body cls_t (Array.of_list arg_ts) false);
-    SMap.add name (cls, cls_t) map
+    let add_method map mthd =
+      let mname = mthd.sfname in
+      let mangled_name = mangle_method_name name mname in
+      let (ret_t, arg_ts) = get_func_sig mthd in
+      let me_t = L.pointer_type cls_t in
+      let func_t = L.function_type ret_t (Array.of_list (me_t::arg_ts)) in
+      let func_def = L.define_function mangled_name func_t m in
+      SMap.add mname (mthd, mangled_name, func_def) map
+    in
+    let mthds = List.fold_left add_method SMap.empty cls.scmethods in
+    ignore (L.struct_set_body cls_t (Array.of_list member_ts) false);
+    SMap.add name (cls, cls_t, mthds) map
   in
 
   let all_classes = List.fold_left codegen_class_decl SMap.empty sclass_decls in
@@ -51,7 +70,9 @@ let gen (bind_list, sfunction_decls, sclass_decls) =
     | A.Int -> i32_t
     | A.String -> string_t
     | A.Double -> double_t
-    | A.ClassT(name) -> L.pointer_type (snd (SMap.find name all_classes))
+    | A.ClassT(name) ->
+      let (cls, cls_t, mthds) = SMap.find name all_classes in
+      L.pointer_type cls_t
     | A.ArrT(ty, _) -> L.pointer_type (typ_to_t_TODO_WITHOUT_CLASSES ty)
   in
 
@@ -95,19 +116,11 @@ let gen (bind_list, sfunction_decls, sclass_decls) =
 
   (* Codegen function definitions *)
   let codegen_func_sig all_funcs func =
-    let arg_types = List.map (fun sformal -> typ_to_t (fst sformal)) func.sformals in
-    add_func_def all_funcs func.sfname (typ_to_t func.styp) arg_types
+    let (ret_t, arg_ts) = get_func_sig func in
+    add_func_def all_funcs func.sfname ret_t arg_ts
   in
 
   let all_funcs = List.fold_left codegen_func_sig all_funcs sfunction_decls in
-
-  let codegen_class_method map cls =
-    let name = cls.scname in
-    let methods_map = List.fold_left codegen_func_sig SMap.empty cls.scmethods in
-    SMap.add name methods_map map
-  in
-
-  let all_methods = List.fold_left codegen_class_method SMap.empty sclass_decls in
 
   let new_scope ctx =
     let Ctx(_, parent_scope) = ctx in
@@ -156,7 +169,7 @@ let gen (bind_list, sfunction_decls, sclass_decls) =
       (* Get info about the variable *)
       let (cval, ClassT(cname)) = find_var scope hd in
       (* Get info about the class *)
-      let (cls, cls_t) = SMap.find cname all_classes in
+      let (cls, cls_t, mthds) = SMap.find cname all_classes in
       (* Members names with indexes *)
       let mems = List.mapi (fun ix v -> (ix, snd v)) cls.scvars in
       (* Filter out the members that have the same name as the sought after member (there should only be 1) *)
@@ -185,19 +198,21 @@ let gen (bind_list, sfunction_decls, sclass_decls) =
     let Ctx(builder, sp) = ctx in
     match e with
     (* Function call *)
-      SCall(ref, exprs) -> (match ref with
-                            fname :: [] ->
-                                let (ctx', args) = Future.fold_left_map codegen_expr ctx exprs in
-                                let ex = L.build_call (SMap.find fname all_funcs) (Array.of_list args) "" builder in
-                                (ctx', ex)
-                          | s :: methodname :: [] ->
-                                let (ctx', args) = Future.fold_left_map codegen_expr ctx exprs in
-                                let (l, typ) = find_var sp s in
-                                let A.ClassT(cname) = typ in
-                                let methodmap = SMap.find cname all_methods in
-                                let ex = L.build_call (SMap.find methodname methodmap) (Array.of_list args) "" builder in
-                                (ctx', ex)
-                          | _ -> raise (Failure("codegen_expr SCall:cannot be other patterns")))
+      SCall(ref, exprs) ->
+        let (ctx', args) = Future.fold_left_map codegen_expr ctx exprs in
+        let ex = match ref with
+        | fname :: [] ->
+          L.build_call (SMap.find fname all_funcs) (Array.of_list args) "" builder
+        | cvar :: methodname :: [] ->
+          let (var, typ) = find_var sp cvar in
+          let A.ClassT(cname) = typ in
+          let (cls, cls_t, mthds) = SMap.find cname all_classes in
+          let (mthd, mangled_name, fn) = SMap.find methodname mthds in
+          let me = L.build_load var "me" builder in
+          L.build_call fn (Array.of_list (me::args)) "" builder
+      | _ -> raise (Failure("codegen_expr SCall:cannot be other patterns"))
+        in
+    (ctx', ex)
     (* New bool literal *)
     | SBoolLit(value) -> (ctx, L.const_int i1_t (if value then 1 else 0))
     (* New 32-bit integer literal *)
@@ -302,7 +317,7 @@ let gen (bind_list, sfunction_decls, sclass_decls) =
 
   let build_class_alloc cname name builder =
     (* Class info *)
-    let (cls, cls_t) = SMap.find cname all_classes in
+    let (cls, cls_t, mthds) = SMap.find cname all_classes in
     (* A pointer to the right struct *)
     let ptr_var = L.build_alloca (L.pointer_type cls_t) name builder in
     (* Malloc the memory *)
@@ -320,18 +335,7 @@ let gen (bind_list, sfunction_decls, sclass_decls) =
   in
 
   (* Codegen for function body *)
-  let gen_func func =
-    (* let A.Func(bind, body) = func in *)
-    (* let A.Bind(typ, name) = bind in *)
-    let body =  func.sbody in
-    let typ = func.styp in
-    let name = func.sfname in
-    let formals = func.sformals in
-    (* Defines the func *)
-    let fn = try SMap.find name all_funcs
-             with Not_found -> let methodmap = SMap.find "StructWithMethods" all_methods in
-                                (SMap.find name methodmap)in
-
+  let raw_gen_func body typ name formals fn =
     (* Codegen for a statement *)
     (* Takes ctx and statement and returns a ctx *)
     let fn_builder = L.builder_at_end context (L.entry_block fn) in
@@ -514,8 +518,28 @@ let gen (bind_list, sfunction_decls, sclass_decls) =
     ignore (build_scope_exit ctx');
     ignore (add_terminator ctx' (build_default_return typ))
   in
-  let all_funcs_methods =
-      (List.fold_left (fun lst cls -> cls.scmethods @ sfunction_decls) sfunction_decls sclass_decls)
+
+  let gen_func func =
+    let body = func.sbody in
+    let typ = func.styp in
+    let name = func.sfname in
+    let formals = func.sformals in
+    let fn = SMap.find name all_funcs in
+    raw_gen_func body typ name formals fn
   in
-  ignore (List.map gen_func all_funcs_methods);
+
+  let gen_methods cname (cls, cls_t, mthds) =
+    let gen_method name (mthd, mangled_name, fn) =
+      let body = mthd.sbody in
+      let typ = mthd.styp in
+      let me_formal = (A.ClassT(cname), "me") in
+      let formals = me_formal :: mthd.sformals in
+      raw_gen_func body typ mangled_name formals fn
+    in
+    SMap.iter gen_method mthds
+  in
+
+  ignore (List.map gen_func sfunction_decls);
+  ignore (SMap.iter gen_methods all_classes);
+
   m

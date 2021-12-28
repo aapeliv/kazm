@@ -321,6 +321,6 @@ let check (globals, functions, classes) =
   let check_class cls =
     { scname = cls.cname;
       scvars = cls.cvars;
-      scmethods = List.map (check_function cls.cvars) cls.cmethods;}
+      scmethods = List.map (check_function ((ClassT(cls.cname), "me")::cls.cvars)) cls.cmethods;}
   in
   (globals, List.map (check_function []) functions, List.map check_class classes)
