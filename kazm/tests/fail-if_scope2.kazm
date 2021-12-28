@@ -1,0 +1,8 @@
+int main() {
+  if (false) {
+    int a;
+    a = 5;
+  } else {
+    int_println(a);
+  }
+}
