@@ -52,7 +52,7 @@ let gen (bind_list, sfunction_decls, sclass_decls) =
     | A.String -> string_t
     | A.Double -> double_t
     | A.ClassT(name) -> L.pointer_type (snd (SMap.find name all_classes))
-    | A.Arr(ty,_) -> L.pointer_type (typ_to_t_TODO_WITHOUT_CLASSES ty)
+    | A.ArrT(ty, _) -> L.pointer_type (typ_to_t_TODO_WITHOUT_CLASSES ty)
   in
 
   let codegen_func_decl name ret_t arg_ts =
@@ -219,28 +219,23 @@ let gen (bind_list, sfunction_decls, sclass_decls) =
       let var = find_fq_var builder sp fqn in
       ignore (L.build_store e' var builder);
       (ctx, e')
-    | SArrayLit arr   -> 
+    | SArrayLit(arr_t, exs) ->
       (* arr: sexpr list = typ * sx list *)
-      let len = L.const_int i32_t (List.length arr) in (* array length *)
-      let size = L.const_int i32_t ((List.length arr) + 1) in (* including null terminator *)
-      let (fst_t, _) = List.hd arr in 
-      let ty = typ_to_t (A.Arr(fst_t, (List.length arr))) in
+      let size = L.const_int i32_t (List.length exs) in
+      let ty = typ_to_t (A.ArrT(arr_t, 0)) in
       (* allocate memory for array *)
-      let arr_alloca = L.build_array_alloca ty size "arr" builder in
+      let arr_alloca = L.build_array_alloca ty size "array_literal" builder in
       (* bitcast -- pointer-to-int *)
-      let arr_ptr = L.build_pointercast arr_alloca ty "arrptr" builder in 
-      (* store all elements *)
-      let elts = List.map (codegen_expr ctx) arr in (* now arr is (ctx * sexpr) list *)
-      let store_elt ind elt = 
-        let (ctx', elt') = elt in 
-        let pos = L.const_int i32_t (ind) in
-          let elt_ptr = L.build_gep arr_ptr [| pos |] "arrelt" builder in
-        ignore(L.build_store elt' elt_ptr builder)
-      in List.iteri store_elt elts;
-      let elt_ptr = L.build_gep arr_ptr [| len |] "arrlast" builder in
-      let null_elt = L.const_null (L.element_type ty) in
-      ignore(L.build_store null_elt elt_ptr builder);
-      (ctx, arr_ptr)
+      let arr_ptr = L.build_pointercast arr_alloca ty "array_ptr" builder in 
+      (* store an element in slot `ix` and pass off context to the next one *)
+      let store_el (ctx, ix) el =
+        let (ctx', gex) = codegen_expr ctx (arr_t, el) in
+        let element_ptr = L.build_gep arr_ptr [|  (L.const_int i32_t ix) |] "array_el" builder in
+        ignore (L.build_store gex element_ptr builder);
+        (ctx', ix + 1)
+      in
+      let (ctx', _) = List.fold_left store_el (ctx, 0) exs in
+      (ctx', arr_ptr)
     | SArrayAccess (s, e) -> 
       let (ctx', ind) = codegen_expr ctx e in 
       let (ty, _) = e in (* e is sexpr which is typ * sx so we retrieve the Ast typ *)
@@ -412,13 +407,13 @@ let gen (bind_list, sfunction_decls, sclass_decls) =
                             let (ctx', e') = codegen_expr ctx (A.String, SStringLit "") in
                             ignore (L.build_store e' var fn_builder);
                             ctx'
-            | A.Arr(t, l) -> 
-              let arr_e = (match t with 
-                    A.Int -> List.map (fun x -> (A.Int, SLiteral(0))) (List.init l (fun x -> 0))
-                  | A.Bool -> List.map (fun x -> (A.Bool, SBoolLit(false))) (List.init l (fun x -> 1))
-                  | A.Double -> List.map (fun x -> (A.Double, SDliteral("0.0"))) (List.init l (fun x -> 0.0))
+            | A.ArrT(t, l) -> 
+              let arr_lit = (match t with 
+                    A.Int -> SArrayLit(A.Int, List.init l (fun x -> SLiteral(0)))
+                  | A.Bool -> SArrayLit(A.Bool, List.init l (fun x -> SBoolLit(false)))
+                  | A.Double -> SArrayLit(A.Double, List.init l (fun x -> SDliteral("0.0")))
                 ) in 
-              let e = (A.Arr(t, l), SArrayLit(arr_e)) in
+              let e = (A.ArrT(t, l), arr_lit) in
               let (ctx', e') = codegen_expr ctx e in 
               let var = L.build_alloca (typ_to_t vtyp) name builder in
               ignore (L.build_store e' var builder); 
@@ -427,7 +422,7 @@ let gen (bind_list, sfunction_decls, sclass_decls) =
                     Ctx(builder, add_var sp name var vtyp))
       | SInitialize((vtyp, name), Some e) -> 
         (match vtyp with 
-          A.Arr(t, l) -> (* type * length *) (* e will be an ArrayLit *)
+          A.ArrT(t, l) -> (* type * length *) (* e will be an ArrayLit *)
             let (ctx', e') = codegen_expr ctx e in 
             let var = L.build_alloca (typ_to_t vtyp) name builder in
             ignore (L.build_store e' var builder); 

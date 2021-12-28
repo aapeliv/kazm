@@ -1,1 +1,1 @@
-Should be a checker error
+Fatal error: exception Failure("Types in array literal must all match")

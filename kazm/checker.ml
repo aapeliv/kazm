@@ -204,10 +204,17 @@ let check (globals, functions, classes) =
             in
             let args' = List.map2 check_call fd.formals args
             in (fd.typ, SCall(ref, args'))
-      | ArrayLit(values) -> 
-        let array_body = List.map (expr locals) values in 
-        let array_t, _ = List.hd array_body in 
-        (Arr (array_t, List.length values), SArrayLit(array_body))
+      | ArrayLit(values) ->
+        let array_body = List.map (expr locals) values in
+        (* Type of first element in array *)
+        let array_t, _ = List.hd array_body in
+        let type_check el =
+          let el_t = fst el in
+          if el_t != array_t then raise (Failure ("Types in array literal must all match")) else ()
+        in
+        (* Check all the types match *)
+        ignore (List.map type_check array_body);
+        (ArrT(array_t, List.length values), SArrayLit(array_t, List.map snd array_body))
       | ArrayAccess(v, e) -> (* array name and array index *)
         (* check if type of e is an int *)
         let (typ', sx') = expr locals e in 
@@ -216,7 +223,7 @@ let check (globals, functions, classes) =
           else 
             let v_ty = type_of_identifier v locals in 
             let e_ty = match v_ty with 
-              Arr(t, l) -> 
+              ArrT(t, l) -> 
                 if e >= Literal(l) || e < Literal(0) then raise(Failure("Array (" ^ v ^") index (" ^ 
                 string_of_expr e ^ ") out of bounds (" ^ string_of_int l ^")")) else t (* we take only the type because that's what's needed for printing *)
             | _ -> raise(Failure("Wrong type of variable in array access"))
@@ -229,7 +236,7 @@ let check (globals, functions, classes) =
           else (* check if type of v is array *)
             let v_ty = type_of_identifier v locals in 
             let e_ty = match v_ty with 
-                Arr(t, l) -> t 
+                ArrT(t, l) -> t 
               | _ -> raise(Failure("Wrong type of variable in array assign"))
             in 
             let (typ'', sx'') = expr locals e2 in 

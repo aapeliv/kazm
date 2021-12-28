@@ -4,7 +4,7 @@ type op = Add | Sub | Mult | Div | Equal | Neq | Less | Leq | Greater | Geq |
 type uop = Neg | Not
 
 type class_t = string
-type typ = Int | Bool | Double | Void | String | Char | Float | ClassT of class_t | Arr of typ * int
+type typ = Int | Bool | Double | Void | String | Char | Float | ClassT of class_t | ArrT of typ * int
 type bind = typ * string
 
 type ref = string list
@@ -80,7 +80,7 @@ let string_of_typ = function
   | String -> "string"
   | Char -> "char"
   | ClassT(name) -> "class " ^ name
-  | Arr(t, l) -> "array"
+  | ArrT(t, l) -> "array"
   
 let rec string_of_expr = function
     Literal(l) -> string_of_int l
