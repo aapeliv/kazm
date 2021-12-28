@@ -236,7 +236,7 @@ let check (globals, functions, classes) =
           else (* check if type of v is array *)
             let v_ty = type_of_identifier v locals in
             let e_ty = match v_ty with
-                ArrT(t, l) -> if e >= Literal(l) || e < Literal(0) then raise(Failure("Array (" ^ v ^") index (" ^ 
+                ArrT(t, l) -> if e1 >= Literal(l) || e1 < Literal(0) then raise(Failure("Array (" ^ v ^") index (" ^ 
                 string_of_expr e ^ ") out of bounds (" ^ string_of_int l ^")")) else t
               | _ -> raise(Failure("Wrong type of variable in array assign"))
             in
