@@ -1,5 +1,5 @@
 int main() {
-	double x;
-	x = -3.14;
-	double_println(x);
+  double x;
+  x = -3.14;
+  double_println(x);
 }

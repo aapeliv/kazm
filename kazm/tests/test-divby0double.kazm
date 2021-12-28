@@ -1,11 +1,11 @@
 int main() {
-	double x;
-	double y;
-	double z;
-	y = 3.14;
-	z = y/x;
-	// This returns inf if x is initialized to be 0.000000
-	double_println(z);
-	// This expr can be semantically checked. The denominator is simply 0.0 instead of a variable.
-	y / 0.0;
+  double x;
+  double y;
+  double z;
+  y = 3.14;
+  z = y/x;
+  // This returns inf if x is initialized to be 0.000000
+  double_println(z);
+  // This expr can be semantically checked. The denominator is simply 0.0 instead of a variable.
+  y / 0.0;
 }

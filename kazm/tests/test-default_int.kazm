@@ -1,4 +1,4 @@
 int main() {
-	int x;
-	int_println(x);
+  int x;
+  int_println(x);
 }

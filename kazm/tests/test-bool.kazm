@@ -1,11 +1,11 @@
 int main() {
-	bool x;
-	x = false;
-	if (x != false){
-		println("pass");
-	} else {
-			println("pass2");
-	}
+  bool x;
+  x = false;
+  if (x != false){
+    println("pass");
+  } else {
+      println("pass2");
+  }
 
-	
+  
 }

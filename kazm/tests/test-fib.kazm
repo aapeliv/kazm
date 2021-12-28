@@ -8,7 +8,7 @@ int exp(int x, int n){
 
 int main() {
 
-	int a;
-	a = exp(2, 10);
-	int_println(a);
+  int a;
+  a = exp(2, 10);
+  int_println(a);
 }

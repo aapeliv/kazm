@@ -1,5 +1,5 @@
 int main() {
-	int x;
-	x = -1;
-	int_println(x);
+  int x;
+  x = -1;
+  int_println(x);
 }

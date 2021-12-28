@@ -1,9 +1,9 @@
 int main() {
-	int x;
-	x = 5;
-	int_println(x);
-	x = x * 4;
-	int_println(x);
-	x = x*x;
-	int_println(x);
+  int x;
+  x = 5;
+  int_println(x);
+  x = x * 4;
+  int_println(x);
+  x = x*x;
+  int_println(x);
 }

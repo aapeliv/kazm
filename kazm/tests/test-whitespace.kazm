@@ -2,6 +2,6 @@
 
 int main() {
   int x;
-  x     = 		15;
+  x     =     15;
   int_println(x);
 }

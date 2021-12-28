@@ -1,11 +1,11 @@
 int main() {
-	int x;
-	int y;
-	x = 10;
-	y = 12;
-	if ( x != y){
-		println("pass");
-	} else {
-		println("fail");
-	}
+  int x;
+  int y;
+  x = 10;
+  y = 12;
+  if ( x != y){
+    println("pass");
+  } else {
+    println("fail");
+  }
 }
