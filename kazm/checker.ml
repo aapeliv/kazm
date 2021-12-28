@@ -289,9 +289,12 @@ let check (globals, functions, classes) =
             | Initialize (bd, Some e) :: ss ->
                 let (typ, name) = bd in
                 let se = expr locals e in
-                if StringMap.mem name locals = true
-                          then raise (Failure ("cannot initialize " ^ name ^ " twice"))
-                          else SInitialize(bd, Some se) :: check_stmt_list ss (StringMap.add name typ locals)
+                let (typ', sx') = se in 
+                if typ <> typ' then raise (Failure ("initialize: variable and value to be assigned of different types"))
+                else 
+                  (if StringMap.mem name locals = true
+                            then raise (Failure ("cannot initialize " ^ name ^ " twice"))
+                            else SInitialize(bd, Some se) :: check_stmt_list ss (StringMap.add name typ locals))
             | Return _ :: _   -> raise (Failure "nothing may follow a return")
             | Block sl :: ss  -> check_stmt_list (sl @ ss) locals (* Flatten blocks *)
             | s :: ss         -> check_stmt s locals :: check_stmt_list ss locals
