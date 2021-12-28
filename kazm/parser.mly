@@ -122,9 +122,9 @@ typ:
   | CLASS_IDENTIFIER { ClassT($1) }
   | ARRAY typ SQB_L INT_LITERAL SQB_R {Arr($2, $4)}
 
-var_decls:
-    { [] }
-  | var_decls var_decl { $2 :: $1 }
+// var_decls:
+//     { [] }
+//   | var_decls var_decl { $2 :: $1 }
 
 var_decl:
     typ IDENTIFIER SEMI { ($1, $2) }
@@ -142,8 +142,8 @@ stmt:
   | for_stmt { $1 }
   | var_decl_stmt SEMI { $1 }
 
-block_stmt:
-    BRACE_L stmts BRACE_R { Block(List.rev $2) }
+// block_stmt:
+//     BRACE_L stmts BRACE_R { Block(List.rev $2) }
 
 return_stmt:
     RETURN expr { Return $2 }
@@ -209,8 +209,8 @@ args_list:
     expr                    { [$1] }
   | args_list COMMA expr { $3 :: $1 }
 
-expr_list:
-    { [] }
-  | expr_list COMMA expr { $3::$1 }
-  | expr { $1::[] }
+// expr_list:
+//     { [] }
+//   | expr_list COMMA expr { $3::$1 }
+//   | expr { $1::[] }
 
