@@ -1,11 +1,10 @@
-/* Test int == */ 
-
-int main(){
-	int a;
-	int b;
-	a = 1;
-	b = 1;
-	if (a == b){
-		println("a == b");
+int main() {
+	int x;
+	x = 4;
+	if (x == 4){
+		println("pass");
+	}
+	if (x != 3){
+		println("pass2");
 	}
 }
