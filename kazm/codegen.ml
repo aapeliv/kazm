@@ -122,14 +122,6 @@ let gen (bind_list, sfunction_decls, sclass_decls) =
 
   let all_funcs = List.fold_left codegen_func_sig all_funcs sfunction_decls in
 
-  let codegen_class_method map cls =
-    let name = cls.scname in
-    let methods_map = List.fold_left codegen_func_sig SMap.empty cls.scmethods in
-    SMap.add name methods_map map
-  in
-
-  let all_methods = List.fold_left codegen_class_method SMap.empty sclass_decls in
-
   let new_scope ctx =
     let Ctx(_, parent_scope) = ctx in
     Scope(Some parent_scope, SMap.empty)
@@ -206,19 +198,21 @@ let gen (bind_list, sfunction_decls, sclass_decls) =
     let Ctx(builder, sp) = ctx in
     match e with
     (* Function call *)
-      SCall(ref, exprs) -> (match ref with
-                            fname :: [] ->
-                                let (ctx', args) = Future.fold_left_map codegen_expr ctx exprs in
-                                let ex = L.build_call (SMap.find fname all_funcs) (Array.of_list args) "" builder in
-                                (ctx', ex)
-                          | s :: methodname :: [] ->
-                                let (ctx', args) = Future.fold_left_map codegen_expr ctx exprs in
-                                let (l, typ) = find_var sp s in
-                                let A.ClassT(cname) = typ in
-                                let methodmap = SMap.find cname all_methods in
-                                let ex = L.build_call (SMap.find methodname methodmap) (Array.of_list args) "" builder in
-                                (ctx', ex)
-                          | _ -> raise (Failure("codegen_expr SCall:cannot be other patterns")))
+      SCall(ref, exprs) ->
+        let (ctx', args) = Future.fold_left_map codegen_expr ctx exprs in
+        let ex = match ref with
+        | fname :: [] ->
+          L.build_call (SMap.find fname all_funcs) (Array.of_list args) "" builder
+        | cvar :: methodname :: [] ->
+          let (var, typ) = find_var sp cvar in
+          let A.ClassT(cname) = typ in
+          let (cls, cls_t, mthds) = SMap.find cname all_classes in
+          let (mthd, mangled_name, fn) = SMap.find methodname mthds in
+          let me = L.build_load var "me" builder in
+          L.build_call fn (Array.of_list (me::args)) "" builder
+      | _ -> raise (Failure("codegen_expr SCall:cannot be other patterns"))
+        in
+    (ctx', ex)
     (* New bool literal *)
     | SBoolLit(value) -> (ctx, L.const_int i1_t (if value then 1 else 0))
     (* New 32-bit integer literal *)
