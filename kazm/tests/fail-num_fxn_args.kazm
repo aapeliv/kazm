@@ -1,4 +1,4 @@
-/* Test if Kazm checks for correct # of fxn args */ 
+/* Test if Kazm checks for correct # of fxn args */
 
 int add(int x, int y){
     return x/y;

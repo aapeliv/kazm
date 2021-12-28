@@ -1,4 +1,4 @@
-/* Test STring variable */ 
+/* Test STring variable */
 
 int main() {
 	String a;

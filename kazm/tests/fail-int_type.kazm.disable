@@ -1,4 +1,4 @@
-/* Type check should fail */ 
+/* Type check should fail */
 
 int main() {
 

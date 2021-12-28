@@ -13,7 +13,7 @@ open Ast
 %token IF ELSE FOR WHILE
 %token RETURN BREAK
 %token CLASS
-%token ARRAY 
+%token ARRAY
 %token TRUE FALSE
 
 %token<string> IDENTIFIER CLASS_IDENTIFIER

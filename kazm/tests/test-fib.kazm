@@ -1,4 +1,4 @@
-/* Recursion in Kazm */ 
+/* Recursion in Kazm */
 
 int exp(int x, int n){
  if (n == 0) { return 1;}
@@ -11,4 +11,4 @@ int main() {
 	int a;
 	a = exp(2, 10);
 	int_println(a);
-} 
+}

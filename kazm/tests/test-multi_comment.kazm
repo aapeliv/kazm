@@ -1,4 +1,4 @@
-/* Test whether kazm can handle multiline comment */ 
+/* Test whether kazm can handle multiline comment */
 
 int main() {
 	/* int x;
@@ -7,7 +7,7 @@ int main() {
 	   x = 1;
 	   y = 2;
 	   z = 3;
-	   print_ln(x); */ 
+	   print_ln(x); */
 
 	int x;
 	x = 4;

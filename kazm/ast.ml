@@ -81,7 +81,7 @@ let string_of_typ = function
   | Char -> "char"
   | ClassT(name) -> "class " ^ name
   | ArrT(t, l) -> "array"
-  
+
 let rec string_of_expr = function
     Literal(l) -> string_of_int l
   | Dliteral(l) -> l

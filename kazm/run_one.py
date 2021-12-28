@@ -5,7 +5,7 @@ from pathlib import Path
 import shutil
 import subprocess
 import argparse
-import sys 
+import sys
 
 if (len(sys.argv) != 2 or sys.argv[1].endswith(".kazm") == False):
     print("Usage: ./run_one.py [*.kazm]")

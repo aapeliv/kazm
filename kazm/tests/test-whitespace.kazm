@@ -1,4 +1,4 @@
-/* Testing whitespace in kazm */ 
+/* Testing whitespace in kazm */
 
 int main() {
   int x;

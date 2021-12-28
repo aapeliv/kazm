@@ -82,7 +82,7 @@ let gen (bind_list, sfunction_decls, sclass_decls) =
     | A.Int -> ignore (L.build_ret (L.const_int i32_t 0) builder); ctx
     | A.Double -> ignore (L.build_ret (L.const_float double_t 0.) builder); ctx
   in
-  
+
   let all_funcs = SMap.empty in
   (* Builtins... *)
   let all_funcs = add_func_decl all_funcs "print" void_t [char_ptr_t] in
@@ -103,7 +103,7 @@ let gen (bind_list, sfunction_decls, sclass_decls) =
 
   let all_funcs = List.fold_left codegen_func_sig all_funcs sfunction_decls in
 
-  let codegen_class_method map cls = 
+  let codegen_class_method map cls =
     let name = cls.scname in
     let methods_map = List.fold_left codegen_func_sig SMap.empty cls.scmethods in
     SMap.add name methods_map map
@@ -152,12 +152,12 @@ let gen (bind_list, sfunction_decls, sclass_decls) =
     let Ctx(builder, sp) = ctx in
     match e with
     (* Function call *)
-      SCall(ref, exprs) -> (match ref with 
-                            fname :: [] ->  
+      SCall(ref, exprs) -> (match ref with
+                            fname :: [] ->
                                 let (ctx', args) = Future.fold_left_map codegen_expr ctx exprs in
                                 let ex = L.build_call (SMap.find fname all_funcs) (Array.of_list args) "" builder in
                                 (ctx', ex)
-                          | s :: methodname :: [] -> 
+                          | s :: methodname :: [] ->
                                 let (ctx', args) = Future.fold_left_map codegen_expr ctx exprs in
                                 let (l, typ) = find_var sp s in
                                 let A.ClassT(cname) = typ in
@@ -175,7 +175,7 @@ let gen (bind_list, sfunction_decls, sclass_decls) =
     | SUnop(op, ((t, _) as e)) ->
         let (ctx1, e') = codegen_expr ctx e in
         let lbuild = match op with
-            A.Neg when t = A.Double -> L.build_fneg 
+            A.Neg when t = A.Double -> L.build_fneg
           | A.Neg                  -> L.build_neg
           | A.Not                  -> L.build_not
         in
@@ -226,7 +226,7 @@ let gen (bind_list, sfunction_decls, sclass_decls) =
       (* allocate memory for array *)
       let arr_alloca = L.build_array_alloca ty size "array_literal" builder in
       (* bitcast -- pointer-to-int *)
-      let arr_ptr = L.build_pointercast arr_alloca ty "array_ptr" builder in 
+      let arr_ptr = L.build_pointercast arr_alloca ty "array_ptr" builder in
       (* store an element in slot `ix` and pass off context to the next one *)
       let store_el (ctx, ix) el =
         let (ctx', gex) = codegen_expr ctx (arr_t, el) in
@@ -236,21 +236,21 @@ let gen (bind_list, sfunction_decls, sclass_decls) =
       in
       let (ctx', _) = List.fold_left store_el (ctx, 0) exs in
       (ctx', arr_ptr)
-    | SArrayAccess (s, e) -> 
-      let (ctx', ind) = codegen_expr ctx e in 
+    | SArrayAccess (s, e) ->
+      let (ctx', ind) = codegen_expr ctx e in
       let (ty, _) = e in (* e is sexpr which is typ * sx so we retrieve the Ast typ *)
-      let pos = L.build_add ind (L.const_int i32_t 0) "accpos" builder in 
-      let (ctx'', arr) = codegen_expr ctx' (ty, SId([s])) in 
-      let elt = L.build_gep arr [| pos |] "acceltptr" builder in 
+      let pos = L.build_add ind (L.const_int i32_t 0) "accpos" builder in
+      let (ctx'', arr) = codegen_expr ctx' (ty, SId([s])) in
+      let elt = L.build_gep arr [| pos |] "acceltptr" builder in
       (ctx'', L.build_load elt "accelt" builder)
       (* I'm worried about ctx and builder *)
     | SArrAssign (s, e1, e2) ->
-      let (ctx', ind) = codegen_expr ctx e1 in 
-      let (ty, _) = e1 in 
-      let pos = L.build_add ind (L.const_int i32_t 0) "accpos" builder in 
-      let (ctx'', arr) = codegen_expr ctx' (ty, SId([s])) in 
-      let (ctx''', new_val) = codegen_expr ctx'' e2 in 
-      let elt_ptr = L.build_gep arr [| pos |] "arrelt" builder in 
+      let (ctx', ind) = codegen_expr ctx e1 in
+      let (ty, _) = e1 in
+      let pos = L.build_add ind (L.const_int i32_t 0) "accpos" builder in
+      let (ctx'', arr) = codegen_expr ctx' (ty, SId([s])) in
+      let (ctx''', new_val) = codegen_expr ctx'' e2 in
+      let elt_ptr = L.build_gep arr [| pos |] "arrelt" builder in
       (ctx''', L.build_store new_val elt_ptr builder)
   in
 
@@ -293,7 +293,7 @@ let gen (bind_list, sfunction_decls, sclass_decls) =
     let name = func.sfname in
     let formals = func.sformals in
     (* Defines the func *)
-    let fn = try SMap.find name all_funcs 
+    let fn = try SMap.find name all_funcs
              with Not_found -> let methodmap = SMap.find "StructWithMethods" all_methods in
                                 (SMap.find name methodmap)in
 
@@ -407,32 +407,32 @@ let gen (bind_list, sfunction_decls, sclass_decls) =
                             let (ctx', e') = codegen_expr ctx (A.String, SStringLit "") in
                             ignore (L.build_store e' var fn_builder);
                             ctx'
-            | A.ArrT(t, l) -> 
-              let arr_lit = (match t with 
+            | A.ArrT(t, l) ->
+              let arr_lit = (match t with
                     A.Int -> SArrayLit(A.Int, List.init l (fun x -> SLiteral(0)))
                   | A.Bool -> SArrayLit(A.Bool, List.init l (fun x -> SBoolLit(false)))
                   | A.Double -> SArrayLit(A.Double, List.init l (fun x -> SDliteral("0.0")))
-                ) in 
+                ) in
               let e = (A.ArrT(t, l), arr_lit) in
-              let (ctx', e') = codegen_expr ctx e in 
+              let (ctx', e') = codegen_expr ctx e in
               let var = L.build_alloca (typ_to_t vtyp) name builder in
-              ignore (L.build_store e' var builder); 
+              ignore (L.build_store e' var builder);
               Ctx(builder, add_var sp name var vtyp)
             | _ ->  let var = L.build_alloca (typ_to_t vtyp) name fn_builder in
                     Ctx(builder, add_var sp name var vtyp))
-      | SInitialize((vtyp, name), Some e) -> 
-        (match vtyp with 
+      | SInitialize((vtyp, name), Some e) ->
+        (match vtyp with
           A.ArrT(t, l) -> (* type * length *) (* e will be an ArrayLit *)
-            let (ctx', e') = codegen_expr ctx e in 
+            let (ctx', e') = codegen_expr ctx e in
             let var = L.build_alloca (typ_to_t vtyp) name builder in
-            ignore (L.build_store e' var builder); 
+            ignore (L.build_store e' var builder);
             Ctx(builder, add_var sp name var vtyp)
         | _ -> raise(Failure("SInitialize: TODO"))
         )
 
     in
 
-    
+
     let add_param map (ptyp, name) param =
       L.set_value_name name param;
       let local_copy = L.build_alloca (typ_to_t ptyp) name fn_builder in
@@ -451,7 +451,7 @@ let gen (bind_list, sfunction_decls, sclass_decls) =
     let ctx' = codegen_stmt fn_ctx (SBlock body) in
     ignore (add_terminator ctx' (build_default_return typ))
   in
-  let all_funcs_methods = 
+  let all_funcs_methods =
       (List.fold_left (fun lst cls -> cls.scmethods @ sfunction_decls) sfunction_decls sclass_decls)
   in
   ignore (List.map gen_func all_funcs_methods);
