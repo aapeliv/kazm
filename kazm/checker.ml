@@ -248,7 +248,7 @@ let check (globals, functions, classes) =
       | ArrayLength(name) -> (*return the length of array *)
         let v_ty = type_of_identifier name locals in
         let e_ty = match v_ty with 
-            ArrT(t, l) -> t
+            ArrT(t, l) -> Int
           | _ -> raise(Failure("Must call .length on an array. " ^ name ^ " is not an array"))
         in 
         (e_ty, SArrayLength(name))
@@ -310,7 +310,7 @@ let check (globals, functions, classes) =
                       "declared with length (" ^ string_of_int l ^") but init with length (" ^ string_of_int (List.length e') ^")" )) else t 
                   | _ -> typ
                 in
-                if typ <> typ' then raise (Failure ("initialize: variable and value to be assigned of different types"))
+                if typ <> typ' then raise(Failure("initialize: variable and value to be assigned of different types"))
                 else 
                   (if StringMap.mem name locals = true
                             then raise (Failure ("cannot initialize " ^ name ^ " twice"))

@@ -1,9 +1,10 @@
 int main() {
 	array int[6] my_arr = [5,3,0,2,1,4];
+	int len = my_arr.length;  
 	int i = 0;
-	while(i < 6) {
+	while(i < len) {
 		int j = 0;
-		while(j < 6 - i - 1) {
+		while(j < len - i - 1) {
 			if (my_arr[j] > my_arr[j + 1]) {
 				int temp = my_arr[j];
 				my_arr[j] = my_arr[j + 1];
@@ -14,7 +15,7 @@ int main() {
 		i = i + 1;
 	}
 	int n = 0;
-	while(n < 6) {
+	while(n < len) {
 		int_print(my_arr[n]);
 		n = n + 1;
 	}
