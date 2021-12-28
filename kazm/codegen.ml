@@ -114,16 +114,38 @@ let gen (bind_list, sfunction_decls, sclass_decls) =
     Scope(Some parent_scope, SMap.empty)
   in
 
+  let rec debug_scope_inspect name scope =
+    (* Prints out all vars in all scopes *)
+    match scope with
+      Scope(None, map) -> _debug_print_all_vars_in_map "top" map
+    | Scope(Some parent, map) -> _debug_print_all_vars_in_map name map; debug_scope_inspect (name ^ "_up") parent
+  and _debug_print_all_vars_in_map name map =
+    SMap.iter (fun name _ -> ignore (print_endline ("Found var " ^ name ^ " in " ^ name)))
+  in
+
   let rec find_var scope name =
     match scope with
       Scope(None, map) -> SMap.find name map
     | Scope(Some parent, map) -> if SMap.mem name map then SMap.find name map else find_var parent name
   in
 
-  let add_var scope name l vtyp =
+  let add_var scope name var vtyp =
     let Scope(p, map) = scope in
-    let map' = SMap.add name (l, vtyp) map in
+    let map' = SMap.add name (var, vtyp) map in
     Scope(p, map')
+  in
+
+  let destroy_var name var vtyp builder =
+    match vtyp with
+    (* TODO: *)
+      (* For classes, call the destructor and free the memory *)
+      | A.ClassT(name) ->
+        ()
+      (* For arrays, call the desctructors on each and free the memory *)
+      | A.ArrT(ty, _) ->
+        ()
+      (* For primitive types, we don't have to do anything *)
+      | _ -> ()
   in
 
   let find_fq_var builder scope = function
@@ -143,6 +165,19 @@ let gen (bind_list, sfunction_decls, sclass_decls) =
       let load = L.build_load cval ("_struct_" ^ hd) builder in
       L.build_struct_gep load mem_pos_in_class (tl ^ "_ptr") builder
     | _ -> raise (Failure("find_fq_var: cannot be other patterns"))
+  in
+
+  let build_scope_exit ctx =
+    (* Builds destructors, etc *)
+    let Ctx(builder, sp) = ctx in
+    let Scope(_, vars) = sp in
+    let dest_var name (var, vtyp) =
+      destroy_var name var vtyp builder
+      (* debug: print out all vars being destroyed when the scope is destroyed *)
+      (* let str = L.build_global_stringptr ("Destroying: " ^ name) "destroy_str" builder in *)
+      (* ignore (L.build_call (SMap.find "println" all_funcs) [| str |] "" builder); *)
+    in
+    ignore (SMap.iter dest_var vars)
   in
 
   (* Codegen for an expression *)
@@ -331,11 +366,13 @@ let gen (bind_list, sfunction_decls, sclass_decls) =
         let true_ctx = Ctx(L.builder_at_end context true_blk, new_scope ctx') in
         (* Build this branch's statements into this block *)
         let true_ctx' = codegen_stmt true_ctx true_stmts in
+        ignore (build_scope_exit true_ctx');
         add_terminator true_ctx' build_join;
 
         (* False branch building *)
         let false_ctx = Ctx(L.builder_at_end context false_blk, new_scope ctx') in
         let false_ctx' = codegen_stmt false_ctx false_stmts in
+        ignore (build_scope_exit false_ctx');
         add_terminator false_ctx' build_join;
 
         (* Build the actual conditional branch *)
@@ -355,6 +392,7 @@ let gen (bind_list, sfunction_decls, sclass_decls) =
         (* Loop body (an iteration) *)
         let while_ctx = Ctx(loop_builder, new_scope ctx) in
         ignore (codegen_stmt while_ctx stmt);
+        ignore (build_scope_exit while_ctx);
         (* Back to start after a loop iteration *)
         ignore (L.build_br start_blk loop_builder);
 
@@ -444,6 +482,7 @@ let gen (bind_list, sfunction_decls, sclass_decls) =
     let fn_ctx = Ctx(fn_builder, fn_scope') in
     (* Build all statements *)
     let ctx' = codegen_stmt fn_ctx (SBlock body) in
+    ignore (build_scope_exit ctx');
     ignore (add_terminator ctx' (build_default_return typ))
   in
   let all_funcs_methods =

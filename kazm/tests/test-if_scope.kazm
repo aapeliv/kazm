@@ -1,0 +1,13 @@
+int main() {
+  int i;
+  i = next_int();
+  if (i > 5) {
+    int a;
+    a = 5;
+    int_println(a);
+  } else {
+    int b;
+    b = 10;
+    int_println(b);
+  }
+}
