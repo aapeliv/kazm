@@ -1,0 +1,10 @@
+int main() {
+  if (false) {
+    int a;
+    a = 5;
+  } else {
+    int a;
+    a = 6;
+    int_println(a);
+  }
+}
