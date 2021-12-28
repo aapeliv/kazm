@@ -7,7 +7,6 @@ int main() {
   if ( x >= y){
     println("pass");
   }
-  
   x = 5;
   if (x >= y ) {
     println("pass");

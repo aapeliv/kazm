@@ -1,11 +1,11 @@
-int main(){
+int main() {
   bool a;
   bool b;
   a = true;
   b = true;
-  if (a || b){
+  if (a || b) {
     println("pass");
   } else {
-    println("fail");  
+    println("fail");
   }
 }

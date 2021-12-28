@@ -215,8 +215,8 @@ let gen (bind_list, sfunction_decls, sclass_decls) =
       (ctx, L.build_load var "id" builder)
     (* Assign expression e to a new bind(type, name) *)
     | SAssign(fqn, value) ->
-      let (ctx', e') = codegen_expr ctx value in
       let var = find_fq_var builder sp fqn in
+      let (ctx', e') = codegen_expr ctx value in
       ignore (L.build_store e' var builder);
       (ctx, e')
     | SArrayLit(arr_t, exs) ->
@@ -230,21 +230,20 @@ let gen (bind_list, sfunction_decls, sclass_decls) =
       (* store an element in slot `ix` and pass off context to the next one *)
       let store_el (ctx, ix) el =
         let (ctx', gex) = codegen_expr ctx (arr_t, el) in
-        let element_ptr = L.build_gep arr_ptr [|  (L.const_int i32_t ix) |] "array_el" builder in
+        let element_ptr = L.build_gep arr_ptr [|  (L.const_int i32_t ix) |] "array_element" builder in
         ignore (L.build_store gex element_ptr builder);
         (ctx', ix + 1)
       in
       let (ctx', _) = List.fold_left store_el (ctx, 0) exs in
       (ctx', arr_ptr)
-    | SArrayAccess (s, e) ->
-      let (ctx', ind) = codegen_expr ctx e in
-      let (ty, _) = e in (* e is sexpr which is typ * sx so we retrieve the Ast typ *)
-      let pos = L.build_add ind (L.const_int i32_t 0) "accpos" builder in
-      let (ctx'', arr) = codegen_expr ctx' (ty, SId([s])) in
-      let elt = L.build_gep arr [| pos |] "acceltptr" builder in
-      (ctx'', L.build_load elt "accelt" builder)
-      (* I'm worried about ctx and builder *)
-    | SArrayAssign (s, e1, e2) ->
+    | SArrayAccess(name, pos_ex) ->
+      let (ctx', pos) = codegen_expr ctx pos_ex in
+      let array_ptr = find_fq_var builder sp [name] in
+      (* Load the array address into a register *)
+      let array = L.build_load array_ptr (name ^ "__array") builder in
+      let element = L.build_gep array [| pos |] (name ^ "__element_ptr") builder in
+      (ctx', L.build_load element (name ^ "__element") builder)
+    | SArrayAssign(s, e1, e2) ->
       let (ctx', ind) = codegen_expr ctx e1 in
       let (ty, _) = e1 in
       let pos = L.build_add ind (L.const_int i32_t 0) "accpos" builder in

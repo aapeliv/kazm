@@ -4,6 +4,6 @@ int main() {
   if (!b){
     println("pass");
   } else {
-    println("fail");  
+    println("fail");
   }
 }

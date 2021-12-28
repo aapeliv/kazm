@@ -3,12 +3,8 @@ int main(){
   int x;
   my_arr = [1,2,3,4,5,6,7,8,9,10];
 
-  
   my_arr[9] = my_arr[0];
   int_println(my_arr[9]);
   my_arr[9] = my_arr[6];
   int_println(my_arr[9]);
-
-
 }
-    

@@ -1,11 +1,9 @@
 int main() {
   bool x;
   x = false;
-  if (x != false){
+  if (x != false) {
     println("pass");
   } else {
-      println("pass2");
+    println("pass2");
   }
-
-  
 }
