@@ -290,7 +290,7 @@ let check (globals, functions, classes) =
                 let (typ, name) = bd in
                 let se = expr locals e in
                 let (typ', sx') = se in 
-                if typ != typ' then raise (Failure ("initialize: variable and value to be assigned of different types"))
+                if typ <> typ' then raise (Failure ("initialize: variable is " ^ string_of_typ typ ^ " and value is " ^ string_of_typ typ'))
                 else 
                   (if StringMap.mem name locals = true
                             then raise (Failure ("cannot initialize " ^ name ^ " twice"))
