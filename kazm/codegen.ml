@@ -220,15 +220,11 @@ let gen (bind_list, sfunction_decls, sclass_decls) =
     | SArrayLit arr   -> 
       (* arr: sexpr list = typ * sx list *)
       let len = L.const_int i32_t (List.length arr) in (* array length *)
-      (* let size = L.const_int i32_t ((List.length arr) + 1) in  *)
       let (fst_t, _) = List.hd arr in 
       let ty = typ_to_t (A.Arr(fst_t, (List.length arr))) in
-      (* allocate memory for array *)
-      let arr_alloca = L.build_array_alloca ty len "arr" builder in
-      (* bitcast -- pointer-to-int *)
-      let arr_ptr = L.build_pointercast arr_alloca ty "arrptr" builder in 
-      (* store all elements *)
-      let elts = List.map (codegen_expr ctx) arr in (* now arr is (ctx * sexpr) list *)
+      let arr_alloca = L.build_array_alloca ty len "arr" builder in (* allocate memory for array *)
+      let arr_ptr = L.build_pointercast arr_alloca ty "arrptr" builder in (* cast pointer-to-int *)
+      let elts = List.map (codegen_expr ctx) arr in (* store array elements*)
       let store_elt ind elt = 
         let (ctx', elt') = elt in 
         let pos = L.const_int i32_t (ind) in
@@ -258,7 +254,6 @@ let gen (bind_list, sfunction_decls, sclass_decls) =
       let (ll, vtyp) = var in (* llvalue and Ast typ *)
       let Arr(t, l) = vtyp in (* Ast typ and length of array *)
       (ctx, L.const_int i32_t l) 
-      (* where would the length be stored *)
   in
 
   (* Add terminator to end of a basic block *)
@@ -438,11 +433,17 @@ let gen (bind_list, sfunction_decls, sclass_decls) =
             ignore (L.build_store e' var builder);
             ctx'
         | A.Bool ->  
-              let var = L.build_alloca (typ_to_t vtyp) name builder in
-              let ctx = Ctx(builder, add_var sp name var vtyp) in
-              let (ctx', e') = codegen_expr ctx e in
-              ignore (L.build_store e' var builder);
-              ctx'
+            let var = L.build_alloca (typ_to_t vtyp) name builder in
+            let ctx = Ctx(builder, add_var sp name var vtyp) in
+            let (ctx', e') = codegen_expr ctx e in
+            ignore (L.build_store e' var builder);
+            ctx'
+        | A.String -> 
+          let var = L.build_alloca (typ_to_t vtyp) name builder in
+          let ctx = Ctx(builder, add_var sp name var vtyp) in
+          let (ctx', e') = codegen_expr ctx e in
+          ignore (L.build_store e' var builder);
+          ctx'
         | _ -> raise(Failure("SInitialize: TODO"))
         )
 
