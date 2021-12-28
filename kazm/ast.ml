@@ -101,6 +101,7 @@ let rec string_of_expr = function
   | Noexpr -> ""
   | ArrayLit(values) -> "values"
   | ArrayAccess(name, value) -> name
+  | ArrayAssign(name, index, value) -> string_of_expr index
   | ArrayLength(name) -> "length"
 
 let rec string_of_stmt = function
