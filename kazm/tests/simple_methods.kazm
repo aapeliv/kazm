@@ -1,0 +1,24 @@
+class StructWithMethods {
+  int x;
+  int y;
+
+  int get5() {
+    return 5;
+  }
+
+  int getX() {
+    return me.x;
+  }
+
+  void printY() {
+    int_println(me.y);
+  }
+};
+
+int main() {
+  StructWithMethods s;
+  s.x = 4;
+  s.y = 6;
+  int_println(s.getX());
+  s.printY();
+}
