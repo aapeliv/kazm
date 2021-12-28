@@ -347,7 +347,6 @@ let gen (bind_list, sfunction_decls, sclass_decls) =
   let raw_gen_func body typ name formals fn =
     (* Codegen for a statement *)
     (* Takes ctx and statement and returns a ctx *)
-    let fn_builder = L.builder_at_end context (L.entry_block fn) in
     let rec codegen_stmt ctx stmt =
       let Ctx(builder, sp) = ctx in
       match stmt with
@@ -434,65 +433,38 @@ let gen (bind_list, sfunction_decls, sclass_decls) =
         Ctx(end_builder, sp)
       (* For a block of statements, just fold *)
       | SBlock(stmts) -> List.fold_left codegen_stmt ctx stmts
-      | SInitialize((vtyp, name), None) ->
+      | SInitialize((vtyp, name), expr) ->
           (match vtyp with
-              A.ClassT(cname) ->
-                Ctx(builder, add_var sp name (build_class_alloc cname name fn_builder) vtyp)
+            A.ClassT(cname) ->
+              if expr != None then raise (Failure ("Can't assign init class")) else
+              Ctx(builder, add_var sp name (build_class_alloc cname name builder) vtyp)
             | _ ->
-              let default =
-                (match vtyp with
-                  | A.ArrT(t, l) ->
-                    let arr_lit = (match t with
-                          A.Int -> SArrayLit(A.Int, List.init l (fun x -> SLiteral(0)))
-                        | A.Bool -> SArrayLit(A.Bool, List.init l (fun x -> SBoolLit(false)))
-                        | A.Double -> SArrayLit(A.Double, List.init l (fun x -> SDliteral("0.0")))
-                      ) in
-                    let (_, e') = codegen_expr ctx (A.ArrT(t, l), arr_lit) in
-                    e'
-                  | A.String ->
-                    L.build_global_stringptr "" "default_string" builder
-                  | _ -> get_default vtyp
+              let (ctx', value) =
+                (match expr with
+                | Some e ->
+                  codegen_expr ctx e
+                | None ->
+                  match vtyp with
+                    | A.ArrT(t, l) ->
+                      let arr_lit = (match t with
+                            A.Int -> SArrayLit(A.Int, List.init l (fun x -> SLiteral(0)))
+                          | A.Bool -> SArrayLit(A.Bool, List.init l (fun x -> SBoolLit(false)))
+                          | A.Double -> SArrayLit(A.Double, List.init l (fun x -> SDliteral("0.0")))
+                        ) in
+                      codegen_expr ctx (A.ArrT(t, l), arr_lit)
+                    | A.String ->
+                      (ctx, L.build_global_stringptr "" "default_string" builder)
+                    | _ -> (ctx, get_default vtyp)
                 )
               in
-              let var = L.build_alloca (typ_to_t vtyp) name fn_builder in
-              ignore (L.build_store default var fn_builder);
-              Ctx(builder, add_var sp name var vtyp))
-      | SInitialize((vtyp, name), Some e) ->
-        (match vtyp with
-          A.ArrT(t, l) -> (* type * length *) (* e will be an ArrayLit *)
-            let (ctx', e') = codegen_expr ctx e in
-            let var = L.build_alloca (typ_to_t vtyp) name builder in
-            ignore (L.build_store e' var builder);
-            Ctx(builder, add_var sp name var vtyp)
-        | A.Int ->  
-          let var = L.build_alloca (typ_to_t vtyp) name builder in
-          let ctx = Ctx(builder, add_var sp name var vtyp) in
-          let (ctx', e') = codegen_expr ctx e in
-          ignore (L.build_store e' var builder);
-          ctx'
-        | A.Double ->  
-            let var = L.build_alloca (typ_to_t vtyp) name builder in
-            let ctx = Ctx(builder, add_var sp name var vtyp) in
-            let (ctx', e') = codegen_expr ctx e in
-            ignore (L.build_store e' var builder);
-            ctx'
-        | A.Bool ->  
-            let var = L.build_alloca (typ_to_t vtyp) name builder in
-            let ctx = Ctx(builder, add_var sp name var vtyp) in
-            let (ctx', e') = codegen_expr ctx e in
-            ignore (L.build_store e' var builder);
-            ctx'
-        | A.String -> 
-          let var = L.build_alloca (typ_to_t vtyp) name builder in
-          let ctx = Ctx(builder, add_var sp name var vtyp) in
-          let (ctx', e') = codegen_expr ctx e in
-          ignore (L.build_store e' var builder);
-          ctx'
-        | _ -> raise(Failure("SInitialize: TODO"))
+              let var = L.build_alloca (typ_to_t vtyp) name builder in
+              let Ctx(_, sp') = ctx' in
+              ignore (L.build_store value var builder);
+              Ctx(builder, add_var sp' name var vtyp)
         )
-
     in
 
+    let fn_builder = L.builder_at_end context (L.entry_block fn) in
 
     let add_param map (ptyp, name) param =
       L.set_value_name name param;
