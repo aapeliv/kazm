@@ -1,5 +1,8 @@
+int main() {
+  string a;
+  a = "world";
+  string b;
+  println(b);
+  println(a);
 
-int main(){
-	
-	String b;
 }

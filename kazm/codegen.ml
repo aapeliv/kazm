@@ -20,6 +20,7 @@ let gen (bind_list, sfunction_decls, sclass_decls) =
   let i32_t = L.i32_type context in
   let i64_t = L.i64_type context in
   let double_t = L.double_type context in
+  let string_t = L.pointer_type (L.i8_type context) in
   let char_t = i8_t in
   let void_t = L.void_type context in
   let char_ptr_t = L.pointer_type char_t in
@@ -48,6 +49,7 @@ let gen (bind_list, sfunction_decls, sclass_decls) =
       A.Void -> void_t
     | A.Bool -> i1_t
     | A.Int -> i32_t
+    | A.String -> string_t
     | A.Double -> double_t
     | A.ClassT(name) -> L.pointer_type (snd (SMap.find name all_classes))
     | A.Arr(ty,_) -> L.pointer_type (typ_to_t_TODO_WITHOUT_CLASSES ty)
@@ -399,6 +401,16 @@ let gen (bind_list, sfunction_decls, sclass_decls) =
                           let (ctx', e') = codegen_expr ctx (A.Double, SDliteral "0.0") in
                           ignore (L.build_store e' var fn_builder);
                           ctx'
+            | A.Bool ->   let var = L.build_alloca (typ_to_t vtyp) name fn_builder in
+                          let ctx = Ctx(builder, add_var sp name var vtyp) in
+                          let (ctx', e') = codegen_expr ctx (A.Bool, SBoolLit false) in
+                          ignore (L.build_store e' var fn_builder);
+                          ctx'
+            | A.String ->   let var = L.build_alloca (typ_to_t vtyp) name fn_builder in
+                            let ctx = Ctx(builder, add_var sp name var vtyp) in
+                            let (ctx', e') = codegen_expr ctx (A.String, SStringLit "") in
+                            ignore (L.build_store e' var fn_builder);
+                            ctx'
             | A.Arr(t, l) -> 
               let arr_e = (match t with 
                     A.Int -> List.map (fun x -> (A.Int, SLiteral(0))) (List.init l (fun x -> 0))

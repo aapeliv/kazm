@@ -1,0 +1,16 @@
+void main()
+{
+    int a = 1; 
+    double b = 2.2; 
+    bool c = false; 
+    int_println(a);
+    double_println(b);
+    if (c) {
+        println("no");
+    } else {
+        println("yes");
+    }
+    string d; 
+    d = "PLT"; 
+    println(d);
+}

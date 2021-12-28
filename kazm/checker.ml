@@ -22,7 +22,7 @@ let check (globals, functions, classes) =
     in dups (List.sort (fun (_,a) (_,b) -> compare a b) binds)
   in
 
-  (**** Check global variables ****)
+  (* Check global variables *)
   check_binds "global" globals;
 
   (* Collect function declarations for built-in functions: no bodies *)
@@ -61,7 +61,7 @@ let check (globals, functions, classes) =
   let function_decls = List.fold_left add_func built_in_decls functions
   in
 
-  (* Add class name to class symbol table with cvars*)
+  (* Add class name to class symbol table with cvars *)
   let add_class map cls = 
     let dup_error = "duplicate class " ^ cls.cname
     and make_err er = raise (Failure er) 
@@ -82,13 +82,6 @@ let check (globals, functions, classes) =
               (List.fold_left add_func StringMap.empty cls.cmethods) map) StringMap.empty classes
   in
 
-  (* Return a function from our class_method symbol table *)
-  (*let find_classmethod clsname methodname =
-  *if StringMap.mem clsname class_decls = false then raise (Failure ("unrecognized class " ^ clsname))
-  *  else try StringMap.find methodname (StringMap.find clsname class_decls)
-  *       with Not_found -> raise (Failure ("unrecognized function " ^ methodname ^ " in class " ^ clsname))
-  *in *)
-
   (* Return a function from our function symbol table *)
   let find_func s =
     try StringMap.find s function_decls
@@ -97,7 +90,7 @@ let check (globals, functions, classes) =
 
   let _ = find_func "main" in (* Ensure "main" is defined *)
 
-  (**** Check functions ****)
+  (* Check functions *)
   let check_function vars func =
     (* Make sure no formals are void or duplicates *)
     check_binds "formal" func.formals;
@@ -280,12 +273,19 @@ let check (globals, functions, classes) =
           let rec check_stmt_list stmts locals = 
             match stmts with
               [Return _ as s] -> [check_stmt s locals]
+            | Initialize ((ClassT c, name), None) :: ss -> 
+                if StringMap.mem c class_decls = false then raise (Failure (c ^" class " ^ "is undefined"))
+                else SInitialize((ClassT c, name), None) :: check_stmt_list ss (StringMap.add name (ClassT c) locals)
             | Initialize (bd, None) :: ss -> 
                 let (typ, name) = bd in
                 if StringMap.mem name locals = true 
-                          then raise (Failure ("cannot initialize " ^ name ^ " twice"))
-                          else SInitialize(bd, None) :: check_stmt_list ss (StringMap.add name typ locals)
-            | Initialize (bd, Some e) :: ss -> (* come back for array *)
+                then raise (Failure ("cannot initialize " ^ name ^ " twice"))
+                else SInitialize(bd, None) :: check_stmt_list ss (StringMap.add name typ locals)
+            | Initialize ((ClassT c, name), Some e) :: ss -> 
+                let se = expr locals e in
+                if StringMap.mem c class_decls = false then raise (Failure (c ^" class " ^ "is undefined"))
+                else SInitialize((ClassT c, name), None) :: check_stmt_list ss (StringMap.add name (ClassT c) locals)
+            | Initialize (bd, Some e) :: ss -> 
                 let (typ, name) = bd in
                 let se = expr locals e in
                 let typ' = match typ with

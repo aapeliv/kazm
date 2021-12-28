@@ -53,6 +53,7 @@ rule tokenize = parse
 | "char" { CHAR }
 | "int" { INT }
 | "double" { DOUBLE }
+| "string" {STRING}
 | "if" { IF }
 | "else" { ELSE }
 | "for" { FOR }
