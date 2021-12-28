@@ -1,0 +1,6 @@
+int main(){
+	array char[5] my_arr = ['a', 'b', 'c', 'd', 'e'];
+	char b = my_arr[0];
+	char_println(b);
+
+}

@@ -17,6 +17,10 @@ void int_println(int val) {
   printf("%d\n", val);
 }
 
+void char_println(char val){
+  printf("%c\n", val);
+}
+
 void double_print(double val) {
   printf("%f", val);
 }

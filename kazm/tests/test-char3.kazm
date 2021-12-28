@@ -1,0 +1,11 @@
+int main(){
+	array char[5] my_arr = ['a', 'b', 'c', 'd', 'e'];
+	//rray string[5] my_arr = ["hi", "katie", "aapeli", "zhonglin", "molly"];
+	int i;
+	for (i = 0; i<my_arr.length ;i = i+1){
+		char_println(my_arr[i]);
+	}
+	
+	int x = my_arr.length;  
+	int_println(x);
+}
