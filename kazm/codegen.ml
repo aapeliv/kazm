@@ -315,13 +315,7 @@ let gen (bind_list, sfunction_decls, sclass_decls) =
   in
 
   (* Codegen for function body *)
-  let gen_func func =
-    (* let A.Func(bind, body) = func in *)
-    (* let A.Bind(typ, name) = bind in *)
-    let body =  func.sbody in
-    let typ = func.styp in
-    let name = func.sfname in
-    let formals = func.sformals in
+  let raw_gen_func body typ name formals =
     (* Defines the func *)
     let fn = try SMap.find name all_funcs
              with Not_found -> let methodmap = SMap.find "StructWithMethods" all_methods in
@@ -485,8 +479,28 @@ let gen (bind_list, sfunction_decls, sclass_decls) =
     ignore (build_scope_exit ctx');
     ignore (add_terminator ctx' (build_default_return typ))
   in
-  let all_funcs_methods =
-      (List.fold_left (fun lst cls -> cls.scmethods @ sfunction_decls) sfunction_decls sclass_decls)
+
+  let gen_func func =
+    let body = func.sbody in
+    let typ = func.styp in
+    let name = func.sfname in
+    let formals = func.sformals in
+    raw_gen_func body typ name formals
   in
-  ignore (List.map gen_func all_funcs_methods);
+
+  let gen_method (cls, cls_t) mthd =
+    let body = mthd.sbody in
+    let typ = mthd.styp in
+    let name = cls.scname ^ "__" ^ mthd.sfname in
+    let me_formal = (typ, "me") in
+    let formals = me_formal :: mthd.sformals in
+    raw_gen_func body typ name formals
+  in
+
+  let gen_methods cname (cls, cls_t) =
+    ignore (List.map (fun mthd -> gen_method (cls, cls_t) mthd) cls.scmethods)
+  in
+
+  ignore (List.map gen_func sfunction_decls);
+  ignore (SMap.iter gen_methods all_classes);
   m
