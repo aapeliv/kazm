@@ -298,6 +298,16 @@ let check (globals, functions, classes) =
                 let (typ, name) = bd in
                 let se = expr locals e in
                 let (typ', sx') = se in 
+                let _ = match typ with 
+                    ArrT(t, l) -> let e' = (match e with 
+                        ArrayLit(ex) -> ex 
+                      | _ -> raise(Failure(name ^" needs to be initialized to an array literal")))
+                    in 
+                    (* Check if array is declared and init with wrong length & wrong type *)
+                    if (List.length e') != l then raise(Failure("Array (" ^ name ^ ") " ^
+                      "declared with length (" ^ string_of_int l ^") but init with length (" ^ string_of_int (List.length e') ^")" )) else t 
+                  | _ -> typ
+                in
                 if typ <> typ' then raise (Failure ("initialize: variable and value to be assigned of different types"))
                 else 
                   (if StringMap.mem name locals = true
@@ -322,6 +332,6 @@ let check (globals, functions, classes) =
   let check_class cls =
     { scname = cls.cname;
       scvars = cls.cvars;
-      scmethods = List.map (check_function ((ClassT(cls.cname), "me")::cls.cvars)) cls.cmethods;}
+      scmethods = List.map (check_function ((ClassT(cls.cname), "me")::[])) cls.cmethods;}
   in
   (globals, List.map (check_function []) functions, List.map check_class classes)

@@ -1,0 +1,13 @@
+class Test {
+  int exists;
+
+  void do_stuff() {
+    int_println(me.exists);
+  }
+};
+
+int main() {
+  Test t;
+  t.exists = 1;
+  t.do_stuff();
+}
