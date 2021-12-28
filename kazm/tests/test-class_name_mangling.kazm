@@ -1,0 +1,29 @@
+/* Make sure that we can have multiple classes with methods of the same name */
+
+class Class1 {
+  int x;
+  bool y;
+  int z;
+
+  void do_something() {
+    int_println(me.x);
+  }
+};
+
+class Class2 {
+  int x;
+  int y;
+  bool z;
+
+  void do_something() {
+    println("Hello from Class2");
+  }
+};
+
+int main() {
+  Class1 c1;
+  c1.x = 12;
+  Class2 c2;
+  c2.do_something();
+  c1.do_something();
+}

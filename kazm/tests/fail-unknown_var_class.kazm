@@ -1,0 +1,12 @@
+class Test {
+  int nonexistent;
+
+  void do_stuff() {
+    int_println(nonexistent);
+  }
+};
+
+int main() {
+  Test t;
+  t.do_stuff();
+}
