@@ -1,6 +1,7 @@
 int main(){
 	array char[5] my_arr = ['a', 'b', 'c', 'd', 'e'];
-	char b = my_arr[0];
+	int x = 0;
+	char b = my_arr[x];
 	char_println(b);
 
 }
