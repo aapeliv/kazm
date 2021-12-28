@@ -230,7 +230,7 @@ let gen (bind_list, sfunction_decls, sclass_decls) =
           | A.Not                  -> L.build_not
         in
         let Ctx(builder, sp) = ctx1 in
-        let new_expr = lbuild e' "im" builder in
+        let new_expr = lbuild e' "unop_res" builder in
         (ctx1, new_expr)
     | SBinop(e1, op, e2) ->
       (* Lookup right thing to build in llvm *)
@@ -258,7 +258,7 @@ let gen (bind_list, sfunction_decls, sclass_decls) =
       let (ctx1, first) = codegen_expr ctx e1 in
       let (ctx2, second) = (codegen_expr ctx1 e2) in
       let Ctx(builder, sp) = ctx2 in
-      let new_expr = lbuild first second "im" builder in
+      let new_expr = lbuild first second "binop_res" builder in
       (ctx2, new_expr)
     | SId(fqn) ->
       let var = find_fq_var builder sp fqn in
@@ -402,10 +402,11 @@ let gen (bind_list, sfunction_decls, sclass_decls) =
         let loop_builder = L.builder_at_end context loop_blk in
         (* Loop body (an iteration) *)
         let while_ctx = Ctx(loop_builder, new_scope ctx) in
-        ignore (codegen_stmt while_ctx stmt);
-        ignore (build_scope_exit while_ctx);
+        let while_ctx' = codegen_stmt while_ctx stmt in
+        ignore (build_scope_exit while_ctx');
         (* Back to start after a loop iteration *)
-        ignore (L.build_br start_blk loop_builder);
+        let Ctx(loop_builder', _) = while_ctx' in
+        ignore (L.build_br start_blk loop_builder');
 
         (* Generate the end block where we end up after the while cond becomes false *)
         let end_blk = L.append_block context "end" fn in
