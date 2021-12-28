@@ -243,14 +243,13 @@ let gen (bind_list, sfunction_decls, sclass_decls) =
       let array = L.build_load array_ptr (name ^ "__array") builder in
       let element = L.build_gep array [| pos |] (name ^ "__element_ptr") builder in
       (ctx', L.build_load element (name ^ "__element") builder)
-    | SArrayAssign(s, e1, e2) ->
-      let (ctx', ind) = codegen_expr ctx e1 in
-      let (ty, _) = e1 in
-      let pos = L.build_add ind (L.const_int i32_t 0) "accpos" builder in
-      let (ctx'', arr) = codegen_expr ctx' (ty, SId([s])) in
-      let (ctx''', new_val) = codegen_expr ctx'' e2 in
-      let elt_ptr = L.build_gep arr [| pos |] "arrelt" builder in
-      (ctx''', L.build_store new_val elt_ptr builder)
+    | SArrayAssign(name, pos_ex, assign_ex) ->
+      let (ctx', assign) = codegen_expr ctx assign_ex in
+      let (ctx'', pos) = codegen_expr ctx' pos_ex in
+      let array_ptr = find_fq_var builder sp [name] in
+      let array = L.build_load array_ptr (name ^ "__array") builder in
+      let element = L.build_gep array [| pos |] (name ^ "__element_ptr") builder in
+      (ctx'', L.build_store assign element builder)
   in
 
   (* Add terminator to end of a basic block *)
