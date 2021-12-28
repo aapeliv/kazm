@@ -219,16 +219,16 @@ let gen (bind_list, sfunction_decls, sclass_decls) =
       (ctx, e')
     | SArrayLit(arr_t, exs) ->
       (* arr: sexpr list = typ * sx list *)
-      let size = L.const_int i32_t (List.length exs) in
-      let ty = typ_to_t (A.ArrT(arr_t, 0)) in
+      let size = List.length exs in
+      let ty = typ_to_t (A.ArrT(arr_t, size)) in
       (* allocate memory for array *)
-      let arr_alloca = L.build_array_alloca ty size "array_literal" builder in
+      let arr_alloca = L.build_array_malloc ty (L.const_int i32_t size) "array_literal" builder in
       (* bitcast -- pointer-to-int *)
       let arr_ptr = L.build_pointercast arr_alloca ty "array_ptr" builder in
       (* store an element in slot `ix` and pass off context to the next one *)
       let store_el (ctx, ix) el =
         let (ctx', gex) = codegen_expr ctx (arr_t, el) in
-        let element_ptr = L.build_gep arr_ptr [|  (L.const_int i32_t ix) |] "array_element" builder in
+        let element_ptr = L.build_in_bounds_gep arr_ptr [|  (L.const_int i32_t ix) |] "array_element" builder in
         ignore (L.build_store gex element_ptr builder);
         (ctx', ix + 1)
       in
@@ -247,7 +247,7 @@ let gen (bind_list, sfunction_decls, sclass_decls) =
     let array_ptr = find_fq_var builder sp [name] in
     (* Load the array address into a register *)
     let array = L.build_load array_ptr (name ^ "__array") builder in
-    (ctx', L.build_gep array [| pos |] (name ^ "__element_ptr") builder)
+    (ctx', L.build_in_bounds_gep array [| pos |] (name ^ "__element_ptr") builder)
   in
 
   (* Add terminator to end of a basic block *)
