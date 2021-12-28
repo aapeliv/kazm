@@ -69,7 +69,7 @@ fdecl:
      { { typ = $1;
          fname = $2;
          formals = List.rev $4;
-         body = List.rev $7 } }
+         body = $7 } }
 
 // TO THINK: Order matters?
 cdecl:
@@ -93,7 +93,7 @@ mdecl:
      { { typ = $1;
          fname = $2;
          formals = List.rev $4;
-         body = List.rev $7 } }
+         body = $7 } }
 
 formals_opt:
     /* nothing */ { [] }
@@ -122,7 +122,7 @@ var_decl:
 
 stmts:
     { [] }
-  | stmts stmt { $2::$1 }
+  | stmts stmt { $1 @ [$2] }
 
 stmt:
     expr SEMI { Expr $1 }
@@ -134,7 +134,7 @@ stmt:
   | var_decl_stmt SEMI { $1 }
 
 block_stmt:
-    BRACE_L stmts BRACE_R { Block(List.rev $2) }
+    stmts { Block($1) }
 
 return_stmt:
     RETURN expr { Return $2 }
@@ -144,14 +144,14 @@ break_stmt:
     BREAK { Break }
 
 if_stmt:
-    IF PAREN_L expr PAREN_R BRACE_L stmts BRACE_R ELSE BRACE_L stmts BRACE_R { If($3, Block(List.rev $6), Block(List.rev $10)) }
-  | IF PAREN_L expr PAREN_R BRACE_L stmts BRACE_R { If($3, Block(List.rev $6), Block([])) }
+    IF PAREN_L expr PAREN_R BRACE_L stmts BRACE_R ELSE BRACE_L stmts BRACE_R { If($3, Block($6), Block($10)) }
+  | IF PAREN_L expr PAREN_R BRACE_L stmts BRACE_R { If($3, Block($6), Block([])) }
 
 while_stmt:
-    WHILE PAREN_L expr PAREN_R BRACE_L stmts BRACE_R { While($3, Block(List.rev $6)) }
+    WHILE PAREN_L expr PAREN_R BRACE_L stmts BRACE_R { While($3, Block($6)) }
 
 for_stmt:
-    FOR PAREN_L expr SEMI expr SEMI expr PAREN_R BRACE_L stmts BRACE_R { For($3, $5, $7, Block(List.rev $10)) }
+    FOR PAREN_L expr SEMI expr SEMI expr PAREN_R BRACE_L stmts BRACE_R { For($3, $5, $7, Block($10)) }
 
 var_decl_stmt:
     typ IDENTIFIER { Initialize(($1, $2), None) }
