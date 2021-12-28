@@ -290,14 +290,36 @@ let check (globals, functions, classes) =
                 let se = expr locals e in
                 let typ' = match typ with
                     Arr(t, l) -> 
-                    let e' = match e with 
-                      ArrayLit(ex) -> ex 
-                    | _ -> raise(Failure(name ^" needs to be initialized to an array literal"))
-                    in 
-                    (* Check if array is declared and init with wrong length *)
-                    if (List.length e') != l then raise(Failure("Array (" ^ name ^ ") " ^
-                    "declared with length (" ^ string_of_int l ^") but init with length (" ^ string_of_int (List.length e') ^")" )) else t
-                    (* Check if array is declared and init with wrong types *)
+                      let e' = (match e with 
+                        ArrayLit(ex) -> ex 
+                      | _ -> raise(Failure(name ^" needs to be initialized to an array literal")))
+                      in 
+                      (* Check if array is declared and init with wrong length & wrong type *)
+                      if (List.length e') != l then raise(Failure("Array (" ^ name ^ ") " ^
+                        "declared with length (" ^ string_of_int l ^") but init with length (" ^ string_of_int (List.length e') ^")" )) else t 
+                      (* let ty_inconsistent_err = "inconsistent types in array " ^ name in
+                      let fst_e = List.hd el in
+                      let (fst_ty, _) = expr fst_e in
+                      let (arr_ty_len, arr_ty_e) = List.fold_left (fun (t, l) e -> 
+                        let (et, e') = expr e in
+                        let is_arr = (
+                          match et with
+                            Arr(atype, alen) -> true
+                          | _ -> false) in
+                        if ((et = fst_ty) || is_arr) then (t+1, (et, e')::l) else (t, (et, e')::l)) (0,[]) e
+
+                         *)
+                      (* if (Literal(l) > 0) then 
+                      let (first_type, _ ) = expr symbols (List.hd e') in 
+                      let ty' = (match first_type with
+                          t -> t
+                        |_ ->  raise(Failure(name ^ "must be declared with " ^ string_of_typ typ ^ " types")) )
+                      in let check_call e =
+                          let (et, e') = expr symbols e in
+                          let err = "argument of incorrect type included: " ^ string_of_typ first_type ^
+                            " expected, but " ^ string_of_typ et ^ " found"
+                          in (check_assign t et err, e')  *)
+                    (* if (t != first_type) then raise(Failure(name ^ "must be declared with " ^string_of_typ typ ^ " types")) *)
                   |_ -> Int
                 in 
                 if StringMap.mem name locals = true 
