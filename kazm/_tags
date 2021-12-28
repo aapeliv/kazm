@@ -6,4 +6,5 @@ true : warn(+a-4)
 
 # Instruct ocamlbuild to ignore the "printbig.o" file when it's building
 "builtins.o": not_hygienic
+"_kazm_build": not_hygienic
 "_tests_build": not_hygienic

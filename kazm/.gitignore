@@ -1,4 +1,5 @@
 _build/
+_kazm_build/
 _tests_build/
 _tests_data/
 *.native

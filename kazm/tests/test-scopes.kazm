@@ -1,0 +1,12 @@
+int main() {
+  {
+    int a;
+    a = 5;
+    int_println(a);
+  }
+  {
+    int a;
+    a = 42;
+    int_println(a);
+  }
+}

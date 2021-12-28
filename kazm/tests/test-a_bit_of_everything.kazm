@@ -1,0 +1,31 @@
+class TwoNumbers {
+  int a;
+  int b;
+
+  int mul() { return me.a * me.b; }
+  int add() { return me.a + me.b; }
+};
+
+int main() {
+  // builtin function implemented in C
+  println("Hello!");
+
+  // Classes
+  TwoNumbers ns;
+  ns.a = 3;
+  ns.b = 7;
+  int_println(2 * ns.mul()); // 42
+
+  // Arrays
+  array double[3] things = [0.1, 0.2, 0.7];
+  int i;
+  double sum = 0.;
+  for (i = 0; i < things.length; i = i + 1) {
+    sum = sum + things[i];
+  }
+  double_println(sum); // 1.000000
+
+  // Scopes
+  { int a = 5; int_println(a); }
+  { int a = 6; int_println(a); }
+}
