@@ -1,0 +1,6 @@
+int main(){
+	char b = 'a';
+	char_println(b);
+	b = 'b';
+	char_println(b);
+}

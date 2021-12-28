@@ -222,6 +222,7 @@ let gen (bind_list, sfunction_decls, sclass_decls) =
     | SDliteral(value) -> (ctx, L.const_float double_t (float_of_string value))
     (* New string literal (just make a new global string) *)
     | SStringLit(value) -> (ctx, L.build_global_stringptr value "globalstring" builder)
+    | SCharLit(value) -> (ctx, L.const_int i8_t (Char.code (String.get value 0)))
     | SUnop(op, ((t, _) as e)) ->
         let (ctx1, e') = codegen_expr ctx e in
         let lbuild = match op with
@@ -477,6 +478,12 @@ let gen (bind_list, sfunction_decls, sclass_decls) =
           let ctx = Ctx(builder, add_var sp name var vtyp) in
           let (ctx', e') = codegen_expr ctx e in
           ignore (L.build_store e' var builder);
+          ctx'
+        | A.Char -> 
+          let var = L.build_alloca (typ_to_t vtyp) name builder in
+          let ctx = Ctx(builder, add_var sp name var vtyp) in 
+          let (ctx', e') = codegen_expr ctx e in
+          ignore(L.build_store e' var builder);
           ctx'
         | A.Double ->  
             let var = L.build_alloca (typ_to_t vtyp) name builder in
