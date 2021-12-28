@@ -266,6 +266,8 @@ let check (globals, functions, classes) =
       Failure ("return gives " ^ string_of_typ t ^ " expected " ^
             string_of_typ func.typ ^ " in " ^ string_of_expr e))
 
+      | StmtScope(block) ->
+        check_stmt block locals
         (* A block is correct if each statement is correct and nothing
             follows any Return statement.  Nested blocks are flattened. *)
       | Block sl ->

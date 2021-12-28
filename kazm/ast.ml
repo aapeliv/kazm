@@ -27,6 +27,7 @@ type expr =
 
 type stmt =
     Block of stmt list
+  | StmtScope of stmt
   | Expr of expr
   | Return of expr
   | If of expr * stmt * stmt
@@ -103,6 +104,8 @@ let rec string_of_expr = function
 let rec string_of_stmt = function
     Block(stmts) ->
       "{\n" ^ String.concat "" (List.map string_of_stmt stmts) ^ "}\n"
+  | StmtScope(stmt) ->
+    string_of_stmt stmt
   | Expr(expr) -> string_of_expr expr ^ ";\n";
   | Return(expr) -> "return " ^ string_of_expr expr ^ ";\n";
   | EmptyReturn -> "return;\n";

@@ -126,12 +126,16 @@ stmts:
 
 stmt:
     expr SEMI { Expr $1 }
+  | scope { $1 }
   | return_stmt SEMI { $1 }
   | break_stmt SEMI { $1 }
   | if_stmt { $1 }
   | while_stmt { $1 }
   | for_stmt { $1 }
   | var_decl_stmt SEMI { $1 }
+
+scope:
+    BRACE_L block_stmt BRACE_R { StmtScope($2) }
 
 block_stmt:
     stmts { Block($1) }
@@ -144,14 +148,14 @@ break_stmt:
     BREAK { Break }
 
 if_stmt:
-    IF PAREN_L expr PAREN_R BRACE_L stmts BRACE_R ELSE BRACE_L stmts BRACE_R { If($3, Block($6), Block($10)) }
-  | IF PAREN_L expr PAREN_R BRACE_L stmts BRACE_R { If($3, Block($6), Block([])) }
+    IF PAREN_L expr PAREN_R scope ELSE scope { If($3, $5, $7) }
+  | IF PAREN_L expr PAREN_R scope { If($3, $5, Block([])) }
 
 while_stmt:
-    WHILE PAREN_L expr PAREN_R BRACE_L stmts BRACE_R { While($3, Block($6)) }
+    WHILE PAREN_L expr PAREN_R scope { While($3, $5) }
 
 for_stmt:
-    FOR PAREN_L expr SEMI expr SEMI expr PAREN_R BRACE_L stmts BRACE_R { For($3, $5, $7, Block($10)) }
+    FOR PAREN_L expr SEMI expr SEMI expr PAREN_R scope { For($3, $5, $7, $9) }
 
 var_decl_stmt:
     typ IDENTIFIER { Initialize(($1, $2), None) }
