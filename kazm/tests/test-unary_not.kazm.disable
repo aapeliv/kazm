@@ -1,0 +1,15 @@
+/* test ! */
+
+int main() {
+  bool a;
+  bool b;
+  a = true;
+  b = false;
+  a = !a;
+  if (!a){
+    println("yay");
+  }
+  else {
+    println("bad");
+  }
+}

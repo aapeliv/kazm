@@ -1,0 +1,22 @@
+Before while
+next_int() < 3
+next_int() < 3
+next_int() < 3
+After while
+Start of fn
+Took if
+After if
+thing() = 5
+without newline: ! hello world
+27
+Integer arithmetic: 6 should equal 6
+8
+Double 3.14 is: 3.140000
+In test
+4
+Next ints:
+4
+was less than 6
+6
+was not less than 6
+8
