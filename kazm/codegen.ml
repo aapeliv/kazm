@@ -28,25 +28,38 @@ let gen (bind_list, sfunction_decls, sclass_decls) =
   let char_ptr_t = L.pointer_type char_t in
   let void_ptr_t = L.pointer_type i8_t in
 
+  let gen_cls_t map cls =
+    let name = cls.scname in
+    let cls_t = L.named_struct_type context name in
+    SMap.add name cls_t map
+  in
+
+  let cls_ts = List.fold_left gen_cls_t SMap.empty sclass_decls in
+
   (* Map our AST type to LLVM type *)
-  let typ_to_t_TODO_WITHOUT_CLASSES = function
+  let rec typ_to_t = function
       A.Void -> void_t
     | A.Bool -> i1_t
     | A.Int -> i32_t
+    | A.String -> string_t
     | A.Double -> double_t
+    | A.ClassT(name) ->
+      let cls_t = SMap.find name cls_ts in
+      L.pointer_type cls_t
+    | A.ArrT(ty, _) -> L.pointer_type (typ_to_t ty)
   in
 
   (* Codegen function definitions *)
   let get_func_sig func =
-    let ret_t = typ_to_t_TODO_WITHOUT_CLASSES func.styp in
-    let arg_types = List.map (fun sformal -> typ_to_t_TODO_WITHOUT_CLASSES (fst sformal)) func.sformals in
+    let ret_t = typ_to_t func.styp in
+    let arg_types = List.map (fun sformal -> typ_to_t (fst sformal)) func.sformals in
     (ret_t, arg_types)
   in
 
   let codegen_class_decl map cls =
     let name = cls.scname in
-    let member_ts = List.map (fun v -> typ_to_t_TODO_WITHOUT_CLASSES (fst v)) cls.scvars in
-    let cls_t = L.named_struct_type context name in
+    let member_ts = List.map (fun v -> typ_to_t (fst v)) cls.scvars in
+    let cls_t = SMap.find name cls_ts in
     let add_method map mthd =
       let mname = mthd.sfname in
       let mangled_name = mangle_method_name name mname in
@@ -62,19 +75,6 @@ let gen (bind_list, sfunction_decls, sclass_decls) =
   in
 
   let all_classes = List.fold_left codegen_class_decl SMap.empty sclass_decls in
-
-  (* TODO TODO TODO *)
-  let typ_to_t = function
-      A.Void -> void_t
-    | A.Bool -> i1_t
-    | A.Int -> i32_t
-    | A.String -> string_t
-    | A.Double -> double_t
-    | A.ClassT(name) ->
-      let (cls, cls_t, mthds) = SMap.find name all_classes in
-      L.pointer_type cls_t
-    | A.ArrT(ty, _) -> L.pointer_type (typ_to_t_TODO_WITHOUT_CLASSES ty)
-  in
 
   let codegen_func_decl name ret_t arg_ts =
     let func_t = L.function_type ret_t (Array.of_list arg_ts) in
