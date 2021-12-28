@@ -1,7 +1,0 @@
-int main() {
-    int a;
-    int b;
-    a = 9;
-    b = 4;
-    int_println(a/b);
-}

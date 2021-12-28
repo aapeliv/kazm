@@ -1,7 +1,0 @@
-int func() {
-  return 2.5;
-}
-
-int main() {
-  func();
-}

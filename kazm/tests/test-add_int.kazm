@@ -1,6 +1,6 @@
 int main() {
   int x;
   x = 100;
-  x = x + 100;
+  x = x + -100;
   int_println(x);
 }

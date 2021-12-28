@@ -2,7 +2,7 @@ int main() {
   bool x;
   x = false;
   if (x != false) {
-    println("pass");
+    println("fail");
   } else {
     println("pass2");
   }
