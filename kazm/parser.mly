@@ -113,12 +113,8 @@ typ:
   | CLASS_IDENTIFIER { ClassT($1) }
   | ARRAY typ SQB_L INT_LITERAL SQB_R {ArrT($2, $4)}
 
-var_decls:
-    { [] }
-  | var_decls var_decl { $2 :: $1 }
-
 var_decl:
-    typ IDENTIFIER SEMI { ($1, $2) }
+    typ IDENTIFIER SEMI { ($1, $2) } 
 
 stmts:
     { [] }
