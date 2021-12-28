@@ -310,8 +310,7 @@ let check (globals, functions, classes) =
                       "declared with length (" ^ string_of_int l ^") but init with length (" ^ string_of_int (List.length e') ^")" )) else t 
                   | _ -> typ
                 in
-                if typ <> typ' then raise(Failure("initialize: variable and value to be assigned of different types " ^ 
-                  string_of_typ typ ^ " and " ^ string_of_typ typ'))
+                if typ <> typ' then raise(Failure("initialize: variable and value to be assigned of different types"))
                 else 
                   (if StringMap.mem name locals = true
                             then raise (Failure ("cannot initialize " ^ name ^ " twice"))
