@@ -292,11 +292,13 @@ let check (globals, functions, classes) =
                     Arr(t, l) -> 
                     let e' = match e with 
                       ArrayLit(ex) -> ex 
-                    | _ -> raise(Failure(""))
+                    | _ -> raise(Failure(name ^" needs to be initialized to an array literal"))
                     in 
+                    (* Check if array is declared and init with wrong length *)
                     if (List.length e') != l then raise(Failure("Array (" ^ name ^ ") " ^
                     "declared with length (" ^ string_of_int l ^") but init with length (" ^ string_of_int (List.length e') ^")" )) else t
-                  | _ -> Int
+                    (* Check if array is declared and init with wrong types *)
+                  |_ -> Int
                 in 
                 if StringMap.mem name locals = true 
                           then raise (Failure ("cannot initialize " ^ name ^ " twice"))

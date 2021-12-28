@@ -1,3 +1,0 @@
-int main(){
-	array int[4] my_arr = ["a", "b", "c", "d"];
-}
