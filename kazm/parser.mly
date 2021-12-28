@@ -99,15 +99,6 @@ formals_opt:
     /* nothing */ { [] }
   | formal_list   { $1 }
 
-/* doesnt have a type yet */
-// constructor:
-//   CLASS_IDENTIFIER PAREN_L formals_opt PAREN_R BRACE_L var_decls stmts BRACE_R { {
-//       fname = $1;
-//       formals = List.rev $3;
-//       locals = List.rev $6;
-//       body = List.rev $7 } }
-
-
 formal_list:
     typ IDENTIFIER { [($1,$2)] }
   | formal_list COMMA typ IDENTIFIER { ($3,$4) :: $1 }
@@ -190,9 +181,9 @@ expr:
   | MINUS expr %prec NOT { Unop(Neg, $2)      }
   | PAREN_L expr PAREN_R { $2 }
   | fq_identifier ASSIGN expr { Assign($1, $3) }
-  | fq_identifier PAREN_L args_opt PAREN_R { Call($1, $3) }
+  | fq_identifier PAREN_L expr_list PAREN_R { Call($1, $3) }
   | fq_identifier      { Id($1) }
-  | SQB_L args_opt SQB_R { ArrayLit($2) }
+  | SQB_L expr_list SQB_R { ArrayLit($2) }
   | IDENTIFIER SQB_L expr SQB_R { ArrayAccess($1, $3) }
   | IDENTIFIER SQB_L expr SQB_R ASSIGN expr { ArrAssign($1, $3, $6) }
 
@@ -200,16 +191,7 @@ fq_identifier:
     IDENTIFIER { [$1] }
   | IDENTIFIER DOT IDENTIFIER { $1::$3::[] }
 
-args_opt:
-    /* nothing */ { [] }
-  | args_list     { List.rev $1 }
-
-args_list:
-    expr                    { [$1] }
-  | args_list COMMA expr { $3 :: $1 }
-
 expr_list:
     { [] }
-  | expr_list COMMA expr { $3::$1 }
-  | expr { $1::[] }
-
+  | expr_list COMMA expr { $1 @ [$3] }
+  | expr { [$1] }
