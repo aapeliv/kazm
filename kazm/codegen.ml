@@ -237,19 +237,19 @@ let gen (bind_list, sfunction_decls, sclass_decls) =
       let (ctx', _) = List.fold_left store_el (ctx, 0) exs in
       (ctx', arr_ptr)
     | SArrayAccess(name, pos_ex) ->
-      let (ctx', pos) = codegen_expr ctx pos_ex in
-      let array_ptr = find_fq_var builder sp [name] in
-      (* Load the array address into a register *)
-      let array = L.build_load array_ptr (name ^ "__array") builder in
-      let element = L.build_gep array [| pos |] (name ^ "__element_ptr") builder in
+      let (ctx', element) = build_array_element_ptr ctx name pos_ex in
       (ctx', L.build_load element (name ^ "__element") builder)
     | SArrayAssign(name, pos_ex, assign_ex) ->
       let (ctx', assign) = codegen_expr ctx assign_ex in
-      let (ctx'', pos) = codegen_expr ctx' pos_ex in
-      let array_ptr = find_fq_var builder sp [name] in
-      let array = L.build_load array_ptr (name ^ "__array") builder in
-      let element = L.build_gep array [| pos |] (name ^ "__element_ptr") builder in
+      let (ctx'', element) = build_array_element_ptr ctx' name pos_ex in
       (ctx'', L.build_store assign element builder)
+  and build_array_element_ptr ctx name pos_ex =
+    let Ctx(builder, sp) = ctx in
+    let (ctx', pos) = codegen_expr ctx pos_ex in
+    let array_ptr = find_fq_var builder sp [name] in
+    (* Load the array address into a register *)
+    let array = L.build_load array_ptr (name ^ "__array") builder in
+    (ctx', L.build_gep array [| pos |] (name ^ "__element_ptr") builder)
   in
 
   (* Add terminator to end of a basic block *)
