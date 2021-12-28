@@ -7,11 +7,11 @@ class StructWithMethods {
   }
 
   int getX() {
-    return 4;
+    return me.x;
   }
 
-  void print6() {
-    int_println(6);
+  void printY() {
+    int_println(me.y);
   }
 };
 
