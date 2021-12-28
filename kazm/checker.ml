@@ -42,7 +42,8 @@ let check (globals, functions, classes) =
                                ("int_print", Int);
                                ("int_println", Int);
                                ("double_print", Double);
-                               ("double_println", Double)]
+                               ("double_println", Double);
+                               ("char_println", Char)]
   in
 
   (* Add function name to symbol table *)
