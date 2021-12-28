@@ -1,0 +1,25 @@
+int main() {
+  int i = 0;
+  while (i < 10) {
+    i = i + 1;
+    int_print(i);
+  }
+  println("");
+  { int j = 9;
+    int_print(j+1);
+    { int m = 9;
+      j = j + 1;
+      int_print(j);
+    }
+  }
+  println("");
+  {
+    string j = "hello";
+    println(j);
+  }
+  string j = "world";
+  while(i < 11) {
+    i = i + 1;
+    println(j);
+  }
+}

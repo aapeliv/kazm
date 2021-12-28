@@ -107,15 +107,15 @@ let check (globals, functions, classes) =
     in
 
     (* Return a variable type from our local symbol table *)
-    let type_of_identifier s locals =
-      try StringMap.find s locals
+    let type_of_identifier s scope =
+      try StringMap.find s scope
       with Not_found -> try StringMap.find s symbols
                with Not_found -> raise (Failure ("undeclared identifier " ^ s))
     in
 
     (* Return a ref (e.g. car.power) type *)
-    let trace_type cls_instance cls_var locals =
-      match type_of_identifier cls_instance locals with
+    let trace_type cls_instance cls_var scope =
+      match type_of_identifier cls_instance scope with
         ClassT(clsname) -> (if StringMap.mem clsname class_decls = false
                             then raise (Failure ("no class type " ^ clsname))
                             else let vars_map = StringMap.find clsname class_decls in
@@ -134,7 +134,7 @@ let check (globals, functions, classes) =
     in
 
     (* Return a semantically-checked expression, i.e., with a type *)
-    let rec expr locals e =
+    let rec expr scope e =
       match e with
         Literal  l -> (Int, SLiteral l)
       | Dliteral l -> (Double, SDliteral l)
@@ -142,20 +142,20 @@ let check (globals, functions, classes) =
       | CharLit c -> (Char, SCharLit c)
       | StringLit s -> (String, SStringLit s)
       | Noexpr     -> (Void, SNoexpr)
-      | Id (s :: []) -> (type_of_identifier s locals, SId([s])) (* TODO: check if hd class is valid *)
-      | Id (s :: var :: []) ->  (trace_type s var locals, SId(s :: [var]))
+      | Id (s :: []) -> (type_of_identifier s scope, SId([s])) (* TODO: check if hd class is valid *)
+      | Id (s :: var :: []) ->  (trace_type s var scope, SId(s :: [var]))
       | Id (_) -> raise(Failure ("Usage: cls_instance.cls_var (e.g. car.power)"))
       | Assign(ref, e) as ex ->
           let lt = match ref with
-            var :: [] -> type_of_identifier var locals
-          | s :: var :: [] -> trace_type s var locals
+            var :: [] -> type_of_identifier var scope
+          | s :: var :: [] -> trace_type s var scope
           | _ -> raise (Failure ("Usage: cls_instance.cls_var (e.g. car.power)"))
-          and (rt, e') = expr locals e in
+          and (rt, e') = expr scope e in
           let err = "illegal assignment " ^ string_of_typ lt ^ " = " ^
                       string_of_typ rt ^ " in " (* ^ string_of_expr ex *)
           in (check_assign lt rt err, SAssign(ref, (rt, e')))
       | Unop(op, e) as ex ->
-          let (t, e') = expr locals e in
+          let (t, e') = expr scope e in
           let ty = match op with
             Neg when t = Int || t = Double -> t
           | Not when t = Bool -> Bool
@@ -164,8 +164,8 @@ let check (globals, functions, classes) =
                                  " in " ^ string_of_expr ex))
           in (ty, SUnop(op, (t, e')))
       | Binop(e1, op, e2) as e ->
-          let (t1, e1') = expr locals e1
-          and (t2, e2') = expr locals e2 in
+          let (t1, e1') = expr scope e1
+          and (t2, e2') = expr scope e2 in
           (* All binary operators require operands of the same type *)
           let same = t1 = t2 in
           let ty = match op with
@@ -187,7 +187,7 @@ let check (globals, functions, classes) =
       | Call(ref, args) as call ->
           let fd = match ref with
             fname :: [] -> find_func fname
-          | s :: methodname :: [] -> (match type_of_identifier s locals with
+          | s :: methodname :: [] -> (match type_of_identifier s scope with
                                       ClassT(clsname) -> trace_method clsname methodname
                                     | _ -> raise (Failure (s ^ " must be a class instance")))
           | _ -> raise (Failure ("Usage: cls_instance.cls_var (e.g. car.power)"))
@@ -197,7 +197,7 @@ let check (globals, functions, classes) =
             raise (Failure ("expecting " ^ string_of_int param_length ^
                           " arguments in " ^ string_of_expr call))
             else let check_call (ft, _) e =
-              let (et, e') = expr locals e in
+              let (et, e') = expr scope e in
               let err = "illegal argument found " ^ string_of_typ et ^
                 " expected " ^ string_of_typ ft ^ " in " ^ string_of_expr e
               in (check_assign ft et err, e')
@@ -205,7 +205,7 @@ let check (globals, functions, classes) =
             let args' = List.map2 check_call fd.formals args
             in (fd.typ, SCall(ref, args'))
       | ArrayLit(values) ->
-        let array_body = List.map (expr locals) values in
+        let array_body = List.map (expr scope) values in
         (* Type of first element in array *)
         let array_t, _ = List.hd array_body in
         let type_check el =
@@ -217,11 +217,11 @@ let check (globals, functions, classes) =
         (ArrT(array_t, List.length values), SArrayLit(array_t, List.map snd array_body))
       | ArrayAccess(v, e) -> (* array name and array index *)
         (* check if type of e is an int *)
-        let (typ', sx') = expr locals e in
+        let (typ', sx') = expr scope e in
           if typ' != Int
           then raise(Failure("Wrong type of array index in array access"))
           else
-            let v_ty = type_of_identifier v locals in
+            let v_ty = type_of_identifier v scope in
             let e_ty = match v_ty with
               ArrT(t, l) ->  match e with
                                Literal l1 -> if l1 >= l then raise(Failure("Array (" ^ v ^") index (" ^
@@ -231,11 +231,11 @@ let check (globals, functions, classes) =
             in (e_ty, SArrayAccess(v, (typ', sx')))
       | ArrayAssign(v, e1, e2) -> (* array name array index value to be assigned *)
         (* check if type of e1 is int *)
-        let (typ', sx') = expr locals e1 in
+        let (typ', sx') = expr scope e1 in
           if typ' != Int
           then raise(Failure("Wrong type of array index in array access"))
           else (* check if type of v is array *)
-            let v_ty = type_of_identifier v locals in
+            let v_ty = type_of_identifier v scope in
             let e_ty = match v_ty with
                 ArrT(t, l) -> match e1 with
                                Literal l1 -> if l1 >= l then raise(Failure("Array (" ^ v ^") index (" ^
@@ -243,10 +243,10 @@ let check (globals, functions, classes) =
                               |_ -> t
               | _ -> raise(Failure("Wrong type of variable in array assign"))
             in
-            let (typ'', sx'') = expr locals e2 in
+            let (typ'', sx'') = expr scope e2 in
             (e_ty, SArrayAssign(v, (typ', sx'), (typ'', sx'')))
       | ArrayLength(name) -> (*return the length of array *)
-        let v_ty = type_of_identifier name locals in
+        let v_ty = type_of_identifier name scope in
         let e_ty = match v_ty with 
             ArrT(t, l) -> Int
           | _ -> raise(Failure("Must call .length on an array. " ^ name ^ " is not an array"))
@@ -254,51 +254,51 @@ let check (globals, functions, classes) =
         (e_ty, SArrayLength(name))
     in
 
-    let check_bool_expr e locals =
-      let (t', e') = expr locals e
+    let check_bool_expr e scope =
+      let (t', e') = expr scope e
       and err = "expected Boolean expression in " ^ string_of_expr e
       in if t' != Bool then raise (Failure err) else (t', e')
     in
 
     (* Return a semantically-checked statement i.e. containing sexprs *)
-    let rec check_stmt stmt locals =
+    let rec check_stmt stmt scope =
       match stmt with
-        Expr e -> SExpr (expr locals e)
+        Expr e -> SExpr (expr scope e)
       | Initialize (_, _) -> raise (Failure ("Initialize stmts are inside Block."))
-      | If(p, b1, b2) -> SIf(check_bool_expr p locals, check_stmt b1 locals, check_stmt b2 locals)
-      | For(e1, e2, e3, st) -> check_stmt (Block([Expr(e1); While(e2, Block([st; Expr(e3)]))])) locals
-      | While(p, s) -> SWhile(check_bool_expr p locals, check_stmt s locals)
+      | If(p, b1, b2) -> SIf(check_bool_expr p scope, check_stmt b1 scope, check_stmt b2 scope)
+      | For(e1, e2, e3, st) -> check_stmt (Block([Expr(e1); While(e2, Block([st; Expr(e3)]))])) scope
+      | While(p, s) -> SWhile(check_bool_expr p scope, check_stmt s scope)
       | EmptyReturn -> SEmptyReturn
       | Break -> SBreak
-      | Return e -> let (t, e') = expr locals e in
+      | Return e -> let (t, e') = expr scope e in
         if t = func.typ then SReturn (t, e')
         else raise (
       Failure ("return gives " ^ string_of_typ t ^ " expected " ^
             string_of_typ func.typ ^ " in " ^ string_of_expr e))
 
       | StmtScope(block) ->
-        check_stmt block locals
+        check_stmt block scope
         (* A block is correct if each statement is correct and nothing
             follows any Return statement.  Nested blocks are flattened. *)
       | Block sl ->
-          let rec check_stmt_list stmts locals =
+          let rec check_stmt_list stmts scope =
             match stmts with
-              [Return _ as s] -> [check_stmt s locals]
+              [Return _ as s] -> [check_stmt s scope]
             | Initialize ((ClassT c, name), None) :: ss ->
                 if StringMap.mem c class_decls = false then raise (Failure (c ^" class " ^ "is undefined"))
-                else SInitialize((ClassT c, name), None) :: check_stmt_list ss (StringMap.add name (ClassT c) locals)
+                else SInitialize((ClassT c, name), None) :: check_stmt_list ss (StringMap.add name (ClassT c) scope)
             | Initialize (bd, None) :: ss ->
                 let (typ, name) = bd in
-                if StringMap.mem name locals = true
+                if StringMap.mem name scope = true
                 then raise (Failure ("cannot initialize " ^ name ^ " twice"))
-                else SInitialize(bd, None) :: check_stmt_list ss (StringMap.add name typ locals)
+                else SInitialize(bd, None) :: check_stmt_list ss (StringMap.add name typ scope)
             | Initialize ((ClassT c, name), Some e) :: ss ->
-                let se = expr locals e in
+                let se = expr scope e in
                 if StringMap.mem c class_decls = false then raise (Failure (c ^" class " ^ "is undefined"))
-                else SInitialize((ClassT c, name), None) :: check_stmt_list ss (StringMap.add name (ClassT c) locals)
+                else SInitialize((ClassT c, name), None) :: check_stmt_list ss (StringMap.add name (ClassT c) scope)
             | Initialize (bd, Some e) :: ss ->
                 let (typ, name) = bd in
-                let se = expr locals e in
+                let se = expr scope e in
                 let (typ', sx') = se in 
                 let _ = match typ with 
                     ArrT(t, l) -> let e' = (match e with 
@@ -312,14 +312,14 @@ let check (globals, functions, classes) =
                 in
                 if typ <> typ' then raise(Failure("initialize: variable and value to be assigned of different types"))
                 else 
-                  (if StringMap.mem name locals = true
+                  (if StringMap.mem name scope = true
                             then raise (Failure ("cannot initialize " ^ name ^ " twice"))
-                            else SInitialize(bd, Some se) :: check_stmt_list ss (StringMap.add name typ locals))
+                            else SInitialize(bd, Some se) :: check_stmt_list ss (StringMap.add name typ scope))
             | Return _ :: _   -> raise (Failure "nothing may follow a return")
-            | Block sl :: ss  -> check_stmt_list (sl @ ss) locals (* Flatten blocks *)
-            | s :: ss         -> check_stmt s locals :: check_stmt_list ss locals
+            | Block sl :: ss  -> check_stmt_list (sl @ ss) scope (* Flatten blocks *)
+            | s :: ss         -> check_stmt s scope :: check_stmt_list ss scope
             | []              -> []
-          in SBlock(check_stmt_list sl locals)
+          in SBlock(check_stmt_list sl scope)
 
     in (* body of check_function *)
     { styp = func.typ;
