@@ -1,0 +1,6 @@
+int main(){
+	array bool[4] x;
+	if (x[1] == false){
+		println("pass");
+	}
+}
