@@ -57,7 +57,7 @@ Cases that are meant to fail are named fail-\*.kazm.
 ### Classes -- Fail Cases 
 **fail-undefined_class.kazm** Using class type not created 
 
-**fail-unknown_var_class.kazm** Try to access class data member without 'me' 
+**fail-member_fxn_me_access.kazm** Try to access class data member without 'me' 
 
 
 ### Classes -- Pass Cases 
