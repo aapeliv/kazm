@@ -1,0 +1,28 @@
+class Team_Project {
+  int num_of_members;
+  double cap;
+  string course_name;
+  string name;
+
+  Team_Project() {
+    me.num_of_members = 5;
+    me.cap = 1.0;
+    me.course_name = "COMS4115: Programming Languages and Translators";
+    me.name = "Aapeli";
+  }
+
+  ~Team_Project() {
+    println("Goodbye from Team_Project");
+  }
+
+  void print_info() {
+    print(me.name);
+    print(" is in the course: ");
+    println(me.course_name);
+  }
+};
+
+int main() {
+  Team_Project tp;
+  tp.print_info();
+}
