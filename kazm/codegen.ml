@@ -54,7 +54,7 @@ let gen (bind_list, sfunction_decls, sclass_decls) =
     | A.Bool -> L.const_int i1_t 0
     | A.Int -> L.const_int i32_t 0
     | A.Double -> L.const_float double_t (float_of_string "0.0")
-    | A.Char -> L.const_int i8_t 0
+    | A.Char -> L.const_int i8_t 109
   in
 
   (* Codegen function definitions *)
@@ -116,6 +116,8 @@ let gen (bind_list, sfunction_decls, sclass_decls) =
     | A.Bool -> ignore (L.build_ret (L.const_int i1_t 0) builder); ctx
     | A.Int -> ignore (L.build_ret (L.const_int i32_t 0) builder); ctx
     | A.Double -> ignore (L.build_ret (L.const_float double_t 0.) builder); ctx
+    | A.Char -> ignore (L.build_ret (L.const_int i8_t 109) builder); ctx
+    (* | A.String -> ignore (L.build_ret (L.build_global_stringptr string_t "") builder); ctx *)
   in
 
   let all_funcs = SMap.empty in

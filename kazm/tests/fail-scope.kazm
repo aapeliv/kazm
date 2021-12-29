@@ -1,0 +1,11 @@
+int main(){
+	int a = 0;
+	{
+		a = 5;
+		int_println(a);
+		int x = 10;
+	}
+
+	int_println(x);
+}
+

@@ -1,0 +1,5 @@
+int main() {
+        While (1){
+            return 0;
+        }
+}
