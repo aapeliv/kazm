@@ -17,7 +17,6 @@ Cases that are meant to fail are named fail-\*.kazm.
 **fail-array_parser_stuff.kazm** declare int array and initialize with non-int array elements
 **fail-bad_type_arr.kazm** declare bool array and initialize with int array  
 
-
 ### Arrays -- Pass Cases
 **test-arr_assign.kazm**
 **test-arr_decl.kazm**
