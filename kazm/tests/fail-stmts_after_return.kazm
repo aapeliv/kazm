@@ -1,0 +1,11 @@
+int main() {
+  int a = 5;
+  if(a < 10) {
+    return a;
+  } else {
+    return 10;
+    a = 10;
+  }
+
+
+}
