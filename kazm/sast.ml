@@ -48,7 +48,7 @@ type sclass_decl = {
     scdestructor : sfunc_decl option;
 }
 
-type sprogram = bind list * sfunc_decl list * sclass_decl list
+type sprogram = sfunc_decl list * sclass_decl list
 
 (* Pretty-printing functions *)
 (* TODO: maybe fix later *)

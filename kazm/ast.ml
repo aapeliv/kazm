@@ -4,7 +4,7 @@ type op = Add | Sub | Mult | Div | Equal | Neq | Less | Leq | Greater | Geq |
 type uop = Neg | Not
 
 type class_t = string
-type typ = Int | Bool | Double | Void | String | Char | Float | ClassT of class_t | ArrT of typ * int
+type typ = Int | Bool | Double | Void | String | Char | ClassT of class_t | ArrT of typ * int
 type bind = typ * string
 
 type ref = string list
@@ -54,7 +54,7 @@ type class_decl = {
     cdestructors : func_decl list;
 }
 
-type program = bind list * func_decl list * class_decl list
+type program = func_decl list * class_decl list
 
 (* TODO: maybe fix later *)
 let string_of_op = function

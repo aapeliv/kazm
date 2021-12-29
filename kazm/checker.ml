@@ -5,9 +5,9 @@ module StringMap = Map.Make(String)
 
 (* Semantic checking of the AST. Returns an SAST if successful,
    throws an exception if something is wrong.
-   Check each global variable, check each function, and check each class *)
+   Check each function and each class *)
 
-let check (globals, functions, classes) =
+let check (functions, classes) =
 
   (* Verify a list of bindings has no void types or duplicate names *)
   let check_binds (kind : string) (binds : bind list) =
@@ -22,8 +22,6 @@ let check (globals, functions, classes) =
     in dups (List.sort (fun (_,a) (_,b) -> compare a b) binds)
   in
 
-  (* Check global variables *)
-  check_binds "global" globals;
 
   (* Collect function declarations for built-in functions: no bodies *)
   let built_in_decls =
@@ -103,7 +101,7 @@ let check (globals, functions, classes) =
 
     (* Build local symbol table of variables for this function *)
     let symbols = List.fold_left (fun m (ty, name) -> StringMap.add name ty m)
-                    StringMap.empty (globals @ func.formals @ vars)
+                    StringMap.empty (func.formals @ vars)
     in
 
     (* Return a variable type from our local symbol table *)
@@ -316,7 +314,7 @@ let check (globals, functions, classes) =
                             then raise (Failure ("cannot initialize " ^ name ^ " twice"))
                             else SInitialize(bd, Some se) :: check_stmt_list ss (StringMap.add name typ scope))
             | Return _ :: _   -> raise (Failure "nothing may follow a return")
-            | Block sl :: ss  -> check_stmt_list (sl @ ss) scope (* Flatten blocks *)
+            | Block sl :: ss  -> check_stmt_list (sl @ ss) scope
             | s :: ss         -> check_stmt s scope :: check_stmt_list ss scope
             | []              -> []
           in SBlock(check_stmt_list sl scope)
@@ -351,4 +349,4 @@ let check (globals, functions, classes) =
       scdestructor = check_dtrs dtrs;
     }
   in
-  (globals, List.map (check_function []) functions, List.map check_class classes)
+  (List.map (check_function []) functions, List.map check_class classes)
