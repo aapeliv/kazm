@@ -86,7 +86,15 @@ let check (functions, classes) =
     with Not_found -> raise (Failure ("unrecognized function " ^ s))
   in
 
-  let _ = find_func "main" in (* Ensure "main" is defined *)
+  let check_main func_typ =
+    match func_typ with
+      Int -> true
+    | _ ->  raise (Failure("main function type is expected to be int instead of " ^ string_of_typ func_typ)) 
+  in
+
+  let main_func = find_func "main" in 
+  let main_func_typ = main_func.typ in
+  let _ = check_main main_func_typ in
 
   (* Check functions *)
   let check_function vars func =
