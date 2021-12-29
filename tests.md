@@ -29,6 +29,8 @@ Cases that are meant to fail are named fail-\*.kazm.
 
 
 ### Arrays -- Pass Cases
+**test-arr_all.kazm** Overview of array functionalities
+
 **test-arr_assign.kazm** Print out elements of array before/after reassign 
 
 **test-arr_decl.kazm** Arr decl without init 

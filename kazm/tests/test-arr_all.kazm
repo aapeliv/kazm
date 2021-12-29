@@ -1,3 +1,5 @@
+// overview of array functionalities
+
 int main()
 {     
     // array declaration without initialization 
