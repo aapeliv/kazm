@@ -1,12 +1,14 @@
 # Kazm Tests 
 
 Categorized by functionality. 
-Cases that are meant to pass are named test-\*.kazm.\
+Cases that are meant to pass are named test-\*.kazm.
+
 Cases that are meant to fail are named fail-\*.kazm.
 
 ### Syntax
 
-**fail-failed_test_name.kazm** What is the test doing wrong  \\
+**fail-failed_test_name.kazm** What is the test doing wrong  
+
 **test-passed_test_name.kazm** what the test is doing
 
 ### Parse - Fail Cases
