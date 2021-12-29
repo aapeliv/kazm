@@ -171,11 +171,11 @@ let gen (bind_list, sfunction_decls, sclass_decls) =
     (* Malloc the memory *)
     let mallocd = L.build_malloc cls_t ("_malloc_" ^ name) builder in
     ignore (L.build_store mallocd ptr_var builder);
-    (* Let's grab the constructors *)
-    let (mthd, mangled_name, fn) = SMap.find cname ctrs in
     let me = L.build_load ptr_var "me" builder in
-    (* Call the constructor *)
-    ignore (L.build_call fn (Array.of_list ([me])) "" builder);
+    (* Let's call the constructor, if any *)
+    (match SMap.find_opt cname ctrs with
+      None -> ()
+    | Some (mthd, mangled_name, fn) -> ignore (L.build_call fn (Array.of_list ([me])) "" builder));
     ptr_var
   in
 
@@ -186,10 +186,11 @@ let gen (bind_list, sfunction_decls, sclass_decls) =
       | A.ClassT(cname) ->
         (* Class info *)
         let (cls, cls_t, mthds, ctrs, dtr) = SMap.find cname all_classes in
-        (* Get destructors *)
-        let (mthd, mangled_name, fn) = SMap.find cname dtr in
         let me = L.build_load var "me" builder in
-        ignore (L.build_call fn (Array.of_list ([me])) "" builder);
+        (* Call destructor if it exists *)
+        (match SMap.find_opt cname dtr with
+          None -> ()
+        | Some (mthd, mangled_name, fn) -> ignore (L.build_call fn (Array.of_list ([me])) "" builder));
         ignore (L.build_free me builder)
       (* For arrays, call the desctructors on each and free the memory *)
       | A.ArrT(ty, _) ->
@@ -450,7 +451,9 @@ let gen (bind_list, sfunction_decls, sclass_decls) =
         let ctx' = Ctx(builder, new_scope ctx) in
         let ctx'' = List.fold_left codegen_stmt ctx' stmts in
         ignore (build_scope_exit ctx'');
-        ctx'
+        let Ctx(_, sp') = ctx' in
+        let Ctx(builder'', _) = ctx'' in
+        Ctx(builder'', sp')
       | SInitialize((vtyp, name), expr) ->
           (match vtyp with
             A.ClassT(cname) ->
