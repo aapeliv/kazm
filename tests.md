@@ -220,6 +220,7 @@ Cases that are meant to fail are named fail-\*.kazm.
 
 ### Operators -- Fail Cases
 **fail-stmts_after_return.kazm** statements after return
+**fail-int_double_eq.kazm** int != double
 
 ### Operators & Control Flows -- Pass Cases
 **test-and.kazm**  Boolean logic with bools 
