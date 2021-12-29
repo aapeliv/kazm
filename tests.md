@@ -141,34 +141,6 @@ Cases that are meant to fail are named fail-\*.kazm.
 
 **test-double_subtract.kazm** subtraction with double
 
-**test-int_div.kazm** division without remainder 
-
-**test-int_divide.kazm** division with remainder (9/4) --> 2
-
-**test-int_eq.kazm** int == 
-
-**test-int_eq_neq.kazm** int == and != 
-
-**test-int_GEQ.kazm** int GEQ
-
-**test-int_greater.kazm** int > 
-
-**test-int_init_decl.kazm** print neg num
-
-**test-int_LEQ.kazm** int LEQ
-
-**test-int_LT.kazm** int LT 
-
-**test-int_mult.kazm** int * 
-
-**test-int_neq.kazm** int NEQ
-
-**test-int_subtract.kazm** int subtract negative num
-
-**test-math_w_parenth.kazm** arithmetic expr with () 
-
-**test-mod.kazm** mod 
-
 **test-neg_double.kazm**  neg double 
 
 **test-neg_int.kazm** neg int 
@@ -228,6 +200,34 @@ Cases that are meant to fail are named fail-\*.kazm.
 
 
 ### Operators & Control Flows -- Pass Cases
+**test-int_div.kazm** division without remainder 
+
+**test-int_divide.kazm** division with remainder (9/4) --> 2
+
+**test-int_eq.kazm** int == 
+
+**test-int_eq_neq.kazm** int == and != 
+
+**test-int_GEQ.kazm** int GEQ
+
+**test-int_greater.kazm** int > 
+
+**test-int_init_decl.kazm** print neg num
+
+**test-int_LEQ.kazm** int LEQ
+
+**test-int_LT.kazm** int LT 
+
+**test-int_mult.kazm** int * 
+
+**test-int_neq.kazm** int NEQ
+
+**test-int_subtract.kazm** int subtract negative num
+
+**test-math_w_parenth.kazm** arithmetic expr with () 
+
+**test-mod.kazm** mod 
+
 **test-and.kazm**  Boolean logic with bools 
 
 **test-and2.kazm** Boolean logic with bools 
@@ -237,10 +237,6 @@ Cases that are meant to fail are named fail-\*.kazm.
 **test-empty_if.kazm** if (true) 
 
 **test-empty_return.kazm** return;
-
-**test-if_scope.kazm** scope of var in 'if' stmt
-
-**test-if_scope3.kazm** scope var in 'if' stmt
 
 **test-NEQ.kazm** int bool != 
 
@@ -308,6 +304,10 @@ Cases that are meant to fail are named fail-\*.kazm.
 **test-scopes.kazm** scope check 
 
 **fail-twice_scope_var.kazm** int a in nested scope and parent scope
+
+**test-if_scope.kazm** scope of var in 'if' stmt
+
+**test-if_scope3.kazm** scope var in 'if' stmt
 
 ### General -- Fail Cases
 
