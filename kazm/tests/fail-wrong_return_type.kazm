@@ -1,3 +1,6 @@
+/*declare function return type int 
+and return double */ 
+
 int func() {
   return 2.5;
 }

@@ -1,7 +1,9 @@
+//check boolean !(!expr)
+
 int main() {
   bool x;
   x = false;
-  if (x != false) {
+  if (x != !(!x)) {
     println("fail");
   } else {
     println("pass2");

@@ -1,3 +1,5 @@
+//nested 'if' with next_int()
+
 int main() {
   println("Nested ifs");
   if (next_int() < 2) {

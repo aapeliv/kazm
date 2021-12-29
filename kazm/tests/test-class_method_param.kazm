@@ -1,3 +1,5 @@
+//class member fxn takes in class as param
+
 class Class1 {
   int a;
 };

@@ -1,3 +1,5 @@
+// Using class type not created
+
 class A {
   int a;
   int b;

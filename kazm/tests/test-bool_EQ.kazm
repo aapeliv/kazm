@@ -1,3 +1,5 @@
+//Check boolean ==
+
 int main() {
   bool x;
   bool y;

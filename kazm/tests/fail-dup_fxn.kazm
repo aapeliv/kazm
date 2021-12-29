@@ -1,3 +1,5 @@
+// Functions with same name twice 
+
 int func() {}
 void func() {}
 

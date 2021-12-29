@@ -1,3 +1,5 @@
+//{ inside {} for new scope }
+
 int main() {
   int a;
   a = 5;

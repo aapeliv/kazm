@@ -1,3 +1,5 @@
+//print neg num
+
 int main(){
 	int x = -100;
 	int_println(x);

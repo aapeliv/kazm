@@ -1,3 +1,4 @@
+//use 'me' in class member fxn
 class Test {
   int exists;
 

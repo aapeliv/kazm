@@ -1,3 +1,5 @@
+//class xtor
+
 class ScopeGreeter {
   ScopeGreeter() {
     println("Hi!");

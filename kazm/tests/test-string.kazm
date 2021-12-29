@@ -1,8 +1,11 @@
+//string var and lit 
+
 int main() {
   string a;
   a = "world";
   string b;
   println(b);
   println(a);
+  println("Hello World");
 
 }

@@ -1,3 +1,5 @@
+//string arr
+
 int main(){
 	// int x =1;
 	array string[5] my_arr = ["hello", "katie", "aapeli", "zhonglin", "molly"];

@@ -1,3 +1,5 @@
+//simple assign to double 
+
 int main() {
   double a;
   a = 2.71;

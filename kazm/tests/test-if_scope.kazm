@@ -1,3 +1,5 @@
+//scope of var in 'if' stmt
+
 int main() {
   int i;
   i = next_int();

@@ -1,3 +1,5 @@
+//Add double var to double literal
+
 int main(){
   double x;
   x = 3.14;

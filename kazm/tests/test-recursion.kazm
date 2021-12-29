@@ -1,4 +1,4 @@
-/* Recursion in Kazm */
+//exponent recursion 
 
 int exp(int x, int n){
  if (n == 0) { return 1;}

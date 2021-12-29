@@ -1,13 +1,18 @@
+//first class 
+
 class TeamProject {
   int num_members;
   double capacity;
-  //String name;
+  string name;
 };
 
 int main() {
-  double a;
-  TeamProject project;
-  // this will just be 0 for now
-  int_println(project.num_members);
-  //project.capacity = 0.;
+  TeamProject tp;
+  tp.num_members = 4;
+  tp.capacity = 100.0;
+  tp.name = "KAZM";
+  print(tp.name);
+  print(" has ");
+  int_print(tp.num_members);
+  print(" members!");
 }

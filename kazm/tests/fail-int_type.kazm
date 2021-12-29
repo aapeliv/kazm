@@ -1,4 +1,4 @@
-/* Type check should fail */
+//declare int and initialize with double
 
 int main() {
 

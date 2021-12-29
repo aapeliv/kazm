@@ -1,3 +1,5 @@
+//print undeclared int
+
 int main() {
   int_println(nonexistent);
 }

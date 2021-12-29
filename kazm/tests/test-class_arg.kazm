@@ -1,3 +1,5 @@
+//access data member of class passed in as fxn arg
+
 class Test {
   int a;
   int b;

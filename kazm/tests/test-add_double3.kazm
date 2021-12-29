@@ -1,3 +1,5 @@
+//assign double to previous double var
+
 int main (){
     double a;
     double b;

@@ -1,3 +1,5 @@
+//while with var 
+
 int main() {
   int i;
   i = 0;

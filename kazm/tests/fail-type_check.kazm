@@ -1,3 +1,5 @@
+//declare string and initialize with int
+
 int main() {
 	string b = 1;
 }

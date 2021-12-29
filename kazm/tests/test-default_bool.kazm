@@ -1,3 +1,5 @@
+//default of bool
+
 int main() {
   bool x;
   if (x == false){

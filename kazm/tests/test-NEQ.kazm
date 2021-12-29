@@ -1,11 +1,11 @@
-/* Tests != */
+// int bool !=
 
 int main() {
   int a;
   int b;
   a = 2;
   b = 3;
-  if (a != b){
+  if (a != 10){
     println("yay");
   } else {
     print("bad");

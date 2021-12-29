@@ -1,3 +1,5 @@
+//char arr 
+
 int main(){
 	array char[5] my_arr = ['a', 'b', 'c', 'd', 'e'];
 	int x = 0;

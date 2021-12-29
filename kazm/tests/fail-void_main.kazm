@@ -1,3 +1,5 @@
+//main declared with void return type
+
 void main() {
 
 }

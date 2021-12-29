@@ -1,4 +1,4 @@
-/* Test whether kazm can handle multiline comment */
+// /**/ over lines
 
 int main() {
   /* int x;

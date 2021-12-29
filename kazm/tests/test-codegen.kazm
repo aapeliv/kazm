@@ -1,3 +1,5 @@
+//test codegen works 
+
 void test_loops() {
   println("Before while");
   while (next_int() < 3) {

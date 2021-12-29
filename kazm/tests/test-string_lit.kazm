@@ -1,0 +1,5 @@
+//early test hello world string lit
+
+int main(){
+	println("Hello, World");
+}

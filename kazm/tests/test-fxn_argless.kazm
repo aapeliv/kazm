@@ -1,3 +1,5 @@
+//calling other func in main 
+
 void other_func() {
   println("In other func");
 }

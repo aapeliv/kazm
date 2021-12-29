@@ -1,3 +1,5 @@
+//hello world
+
 int main() {
   println("Hello, world!");
   return 0;

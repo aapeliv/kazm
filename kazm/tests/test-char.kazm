@@ -1,3 +1,5 @@
+//char literal
+
 int main(){
 	'a';
 }

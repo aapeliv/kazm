@@ -1,4 +1,4 @@
-/* Test STring variable */
+//reassign string var
 
 int main() {
   string a;

@@ -1,3 +1,5 @@
+//declare variable in if and use in else
+
 int main() {
   if (false) {
     int a;

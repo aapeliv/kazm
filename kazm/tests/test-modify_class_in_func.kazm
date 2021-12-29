@@ -1,3 +1,5 @@
+//pass class member as param and change member 
+
 class Test {
   int a;
   int b;

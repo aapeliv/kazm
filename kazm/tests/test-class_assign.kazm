@@ -1,3 +1,5 @@
+//assign to class data member in main
+
 class Test {
   int first;
   int second;

@@ -1,3 +1,5 @@
+//int NEQ
+
 int main() {
   int x;
   int y;

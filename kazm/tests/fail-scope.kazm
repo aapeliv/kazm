@@ -1,3 +1,6 @@
+/*declare variable in inner {} 
+and try to use outside of scope */ 
+
 int main(){
 	int a = 0;
 	{

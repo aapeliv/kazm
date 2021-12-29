@@ -1,3 +1,5 @@
+//read elements of array 
+
 int main() {
   array int[4] my_arr;
   my_arr = [1,2,3,4];

@@ -1,3 +1,5 @@
+//default of int
+
 int main() {
   int x;
   int_println(x);

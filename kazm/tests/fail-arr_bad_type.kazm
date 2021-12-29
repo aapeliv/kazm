@@ -1,0 +1,5 @@
+/* declare bool array and initialize to string */ 
+
+int main(){
+	array bool[4] x = "Hello";
+}

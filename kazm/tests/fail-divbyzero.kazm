@@ -1,3 +1,5 @@
+//divide integer by 0
+
 int main(){
     int x;
     x = 100;

@@ -1,3 +1,5 @@
+//early test - int param in arg
+
 void test(int arg) {}
 
 int main() {

@@ -1,4 +1,4 @@
-/* Recursion in Kazm */
+/* fib recursion in kazm */
 
 int fib(int n){
  if (n <= 1){

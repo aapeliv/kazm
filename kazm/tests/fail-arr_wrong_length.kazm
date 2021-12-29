@@ -1,5 +1,10 @@
-int main(){
+/* declare array of length 4 
+and initialize with array of length 3 */ 
+
+int main(){ 
 	array int[4] my_arr = [3,4,5]; // [1,2,3,4,5];
+	
+	
 	//int_println(my_arr[5]);
 	
 }

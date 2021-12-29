@@ -1,3 +1,5 @@
+//call void fxn in main 
+
 void func() {}
 
 int main() {

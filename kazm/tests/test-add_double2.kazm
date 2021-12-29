@@ -1,7 +1,9 @@
+//Add positive and negative double vars 
+
 int main() {
   double x;
   double y;
   x = 10.0;
-  y = -9.7;
+  y = -9.7 + 0.0;
   double_print(x + y);
 }

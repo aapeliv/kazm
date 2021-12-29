@@ -1,3 +1,5 @@
+//fxn with int arg called in main 
+
 void func(int val) {
   int_println(val);
 }

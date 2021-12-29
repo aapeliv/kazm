@@ -1,3 +1,5 @@
+//test default of char
+
 int main(){
 	char b;
 	int x;

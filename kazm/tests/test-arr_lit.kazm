@@ -1,3 +1,5 @@
+//Array init after decl
+
 int main(){
   array int[5] my_arr;
   my_arr = [1,2,3,4,5];

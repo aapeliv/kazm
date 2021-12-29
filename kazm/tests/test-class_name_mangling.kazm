@@ -1,4 +1,4 @@
-/* Make sure that we can have multiple classes with methods of the same name */
+/* diff classes, same member fxn name */
 
 class Class1 {
   int x;

@@ -1,3 +1,5 @@
+/* assign to array index exceeding array length */ 
+
 int main(){
 	array int[4] my_arr = [1,2,3,4];
 	my_arr[10] = 0;

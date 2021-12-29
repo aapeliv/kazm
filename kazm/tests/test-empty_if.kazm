@@ -1,4 +1,5 @@
-/* Basic blocks without terminators are tricky, this might cause issues */
+/* if (true) */
+
 void func() {
   if (true) {}
 }
@@ -7,3 +8,6 @@ int main() {
   func();
   return 0;
 }
+
+
+/* Basic blocks without terminators are tricky, this might cause issues */ 

@@ -1,3 +1,5 @@
+//default of string 
+
 int main() {
 	string b;
 	if (b == ""){

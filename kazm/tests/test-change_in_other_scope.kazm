@@ -1,3 +1,5 @@
+//change variable and new scope and check result
+
 int main() {
   int a;
   a = 0;

@@ -1,1 +1,3 @@
+//main w no return int
+
 int main() {}

@@ -1,3 +1,5 @@
+//reassign char var 
+
 int main(){
 	char b = 'a';
 	char_println(b);

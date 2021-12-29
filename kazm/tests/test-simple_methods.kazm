@@ -1,3 +1,5 @@
+//class and me
+
 class StructWithMethods {
   int x;
   int y;

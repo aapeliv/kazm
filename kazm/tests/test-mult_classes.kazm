@@ -1,3 +1,5 @@
+//mult classes 
+
 class A {
     int y;
 };

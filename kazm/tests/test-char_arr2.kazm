@@ -1,3 +1,5 @@
+//char array and print elems and length 
+
 int main(){
 	array char[5] my_arr = ['a', 'b', 'c', 'd', 'e'];
 	//rray string[5] my_arr = ["hi", "katie", "aapeli", "zhonglin", "molly"];

@@ -1,3 +1,5 @@
+// boolean or 
+
 int main() {
   bool a;
   bool b;

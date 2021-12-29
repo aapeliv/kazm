@@ -1,4 +1,4 @@
-/* Test if Kazm checks for correct # of fxn args */
+/* define function with 2 arguments and pass 3*/
 
 int add(int x, int y){
     return x/y;

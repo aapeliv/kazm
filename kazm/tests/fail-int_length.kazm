@@ -1,3 +1,5 @@
+//declare int and attempt to access its length
+
 int main(){
 	int x = 1;
 	int y = x.length;

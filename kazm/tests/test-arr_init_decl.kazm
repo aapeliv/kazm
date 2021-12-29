@@ -1,3 +1,5 @@
+//Arr decl with init
+
 int main(){
   array int[3] arr = [1,2,3];
   int_println(arr[2]);

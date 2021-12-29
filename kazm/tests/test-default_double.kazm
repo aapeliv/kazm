@@ -1,3 +1,5 @@
+//default of double 
+
 int main(){
   double x;
   double_print(x);
