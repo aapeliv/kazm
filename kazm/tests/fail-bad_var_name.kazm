@@ -1,3 +1,5 @@
+//bad var name 
+
 int main()
 	int X;
 }

@@ -1,0 +1,7 @@
+//int a in nested scope and parent scope
+
+int main(){
+	int x;
+	{ char x;
+	}
+}

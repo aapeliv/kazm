@@ -202,6 +202,8 @@ Cases that are meant to fail are named fail-\*.kazm.
 
 **fail-void_main.kazm** main declared with void return type 
 
+**fail-fxn_in_main.kazm** fxn in fxn 
+
 
 ### Functions -- Pass Cases
 **test-function_call_expr.kazm** fxn call with expr as int 
@@ -220,7 +222,10 @@ Cases that are meant to fail are named fail-\*.kazm.
 
 ### Operators -- Fail Cases
 **fail-stmts_after_return.kazm** statements after return
-**fail-int_double_eq.kazm** int != double
+
+**fail-int_double_eq.kazm** comparing int to double 
+
+
 
 ### Operators & Control Flows -- Pass Cases
 **test-and.kazm**  Boolean logic with bools 
@@ -272,6 +277,17 @@ Cases that are meant to fail are named fail-\*.kazm.
 
 **fail-bad_var_name.kazm** var name uppercase
 
+**fail-bad_class_name.kazm** class naming convention 
+
+**fail-bad_var_name.kazm** bad var name 
+
+**fail-comment_eof.kazm** comment through eof 
+
+**fail-fxn_bad_name.kazm** bad fxn name
+
+**fail-mult_decl.kazm** char a, b, c
+
+
 ### Scope -- Fail Cases
 **fail-if_scope2.kazm** declare variable in if and use in else 
 
@@ -288,6 +304,8 @@ Cases that are meant to fail are named fail-\*.kazm.
 **test-scope_checking.kazm** scope check 
 
 **test-scopes.kazm** scope check 
+
+**fail-twice_scope_var.kazm** int a in nested scope and parent scope
 
 ### General -- Fail Cases
 

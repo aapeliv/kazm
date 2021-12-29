@@ -1,7 +1,9 @@
+//comparing int to double 
+
 int main(){
 	if ( 5 == 5.0){
 		println("fail");
 	} else {
 		println("ok");
-}
+	}
 }

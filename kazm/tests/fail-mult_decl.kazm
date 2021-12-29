@@ -1,0 +1,5 @@
+// char a, b, c
+
+int main(){
+	char a, b, c;
+}
