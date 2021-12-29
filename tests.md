@@ -225,6 +225,7 @@ Cases that are meant to fail are named fail-\*.kazm.
 
 **fail-int_double_eq.kazm** comparing int to double 
 
+**fail-string_append.kazm** illegal string + string 
 
 
 ### Operators & Control Flows -- Pass Cases

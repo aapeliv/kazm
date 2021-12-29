@@ -1,0 +1,5 @@
+//illegal string + string 
+
+int main(){
+	"hello" + " world!";
+}

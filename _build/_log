@@ -1,0 +1,12 @@
+### Starting build.
+Backtrace:
+                      - Failed to build the target kazm.native
+                          - Building kazm.native:
+                              - Building kazm.cmx:
+                                  - Failed to build all of these:
+                                      - Building kazm.ml:
+                                          - Failed to build all of these:
+                                              - Building kazm.mly
+                                              - Building kazm.mll
+                                      - Building kazm.mlpack
+# Compilation unsuccessful.
