@@ -194,8 +194,6 @@ Cases that are meant to fail are named fail-\*.kazm.
 
 **fail-wrong_return_type.kazm** declare function return type int and return double  
 
-**fail-missing_return_type.kazm** int fxn missing return 
-
 **fail-main_fxn_type.kazm** main declared with type string 
 
 **fail-unknown_var_class.kazm** print undeclared int 
