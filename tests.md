@@ -123,6 +123,7 @@ Cases that are meant to fail are named fail-\*.kazm.
 **test-void_return.kazm** 
 
 ### Operators -- Fail Cases
+**test-stmts_after_return.kazm**
 
 ### Operators & Control Flows -- Pass Cases
 **test-and.kazm** 
