@@ -117,7 +117,6 @@ let gen (sfunction_decls, sclass_decls) =
     | A.Int -> ignore (L.build_ret (L.const_int i32_t 0) builder); ctx
     | A.Double -> ignore (L.build_ret (L.const_float double_t 0.) builder); ctx
     | A.Char -> ignore (L.build_ret (L.const_int i8_t 109) builder); ctx
-    (* | A.String -> ignore (L.build_ret (L.build_global_stringptr string_t "") builder); ctx *)
   in
 
   let all_funcs = SMap.empty in

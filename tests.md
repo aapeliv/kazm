@@ -1,13 +1,19 @@
 # Kazm Tests 
 
 Categorized by functionality. 
-Cases that are meant to pass are named test-\*.kazm. 
+Cases that are meant to pass are named test-\*.kazm.\
 Cases that are meant to fail are named fail-\*.kazm.
 
 ### Syntax
 
-**fail-failed_test_name.kazm** what the test is doing wrong
+**fail-failed_test_name.kazm** What is the test doing wrong  
 **test-passed_test_name.kazm** what the test is doing
+
+### Parse - Fail Cases
+**fail-parse.kazm** While instead of while
+**fail-parse2.kazm** Main instead of main
+
+
 
 ### Arrays -- Fail Cases 
 **fail-arr_assign_out_of_bounds.kazm** assign to negative array index
@@ -72,6 +78,8 @@ Cases that are meant to fail are named fail-\*.kazm.
 **test-char.kazm**
 **test-char2.kazm**
 **test-char3.kazm**
+**test-char_default.kazm** test default of char is 'm'
+**test-string_default.kazm** test default of string is ""
 **test-default_bool.kazm**
 **test-default_double.kazm**
 **test-default_bool.kazm**
@@ -148,6 +156,7 @@ Cases that are meant to fail are named fail-\*.kazm.
 
 ### Scope -- Fail Cases
 **fail-if_scope2.kazm** declare variable in if and use in else 
+**fail-scope.kazm** declare variable in inner {} and try to use outside of scope
 
 ### Scope -- Pass Cases
 **test-change_in_other_scope.kazm** change variable and new scope and check result
