@@ -11,7 +11,7 @@ open Ast
 %token EQ NEQ LT LEQ GT GEQ /* == != < <= > >= */
 %token VOID BOOL CHAR INT DOUBLE STRING
 %token IF ELSE FOR WHILE
-%token RETURN BREAK
+%token RETURN 
 %token CLASS
 %token ARRAY LENGTH
 %token TRUE FALSE
@@ -141,7 +141,6 @@ stmt:
     expr SEMI { Expr $1 }
   | scope { $1 }
   | return_stmt SEMI { $1 }
-  | break_stmt SEMI { $1 }
   | if_stmt { $1 }
   | while_stmt { $1 }
   | for_stmt { $1 }
@@ -156,9 +155,6 @@ block_stmt:
 return_stmt:
     RETURN expr { Return $2 }
   | RETURN { EmptyReturn }
-
-break_stmt:
-    BREAK { Break }
 
 if_stmt:
     IF PAREN_L expr PAREN_R scope ELSE scope { If($3, $5, $7) }

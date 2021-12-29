@@ -275,7 +275,6 @@ let check (functions, classes) =
       | For(e1, e2, e3, st) -> check_stmt (Block([Expr(e1); While(e2, Block([st; Expr(e3)]))])) scope
       | While(p, s) -> SWhile(check_bool_expr p scope, check_stmt s scope)
       | EmptyReturn -> SEmptyReturn
-      | Break -> SBreak
       | Return e -> let (t, e') = expr scope e in
         if t = func.typ then SReturn (t, e')
         else raise (

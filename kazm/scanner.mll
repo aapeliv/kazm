@@ -61,7 +61,6 @@ rule tokenize = parse
 | "for" { FOR }
 | "while" { WHILE }
 | "return" { RETURN }
-| "break" { BREAK }
 | "true" { TRUE }
 | "false" { FALSE }
 (* | "\"" ([^'\"']+ as str) "\"" { STRING_LITERAL(str) } *)

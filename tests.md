@@ -29,6 +29,8 @@ Cases that are meant to fail are named fail-\*.kazm.
 
 
 ### Arrays -- Pass Cases
+**test-arr_all.kazm** Overview of array functionalities
+
 **test-arr_assign.kazm** Print out elements of array before/after reassign 
 
 **test-arr_decl.kazm** Arr decl without init 
@@ -139,34 +141,6 @@ Cases that are meant to fail are named fail-\*.kazm.
 
 **test-double_subtract.kazm** subtraction with double
 
-**test-int_div.kazm** division without remainder 
-
-**test-int_divide.kazm** division with remainder (9/4) --> 2
-
-**test-int_eq.kazm** int == 
-
-**test-int_eq_neq.kazm** int == and != 
-
-**test-int_GEQ.kazm** int GEQ
-
-**test-int_greater.kazm** int > 
-
-**test-int_init_decl.kazm** print neg num
-
-**test-int_LEQ.kazm** int LEQ
-
-**test-int_LT.kazm** int LT 
-
-**test-int_mult.kazm** int * 
-
-**test-int_neq.kazm** int NEQ
-
-**test-int_subtract.kazm** int subtract negative num
-
-**test-math_w_parenth.kazm** arithmetic expr with () 
-
-**test-mod.kazm** mod 
-
 **test-neg_double.kazm**  neg double 
 
 **test-neg_int.kazm** neg int 
@@ -193,8 +167,6 @@ Cases that are meant to fail are named fail-\*.kazm.
 **fail-fxn-param_type.kazm** use int_println with double 
 
 **fail-wrong_return_type.kazm** declare function return type int and return double  
-
-**fail-missing_return_type.kazm** int fxn missing return 
 
 **fail-main_fxn_type.kazm** main declared with type string 
 
@@ -225,9 +197,38 @@ Cases that are meant to fail are named fail-\*.kazm.
 
 **fail-int_double_eq.kazm** comparing int to double 
 
+**fail-string_append.kazm** illegal string + string 
 
 
 ### Operators & Control Flows -- Pass Cases
+**test-int_div.kazm** division without remainder 
+
+**test-int_divide.kazm** division with remainder (9/4) --> 2
+
+**test-int_eq.kazm** int == 
+
+**test-int_eq_neq.kazm** int == and != 
+
+**test-int_GEQ.kazm** int GEQ
+
+**test-int_greater.kazm** int > 
+
+**test-int_init_decl.kazm** print neg num
+
+**test-int_LEQ.kazm** int LEQ
+
+**test-int_LT.kazm** int LT 
+
+**test-int_mult.kazm** int * 
+
+**test-int_neq.kazm** int NEQ
+
+**test-int_subtract.kazm** int subtract negative num
+
+**test-math_w_parenth.kazm** arithmetic expr with () 
+
+**test-mod.kazm** mod 
+
 **test-and.kazm**  Boolean logic with bools 
 
 **test-and2.kazm** Boolean logic with bools 
@@ -237,10 +238,6 @@ Cases that are meant to fail are named fail-\*.kazm.
 **test-empty_if.kazm** if (true) 
 
 **test-empty_return.kazm** return;
-
-**test-if_scope.kazm** scope of var in 'if' stmt
-
-**test-if_scope3.kazm** scope var in 'if' stmt
 
 **test-NEQ.kazm** int bool != 
 
@@ -267,6 +264,8 @@ Cases that are meant to fail are named fail-\*.kazm.
 **test-while_with_var.kazm** while with var 
 
 **test-while.kazm** while 
+
+**test-nest_if.kazm** test nested ifs 
 
 ### Parse - Fail Cases
 **fail-parse.kazm** While instead of while 
@@ -306,6 +305,10 @@ Cases that are meant to fail are named fail-\*.kazm.
 **test-scopes.kazm** scope check 
 
 **fail-twice_scope_var.kazm** int a in nested scope and parent scope
+
+**test-if_scope.kazm** scope of var in 'if' stmt
+
+**test-if_scope3.kazm** scope var in 'if' stmt
 
 ### General -- Fail Cases
 
