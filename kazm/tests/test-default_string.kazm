@@ -1,0 +1,6 @@
+int main() {
+	string b;
+	if (b == ""){
+		println("pass");
+	}
+}
