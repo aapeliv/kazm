@@ -268,6 +268,8 @@ Cases that are meant to fail are named fail-\*.kazm.
 
 **fail-parse2.kazm** Main instead of main
 
+**fail-comment_eof.kazm** multiline comment through eof
+
 ### Scope -- Fail Cases
 **fail-if_scope2.kazm** declare variable in if and use in else 
 
