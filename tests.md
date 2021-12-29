@@ -245,7 +245,7 @@ Cases that are meant to fail are named fail-\*.kazm.
 
 **test-nested_while.kazm** nested while 
 
-**test-nested_ifs.kazm**
+**test-nested_ifs.kazm** nested ifs
 
 **test-or.kazm** boolean or 
 
