@@ -5,7 +5,7 @@ open Sast
 module SMap = Map.Make(String)
 
 (* A variable scope, contains variables and a ref to the parent scope *)
-type vscope = Scope of (vscope option) * (L.llvalue * A.typ) SMap.t
+type vscope = Scope of (vscope option) * (L.llvalue * A.typ * bool) SMap.t
 (* A codegen context: builder and variable scope *)
 type ctx_t = Ctx of L.llbuilder * vscope
 
@@ -77,9 +77,15 @@ let gen (bind_list, sfunction_decls, sclass_decls) =
       let func_def = L.define_function mangled_name func_t m in
       SMap.add mname (mthd, mangled_name, func_def) map
     in
+    let dtrs = match cls.scdestructor with
+      None -> []
+    | Some d -> [d]
+    in
     let mthds = List.fold_left add_method SMap.empty cls.scmethods in
+    let ctrs = List.fold_left add_method SMap.empty cls.scconstructors in
+    let dtr = List.fold_left add_method SMap.empty dtrs in
     ignore (L.struct_set_body cls_t (Array.of_list member_ts) false);
-    SMap.add name (cls, cls_t, mthds) map
+    SMap.add name (cls, cls_t, mthds, ctrs, dtr) map
   in
 
   let all_classes = List.fold_left codegen_class_decl SMap.empty sclass_decls in
@@ -151,18 +157,41 @@ let gen (bind_list, sfunction_decls, sclass_decls) =
     | Scope(Some parent, map) -> if SMap.mem name map then SMap.find name map else find_var parent name
   in
 
-  let add_var scope name var vtyp =
+  let add_var scope name var vtyp own =
     let Scope(p, map) = scope in
-    let map' = SMap.add name (var, vtyp) map in
+    let map' = SMap.add name (var, vtyp, own) map in
     Scope(p, map')
+  in
+
+  let build_class_alloc cname name builder =
+    (* Class info *)
+    let (cls, cls_t, mthds, ctrs, dtr) = SMap.find cname all_classes in
+    (* A pointer to the right struct *)
+    let ptr_var = L.build_alloca (L.pointer_type cls_t) name builder in
+    (* Malloc the memory *)
+    let mallocd = L.build_malloc cls_t ("_malloc_" ^ name) builder in
+    ignore (L.build_store mallocd ptr_var builder);
+    let me = L.build_load ptr_var "me" builder in
+    (* Let's call the constructor, if any *)
+    (match SMap.find_opt cname ctrs with
+      None -> ()
+    | Some (mthd, mangled_name, fn) -> ignore (L.build_call fn (Array.of_list ([me])) "" builder));
+    ptr_var
   in
 
   let destroy_var name var vtyp builder =
     match vtyp with
     (* TODO: *)
       (* For classes, call the destructor and free the memory *)
-      | A.ClassT(name) ->
-        ()
+      | A.ClassT(cname) ->
+        (* Class info *)
+        let (cls, cls_t, mthds, ctrs, dtr) = SMap.find cname all_classes in
+        let me = L.build_load var "me" builder in
+        (* Call destructor if it exists *)
+        (match SMap.find_opt cname dtr with
+          None -> ()
+        | Some (mthd, mangled_name, fn) -> ignore (L.build_call fn (Array.of_list ([me])) "" builder));
+        ignore (L.build_free me builder)
       (* For arrays, call the desctructors on each and free the memory *)
       | A.ArrT(ty, _) ->
         ()
@@ -172,13 +201,13 @@ let gen (bind_list, sfunction_decls, sclass_decls) =
 
   let find_fq_var builder scope = function
     (* Unqualified access *)
-      ref::[] -> fst (find_var scope ref)
+      ref::[] -> let (var, _, _) = find_var scope ref in var
     (* Qualified access *)
     | hd::tl::[] ->
       (* Get info about the variable *)
-      let (cval, ClassT(cname)) = find_var scope hd in
+      let (cval, ClassT(cname), own) = find_var scope hd in
       (* Get info about the class *)
-      let (cls, cls_t, mthds) = SMap.find cname all_classes in
+      let (cls, cls_t, mthds, ctrs, dtr) = SMap.find cname all_classes in
       (* Members names with indexes *)
       let mems = List.mapi (fun ix v -> (ix, snd v)) cls.scvars in
       (* Filter out the members that have the same name as the sought after member (there should only be 1) *)
@@ -193,11 +222,8 @@ let gen (bind_list, sfunction_decls, sclass_decls) =
     (* Builds destructors, etc *)
     let Ctx(builder, sp) = ctx in
     let Scope(_, vars) = sp in
-    let dest_var name (var, vtyp) =
-      destroy_var name var vtyp builder
-      (* debug: print out all vars being destroyed when the scope is destroyed *)
-      (* let str = L.build_global_stringptr ("Destroying: " ^ name) "destroy_str" builder in *)
-      (* ignore (L.build_call (SMap.find "println" all_funcs) [| str |] "" builder); *)
+    let dest_var name (var, vtyp, own) =
+      if own then destroy_var name var vtyp builder else ()
     in
     ignore (SMap.iter dest_var vars)
   in
@@ -213,9 +239,8 @@ let gen (bind_list, sfunction_decls, sclass_decls) =
         | fname :: [] ->
           L.build_call (SMap.find fname all_funcs) (Array.of_list args) "" builder
         | cvar :: methodname :: [] ->
-          let (var, typ) = find_var sp cvar in
-          let A.ClassT(cname) = typ in
-          let (cls, cls_t, mthds) = SMap.find cname all_classes in
+          let (var, A.ClassT(cname), own) = find_var sp cvar in
+          let (cls, cls_t, mthds, ctrs, dtr) = SMap.find cname all_classes in
           let (mthd, mangled_name, fn) = SMap.find methodname mthds in
           let me = L.build_load var "me" builder in
           L.build_call fn (Array.of_list (me::args)) "" builder
@@ -303,7 +328,7 @@ let gen (bind_list, sfunction_decls, sclass_decls) =
       (ctx'', L.build_store assign element builder)
     | SArrayLength(name) -> 
       let var = find_var sp name in 
-      let (ll, vtyp) = var in (* llvalue and Ast typ *)
+      let (ll, vtyp, own) = var in (* llvalue and Ast typ *)
       let ArrT(t, l) = vtyp in (* Ast typ and length of array *)
       (ctx, L.const_int i32_t l) 
   and build_array_element_ptr ctx name pos_ex =
@@ -323,17 +348,6 @@ let gen (bind_list, sfunction_decls, sclass_decls) =
     match L.block_terminator (L.insertion_block builder) with
       Some _ -> ()
     | None -> ignore (build_terminator ctx)
-  in
-
-  let build_class_alloc cname name builder =
-    (* Class info *)
-    let (cls, cls_t, mthds) = SMap.find cname all_classes in
-    (* A pointer to the right struct *)
-    let ptr_var = L.build_alloca (L.pointer_type cls_t) name builder in
-    (* Malloc the memory *)
-    let mallocd = L.build_malloc cls_t ("_malloc_" ^ name) builder in
-    ignore (L.build_store mallocd ptr_var builder);
-    ptr_var
   in
 
   let build_alloc vtyp name builder =
@@ -433,12 +447,18 @@ let gen (bind_list, sfunction_decls, sclass_decls) =
         let Ctx(_, sp) = ctx in
         Ctx(end_builder, sp)
       (* For a block of statements, just fold *)
-      | SBlock(stmts) -> List.fold_left codegen_stmt ctx stmts
+      | SBlock(stmts) ->
+        let ctx' = Ctx(builder, new_scope ctx) in
+        let ctx'' = List.fold_left codegen_stmt ctx' stmts in
+        ignore (build_scope_exit ctx'');
+        let Ctx(_, sp') = ctx' in
+        let Ctx(builder'', _) = ctx'' in
+        Ctx(builder'', sp')
       | SInitialize((vtyp, name), expr) ->
           (match vtyp with
             A.ClassT(cname) ->
               if expr != None then raise (Failure ("Can't assign init class")) else
-              Ctx(builder, add_var sp name (build_class_alloc cname name builder) vtyp)
+              Ctx(builder, add_var sp name (build_class_alloc cname name builder) vtyp true)
             | _ ->
               let (ctx', value) =
                 (match expr with
@@ -461,7 +481,7 @@ let gen (bind_list, sfunction_decls, sclass_decls) =
               let var = L.build_alloca (typ_to_t vtyp) name builder in
               let Ctx(_, sp') = ctx' in
               ignore (L.build_store value var builder);
-              Ctx(builder, add_var sp' name var vtyp)
+              Ctx(builder, add_var sp' name var vtyp true)
         )
     in
 
@@ -472,12 +492,12 @@ let gen (bind_list, sfunction_decls, sclass_decls) =
       let local_copy = L.build_alloca (typ_to_t ptyp) name fn_builder in
       ignore (L.set_value_name (name ^ "_local") local_copy);
       ignore (L.build_store param local_copy fn_builder);
-      SMap.add name (local_copy, ptyp) map
+      SMap.add name (local_copy, ptyp, false) map
     in
-    let vars = List.fold_left2 add_param SMap.empty formals (Array.to_list (L.params fn)) in
-    let fn_scope = Scope(None, vars) in
-    let initialize_var scope (vtyp, name) =
-      add_var scope name (build_alloc vtyp name fn_builder) vtyp
+    let params = List.fold_left2 add_param SMap.empty formals (Array.to_list (L.params fn)) in
+    let fn_scope = Scope(None, params) in
+    let initialize_var scope (vtyp, name, own) =
+      add_var scope name (build_alloc vtyp name fn_builder) vtyp own
     in
     let fn_scope' = List.fold_left initialize_var fn_scope [] in
     let fn_ctx = Ctx(fn_builder, fn_scope') in
@@ -496,7 +516,7 @@ let gen (bind_list, sfunction_decls, sclass_decls) =
     raw_gen_func body typ name formals fn
   in
 
-  let gen_methods cname (cls, cls_t, mthds) =
+  let gen_methods cname (cls, cls_t, mthds, ctrs, dtr) =
     let gen_method name (mthd, mangled_name, fn) =
       let body = mthd.sbody in
       let typ = mthd.styp in
@@ -504,7 +524,9 @@ let gen (bind_list, sfunction_decls, sclass_decls) =
       let formals = me_formal :: mthd.sformals in
       raw_gen_func body typ mangled_name formals fn
     in
-    SMap.iter gen_method mthds
+    ignore (SMap.iter gen_method mthds);
+    ignore (SMap.iter gen_method ctrs);
+    ignore (SMap.iter gen_method dtr);
   in
 
   ignore (List.map gen_func sfunction_decls);

@@ -49,6 +49,9 @@ type class_decl = {
     cname : class_t;
     cvars : bind list;
     cmethods : func_decl list;
+    cconstructors : func_decl list;
+    (* We'll check there is one and only one of these later *)
+    cdestructors : func_decl list;
 }
 
 type program = bind list * func_decl list * class_decl list
