@@ -1,8 +1,0 @@
-/* Test STring variable */
-
-int main() {
-  String a;
-  a = "hi";
-  a = "world";
-  println(a);
-}

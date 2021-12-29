@@ -48,21 +48,16 @@ open Ast
 program:
   decls EOF { $1 }
 
-// TO THINK: Order matters?
 decls:
-   /* nothing */ { ([], [], []) }
- | decls var_decl {
-   let (f, s, t) = $1 in
-   (f @ [$2], s, t)
-  }
- | decls fdecl {
-   let (f, s, t) = $1 in
-   (f, s @ [$2], t)
-  }
- | decls cdecl {
-   let (f, s, t) = $1 in
-   (f, s, t @ [$2])
- }
+    /* nothing */ { ([], []) }
+  | decls fdecl {
+    let (f, s) = $1 in
+    (f @ [$2], s)
+    }
+  | decls cdecl {
+    let (f, s) = $1 in
+    (f, s @ [$2])
+    }
 
 fdecl:
    typ IDENTIFIER PAREN_L formals_opt PAREN_R BRACE_L stmts BRACE_R
@@ -71,7 +66,6 @@ fdecl:
          formals = List.rev $4;
          body = $7 } }
 
-// TO THINK: Order matters?
 cdecl:
     CLASS CLASS_IDENTIFIER BRACE_L class_body BRACE_R SEMI {
       let (vars, mthds, constructors, destructors) = $4 in

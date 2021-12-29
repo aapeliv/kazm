@@ -1,6 +1,0 @@
-int main() {
-  println("About to declare a double");
-  double a;
-  // a = 2.71;
-  // double_println(a);
-}
