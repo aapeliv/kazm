@@ -1,63 +1,24 @@
-# PLT class group project
+# Kazm
 
-## Final Report Overleaf Link: https://www.overleaf.com/1997148773tgqyfyqvktmx
+Kazm is a C-like programming language implemented in OCaml for the Programming Languages and Translators class at Columbia University.
+
+In addition to a basic subset of C, Kazm also supports lightweight classes, arrays, and a scoping mechanism that automatically destroys objects.
+
+## Compiling a program
+
+The easiest way to run the Kazm compiler is using Docker and the bundled helper. First clone the repository and enter the `kazm` directory, then compile the included `hello_world.kazm` file in the Kazm Docker container:
+
+```sh
+git clone git@github.com:aapeliv/plt.git
+cd kazm/
+docker run --rm -it -v $(pwd):/home/kazm -w=/home/kazm aapeliv/plt ./compile.py --run hello_world.kazm
+```
+
+The helper can be run without the `--run` switch in which case the compiler will simply produce an executable but not run it.
 
 ## Running all tests
- Please name all "passing" cases as test-\*.kazm and all "failing" cases as fail-\*.kazm
 
 ```sh
 cd kazm/
 docker run --rm -it -v $(pwd):/home/kazm -w=/home/kazm aapeliv/plt ./test.py
-```
-
-
-## Running the parser
-
-```sh
-cd kazm/
-ocamlbuild kazm.native
-cat sample.kazm | ./kazm.native
-```
-
-
-## Running the "hello world" example
-
-In the OCaml/LLVM docker container:
-
-```sh
-cd kazm
-docker run --rm -it -v $(pwd):/home/kazm -w=/home/kazm aapeliv/plt
-# now inside the container
-opam config exec -- ocamlbuild -use-ocamlfind kazm.native
-# run the kazm compiler to output LLVM IR
-cat arr.kazm | ./kazm.native > hello_world.ll
-# compile LLVM IR into assembly
-llc --relocation-model=pic hello_world.ll
-# compile builtins
-cc -c builtins.c -o builtins.o
-# compile hello world
-cc -o hello_world builtins.o hello_world.s
-# run!
-./hello_world
-```
-
-## Running the "sast_test" example
-
-In the OCaml/LLVM docker container:
-
-```sh
-cd kazm
-docker run --rm -it -v $(pwd):/home/kazm -w=/home/kazm columbiasedwards/plt
-# now inside the container
-opam config exec -- ocamlbuild -use-ocamlfind sastprinter.native
-# run the kazm compiler to output LLVM IR
-cat sast_test.in | ./sastprinter.native > sast_test.ll
-# compile LLVM IR into assembly
-llc --relocation-model=pic sast_test.ll
-# compile builtins
-cc -c builtins.c -o builtins.o
-# compile hello world
-cc -o sast_test builtins.o sast_test.s
-# run!
-./sast_test
 ```
