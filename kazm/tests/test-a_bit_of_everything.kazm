@@ -1,7 +1,7 @@
 class TwoNumbers {
   int a;
   int b;
-
+  TwoNumbers() { me.a = 3; }
   int mul() { return me.a * me.b; }
   int add() { return me.a + me.b; }
 };
@@ -12,7 +12,6 @@ int main() {
 
   // Classes
   TwoNumbers ns;
-  ns.a = 3;
   ns.b = 7;
   int_println(2 * ns.mul()); // 42
 
