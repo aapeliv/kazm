@@ -1,0 +1,12 @@
+int main(){
+    if (true){
+		if (true){
+			if (false){
+				println("fail");
+			}
+			else {
+				println("pass");
+			}
+		}
+	}
+}
