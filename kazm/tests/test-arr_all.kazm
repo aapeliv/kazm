@@ -1,0 +1,21 @@
+int main()
+{     
+    // array declaration without initialization 
+    array double[3] a; 
+    double_println(a[2]);
+    
+    // array declaration with initialization 
+    array int[5] b = [1, 2, 3, 4, 5];     
+
+    // array access and array assign
+    int_println(b[0]);
+    b[0] = b[4]; 
+    int_println(b[0]);
+    b[0] = 7; 
+    int_println(b[0]);
+
+    // array length 
+    int_println(a.length);
+
+    // output 0.000000 1 5 7 3
+}
