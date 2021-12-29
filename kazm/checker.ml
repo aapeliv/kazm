@@ -332,8 +332,23 @@ let check (globals, functions, classes) =
   in
 
   let check_class cls =
+    let ctrs = cls.cconstructors in
+    let dtrs = cls.cdestructors in
+    let check_cd_name func =
+      if func.fname <> cls.cname then raise (Failure ("Class constructor or destructor does not have same name as class, expected " ^ cls.cname ^ " (class) == " ^ func.fname)) else ()
+    in
+    ignore (List.map check_cd_name ctrs);
+    ignore (List.map check_cd_name dtrs);
+    let check_dtrs = function
+        [] -> None
+      | hd::[] -> Some (check_function ((ClassT(cls.cname), "me")::[]) hd)
+      | _ -> raise (Failure ("Can only have one or zero destructors"))
+    in
     { scname = cls.cname;
       scvars = cls.cvars;
-      scmethods = List.map (check_function ((ClassT(cls.cname), "me")::[])) cls.cmethods;}
+      scmethods = List.map (check_function ((ClassT(cls.cname), "me")::[])) cls.cmethods;
+      scconstructors = List.map (check_function ((ClassT(cls.cname), "me")::[])) ctrs;
+      scdestructor = check_dtrs dtrs;
+    }
   in
   (globals, List.map (check_function []) functions, List.map check_class classes)

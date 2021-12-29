@@ -46,6 +46,7 @@ rule tokenize = parse
 | "<=" { LEQ }
 | '>' { GT }
 | ">=" { GEQ }
+| "~" { TWIDDLE }
 | "class" { CLASS }
 | "void" { VOID }
 | "array"  { ARRAY }

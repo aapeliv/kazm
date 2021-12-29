@@ -1,0 +1,18 @@
+class ScopeGreeter {
+  ScopeGreeter() {
+    println("Hi!");
+  }
+
+  ~ScopeGreeter() {
+    println("Bye!");
+  }
+};
+
+int main() {
+  println("Top");
+  {
+    ScopeGreeter g;
+    println("In scope");
+  }
+  println("Bottom");
+}

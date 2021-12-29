@@ -44,6 +44,8 @@ type sclass_decl = {
     scname : class_t;
     scvars : bind list;
     scmethods : sfunc_decl list;
+    scconstructors : sfunc_decl list;
+    scdestructor : sfunc_decl option;
 }
 
 type sprogram = bind list * sfunc_decl list * sclass_decl list

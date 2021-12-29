@@ -4,7 +4,7 @@ open Ast
 %}
 
 %token PAREN_L PAREN_R BRACE_L BRACE_R SQB_L SQB_R SQB_PAIR /* ( ) { } [ ] */
-%token DOT SEMI COMMA MOD ASSIGN  /* . ; , * % = */
+%token DOT SEMI COMMA MOD ASSIGN TWIDDLE /* . ; , * % = ~ */
 %token PLUS MINUS TIMES DIVIDE  /* + - * / */
 %token PLUSEQ MINUSEQ TIMESEQ DIVIDEQ /* + - * / += -= *= /= */
 %token AND OR NOT  /* && || ! */
@@ -74,18 +74,27 @@ fdecl:
 // TO THINK: Order matters?
 cdecl:
     CLASS CLASS_IDENTIFIER BRACE_L class_body BRACE_R SEMI {
-      { cname = $2; cvars = fst $4; cmethods = snd $4 }
+      let (vars, mthds, constructors, destructors) = $4 in
+      { cname = $2; cvars = vars; cmethods = mthds; cconstructors = constructors; cdestructors = destructors; }
     }
 
 class_body:
-    { ([], []) }
+    { ([], [], [], []) }
   | class_body var_decl {
-   let (f, s) = $1 in
-   (f @ [$2], s)
+   let (f, s, t, h) = $1 in
+   (f @ [$2], s, t, h)
   }
   | class_body mdecl {
-   let (f, s) = $1 in
-   (f, s @ [$2])
+   let (f, s, t, h) = $1 in
+   (f, s @ [$2], t, h)
+  }
+  | class_body constructor_decl {
+   let (f, s, t, h) = $1 in
+   (f, s, t @ [$2], h)
+  }
+  | class_body destructor_decl {
+   let (f, s, t, h) = $1 in
+   (f, s, t, h @ [$2])
   }
 
 mdecl:
@@ -94,6 +103,20 @@ mdecl:
          fname = $2;
          formals = List.rev $4;
          body = $7 } }
+
+constructor_decl:
+   CLASS_IDENTIFIER PAREN_L formals_opt PAREN_R BRACE_L stmts BRACE_R
+     { { typ = Void;
+         fname = $1;
+         formals = List.rev $3;
+         body = $6 } }
+
+destructor_decl:
+   TWIDDLE CLASS_IDENTIFIER PAREN_L PAREN_R BRACE_L stmts BRACE_R
+     { { typ = Void;
+         fname = $2;
+         formals = [];
+         body = $6 } }
 
 formals_opt:
     /* nothing */ { [] }
