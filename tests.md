@@ -268,6 +268,8 @@ Cases that are meant to fail are named fail-\*.kazm.
 
 **test-while.kazm** while 
 
+**test-nest_if.kazm** test nested ifs 
+
 ### Parse - Fail Cases
 **fail-parse.kazm** While instead of while 
 
